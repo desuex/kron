@@ -1,3 +1,6 @@
+# Repository Structure
+
+```
 kron/
   README.md
   LICENSE
@@ -8,7 +11,7 @@ kron/
   ROADMAP.md
   CHANGELOG.md
 
-  docs/
+  docs/                           # specifications and design documents
     MANIFESTO.md
     HELLOKRON.md
     SPEC.md
@@ -24,73 +27,73 @@ kron/
     CRD-SPEC.md
     CLI-SPEC.md
 
-  core/                         # kron-core (pure engine)
+  core/                           # pure deterministic scheduling engine
     go.mod
     go.sum
     README.md
     pkg/
       core/
-        decision.go             # DecisionRequest/Result types
-        window.go               # window computation
-        seed.go                 # seed + hashing (SHA-256)
-        prng.go                 # SplitMix64 + NextFloat64
+        decision.go
+        window.go
+        seed.go
+        prng.go
         distribution/
           uniform.go
           skew_early.go
           skew_late.go
-          normal.go             # optional later
-          exponential.go        # optional later
+          normal.go
+          exponential.go
         constraints/
           model.go
           eval.go
-          parse.go              # if you parse constraint clauses here
-        errors.go               # typed errors per ERROR-MODEL
-        vectors.go              # helpers for golden vectors
+          parse.go
+        errors.go
+        vectors.go
     testdata/
       vectors/
         v1.json
         v2.json
         ...
     internal/
-      tzdb/                     # optional: pin timezone source policy
+      tzdb/
 
-  cmd/                          # binaries live at repo root, depend on modules below
+  cmd/                            # binary entrypoints
     krond/
       main.go
     krontab/
       main.go
     kronctl/
-      main.go                   # optional; can arrive later
+      main.go
 
-  daemon/                       # krond implementation (adapter)
+  daemon/                         # host daemon adapter
     go.mod
     go.sum
     README.md
     pkg/
       daemon/
-        daemon.go               # lifecycle
-        scheduler.go            # priority queue, timers
+        daemon.go
+        scheduler.go
         runner/
-          runner.go             # fork/exec + supervision
+          runner.go
           signals.go
           timeout.go
         state/
-          state.go              # schema structs
-          store.go              # atomic writes, fsync
+          state.go
+          store.go
           migrate.go
         config/
           load.go
-          model.go              # parsed config structs
+          model.go
         logging/
-          text.go               # LOGS.md format writer
+          text.go
           json.go
         limits/
-          rlimits.go            # optional
+          rlimits.go
     testdata/
       configs/
       state/
 
-  operator/                     # kubernetes controller (adapter)
+  operator/                       # Kubernetes controller adapter
     go.mod
     go.sum
     README.md
@@ -102,32 +105,32 @@ kron/
       kronjob_controller.go
     pkg/
       adapters/
-        decision.go             # map CRD -> core DecisionRequest
-        jobs.go                 # create Job w/ labels/annotations
+        decision.go
+        jobs.go
       logging/
         text.go
         json.go
       metrics/
         metrics.go
-    config/                     # kubebuilder/kustomize assets
+    config/
       crd/
       rbac/
       manager/
       samples/
     charts/
-      kron/                     # Helm chart (optional but valuable)
+      kron/
     hack/
       kind-e2e.sh
 
-  tooling/
+  tooling/                        # build and release configuration
     golangci-lint.yml
     goreleaser/
       .goreleaser.yaml
     cosign/
     sbom/
 
-  scripts/
-    generate.sh                 # codegen, manifests, etc.
+  scripts/                        # development and CI scripts
+    generate.sh
     test.sh
     e2e.sh
 
@@ -137,3 +140,4 @@ kron/
       ci-daemon.yml
       ci-operator.yml
       release.yml
+```
