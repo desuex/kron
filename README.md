@@ -50,6 +50,7 @@ Start here:
 | [SPEC.md](docs/SPEC.md) | Scheduling and execution semantics (stable contract) |
 | [CORE-SPEC.md](docs/CORE-SPEC.md) | `kron-core` engine formal contract |
 | [SYNTAX.md](docs/SYNTAX.md) | Schedule syntax reference (cron + modifiers) |
+| [KRONTAB.md](docs/KRONTAB.md) | `krond` configuration file format |
 | [EXECUTION.md](docs/EXECUTION.md) | `krond` daemon execution model |
 | [STATE.md](docs/STATE.md) | Persistent state model for `krond` |
 | [ERROR-MODEL.md](docs/ERROR-MODEL.md) | Error categories and handling semantics |

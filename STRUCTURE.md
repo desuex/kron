@@ -17,6 +17,7 @@ kron/
     SPEC.md
     CORE-SPEC.md
     SYNTAX.md
+    KRONTAB.md
     EXECUTION.md
     STATE.md
     ERROR-MODEL.md

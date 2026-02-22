@@ -73,8 +73,10 @@ If system clock jumps backward, the queue is recalculated.
 Each schedule entry has a stable identity:
 
 ```
-<config_path>:<entry_name>
+<config_path>:<name>
 ```
+
+Where `<config_path>` is the absolute path to the configuration file and `<name>` is the `name` field defined in the entry. See KRONTAB.md for the file format specification.
 
 This identity is used for:
 
