@@ -1,6 +1,8 @@
 # Kron manifesto (project principles)
 
-**Kron is probabilistic scheduling for Kubernetes.**
+> **Note:** This document captures early design thinking and project principles. The roadmap, field names, and repository layout described here have been superseded by the formal specifications in this directory (SPEC.md, CORE-SPEC.md, SYNTAX.md, etc.) and the top-level ROADMAP.md. The core beliefs and promises below remain accurate.
+
+**Kron is deterministic probabilistic scheduling.**
 It exists to make automation look less like a metronome and more like reality, while keeping operations safe, explainable, and controllable.
 
 ### What we believe
@@ -31,7 +33,7 @@ Kron will provide:
 
 ---
 
-# Product shape (what Kron *is*)
+# Product shape (what Kron *is*) — *superseded by SPEC.md and HELLOKRON.md*
 
 **A controller + CRD** that creates normal Kubernetes `Job`s (or `CronJob`s) at computed times.
 
@@ -55,7 +57,7 @@ Default to **deterministic randomness** (seeded) so runs are spread but stable a
 
 ---
 
-# Roadmap
+# Roadmap — *superseded by top-level ROADMAP.md*
 
 ## Phase 0 — “It builds, it runs” (Week 1–2 worth of effort)
 
@@ -140,7 +142,7 @@ Deliverable: mature project with contributors.
 
 ---
 
-# Repository layout suggestion
+# Repository layout suggestion — *superseded by STRUCTURE.md*
 
 * `/api/v1alpha1` – types
 * `/controllers` – reconciler

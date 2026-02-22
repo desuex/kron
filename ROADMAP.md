@@ -152,7 +152,7 @@ Minimal but correct execution engine.
   * allow
   * forbid
 * Deadline handling
-* Structured logging per LOGS.md
+* Structured logging per LOGGING.md
 
 ## Exclusions
 

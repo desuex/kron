@@ -34,12 +34,31 @@ Kron spreads work safely, deterministically, and observably.
 
 ## Architecture
 
-- `core/` – deterministic scheduling engine
-- `daemon/` – host execution daemon
-- `operator/` – Kubernetes controller
-- `cmd/` – CLI tools
+- `core/` – deterministic scheduling engine (`kron-core`)
+- `daemon/` – host execution daemon (`krond`)
+- `operator/` – Kubernetes controller (`kron-operator`)
+- `cmd/` – CLI tools (`krontab`, `krond`, `kronctl`)
 
-Full specifications live in `/docs`.
+## Documentation
+
+Start here:
+
+| Document | Description |
+|---|---|
+| [HELLOKRON.md](docs/HELLOKRON.md) | Project overview, goals, and architecture |
+| [MANIFESTO.md](docs/MANIFESTO.md) | Design principles and early vision (historical) |
+| [SPEC.md](docs/SPEC.md) | Scheduling and execution semantics (stable contract) |
+| [CORE-SPEC.md](docs/CORE-SPEC.md) | `kron-core` engine formal contract |
+| [SYNTAX.md](docs/SYNTAX.md) | Schedule syntax reference (cron + modifiers) |
+| [EXECUTION.md](docs/EXECUTION.md) | `krond` daemon execution model |
+| [STATE.md](docs/STATE.md) | Persistent state model for `krond` |
+| [ERROR-MODEL.md](docs/ERROR-MODEL.md) | Error categories and handling semantics |
+| [LOGGING.md](docs/LOGGING.md) | Structured log format specification |
+| [SECURITY.md](docs/SECURITY.md) | Security model and hardening requirements |
+| [COMPAT.md](docs/COMPAT.md) | Compatibility with cron, systemd, CronJob |
+| [TEST-VECTORS.md](docs/TEST-VECTORS.md) | Golden test vectors for determinism |
+| [CRD-SPEC.md](docs/CRD-SPEC.md) | Kubernetes CRD schema and behavior |
+| [CLI-SPEC.md](docs/CLI-SPEC.md) | CLI commands, flags, and exit codes |
 
 ---
 

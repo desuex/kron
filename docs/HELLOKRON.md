@@ -2,13 +2,16 @@
 
 ## What Kron is
 
-Kron is a Kubernetes-native probabilistic scheduler.
+Kron is a deterministic probabilistic scheduling system.
 
-Kron exists to schedule Kubernetes `Job` executions with controlled variability so that automation does not fire as a synchronized metronome. Kron spreads scheduled work to reduce load spikes, supports distributions that imitate human timing patterns, and enables gentle unpredictability for automation use cases.
+Kron exists to schedule work with controlled variability so that automation does not fire as a synchronized metronome. Kron spreads scheduled work to reduce load spikes, supports distributions that imitate human timing patterns, and enables gentle unpredictability for automation use cases.
 
-Kron is delivered as a Kubernetes controller plus Custom Resource Definitions (CRDs). It creates ordinary Kubernetes `Job` objects. It does not require changes to Kubernetes itself.
+Kron is built around a pure scheduling engine (`kron-core`) and delivered through two adapters:
 
-Kron is deterministic by default: for a given resource, schedule period, and configuration, the chosen run time is reproducible and explainable.
+* `kron-operator` — a Kubernetes controller that creates ordinary `Job` objects via Custom Resource Definitions (CRDs).
+* `krond` — a host-level daemon for non-Kubernetes environments that executes commands via fork/exec.
+
+Kron is deterministic by default: for a given schedule entry, period, and configuration, the chosen run time is reproducible and explainable across restarts, leader changes, and reconciliations.
 
 ---
 
@@ -38,25 +41,21 @@ Kron is not:
 
 ## Architecture
 
-Kron runs as a controller deployment in Kubernetes.
+Kron is structured as a pure core engine with adapter layers:
 
-It provides one primary CRD:
+* **`kron-core`** — a pure, stateless, side-effect-free scheduling engine. It takes a schedule definition and period as input and produces a deterministic decision (chosen execution time, seed hash, window bounds). It has no I/O, no clock access, and no platform dependencies.
 
-* `KronJob` (name may change, semantics remain)
+* **`kron-operator`** (Kubernetes adapter) — a controller deployment that provides a `KronJob` CRD. A `KronJob` represents a recurring schedule. The controller computes the next run time via `kron-core` and creates a Kubernetes `Job` from a user-provided `jobTemplate` when the computed time arrives. Uses leader election; at most one active controller instance makes scheduling decisions at a time.
 
-A `KronJob` represents a recurring schedule. The controller computes the next run time and creates a Kubernetes `Job` from a user-provided `jobTemplate` when the computed time arrives.
+* **`krond`** (host adapter) — a daemon that reads local configuration files (`krontab` format), computes decisions via `kron-core`, and executes commands via fork/exec. Maintains persistent state to guarantee idempotency across restarts.
 
-Kron uses leader election. At most one active controller instance makes scheduling decisions at a time.
-
-Kron’s scheduling decisions are pure and reproducible: they depend only on the `KronJob` spec, the current schedule period, and a seed strategy.
+Kron’s scheduling decisions are pure and reproducible: they depend only on the schedule definition, the current period, and a seed strategy.
 
 ---
 
 ## Resource model
 
-### KronJob
-
-A `KronJob` defines:
+A schedule entry (called `KronJob` in Kubernetes, or a `krontab` entry for `krond`) defines:
 
 * A baseline schedule (cron-like).
 * A window around or within which execution may occur.
@@ -65,11 +64,13 @@ A `KronJob` defines:
 * Execution safety policies (concurrency, missed run behavior).
 * A Kubernetes `Job` template to instantiate.
 
-Kron creates `Job` objects with:
+In Kubernetes mode, Kron creates `Job` objects with:
 
 * An owner reference pointing to the `KronJob`.
 * Labels and annotations that allow tracing decisions, identifying the period, and enforcing idempotency.
 * Optional TTL and retention controlled by the `Job` template and/or Kron defaults.
+
+In daemon mode, `krond` executes commands directly via fork/exec and persists state to disk for idempotency.
 
 ---
 

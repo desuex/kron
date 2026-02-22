@@ -9,14 +9,15 @@ kron/
   CHANGELOG.md
 
   docs/
+    MANIFESTO.md
     HELLOKRON.md
-    SYNTAX.md
-    LOGS.md
-    EXECUTION.md
     SPEC.md
     CORE-SPEC.md
+    SYNTAX.md
+    EXECUTION.md
     STATE.md
     ERROR-MODEL.md
+    LOGGING.md
     SECURITY.md
     COMPAT.md
     TEST-VECTORS.md
