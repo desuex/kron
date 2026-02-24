@@ -1,5 +1,6 @@
 # Kron
 [![codecov](https://codecov.io/github/desuex/kron/graph/badge.svg?token=8KYI8SHH91)](https://codecov.io/github/desuex/kron)
+[![docs](https://readthedocs.org/projects/krontab/badge/?version=latest)](https://krontab.readthedocs.io/)
 
 
 
@@ -51,6 +52,14 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 ## Documentation
 
 Start here:
+
+| Guide | Description |
+|---|---|
+| [Read the Docs](https://krontab.readthedocs.io/) | Hosted documentation |
+| [SETUP.md](docs/SETUP.md) | Local setup and build instructions |
+| [USAGE.md](docs/USAGE.md) | MVP CLI usage (`lint`, `explain`, `next`) |
+
+Reference specifications:
 
 | Document | Description |
 |---|---|
