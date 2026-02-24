@@ -133,7 +133,7 @@ Commands must not be executed via shell by default.
 
 Default execution:
 
-```id="a0x3f9"
+```text
 execve(binary, args, env)
 ```
 
@@ -193,13 +193,13 @@ Sensitive environment variables must not be injected implicitly.
 
 State directory:
 
-```id="8rj3dk"
+```text
 0700
 ```
 
 State files:
 
-```id="pxm6z1"
+```text
 0600
 ```
 

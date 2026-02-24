@@ -20,7 +20,7 @@ This specification applies to the Kubernetes adapter (`kron-operator`).
 
 ## API Group
 
-```id="k0b1ga"
+```text
 Group: kron.io
 Version: v1alpha1
 Kind: KronJob
@@ -34,7 +34,7 @@ Future versions must follow Kubernetes API versioning rules.
 
 ## Resource Structure
 
-```id="g6pj9m"
+```text
 apiVersion: kron.io/v1alpha1
 kind: KronJob
 metadata:
@@ -48,7 +48,7 @@ status: KronJobStatus
 
 ## Spec
 
-```id="d1kz9r"
+```text
 KronJobSpec {
   schedule: string
   timezone: string (optional)
@@ -86,7 +86,7 @@ Invalid timezone causes resource rejection.
 
 ## window
 
-```id="j9q1dp"
+```text
 WindowSpec {
   mode: "after" | "around"
   duration: string (Go duration format)
@@ -95,7 +95,7 @@ WindowSpec {
 
 Default:
 
-```id="1q8r2h"
+```text
 mode: "after"
 duration: "0s"
 ```
@@ -110,7 +110,7 @@ Validation:
 
 ## distribution
 
-```id="v8u4lk"
+```text
 DistributionSpec {
   name: string
   params: map[string]string (optional)
@@ -119,7 +119,7 @@ DistributionSpec {
 
 Default:
 
-```id="8ztw3m"
+```text
 name: "uniform"
 params: {}
 ```
@@ -140,7 +140,7 @@ Parameter validation must match CORE-SPEC.md.
 
 ## seed
 
-```id="n5h7cy"
+```text
 SeedSpec {
   strategy: "stable" | "daily" | "weekly"
   salt: string (optional)
@@ -149,7 +149,7 @@ SeedSpec {
 
 Default:
 
-```id="q0f9ra"
+```text
 strategy: "stable"
 salt: ""
 ```
@@ -160,7 +160,7 @@ Unknown strategy causes rejection.
 
 ## constraints
 
-```id="p7v2sx"
+```text
 ConstraintSpec {
   only: []ConstraintClause (optional)
   avoid: []ConstraintClause (optional)
@@ -177,7 +177,7 @@ If constraints are unsatisfiable at runtime, period becomes `unschedulable`.
 
 ## policy
 
-```id="y3m8dz"
+```text
 PolicySpec {
   concurrency: "allow" | "forbid" | "replace"
   deadline: string (Go duration format)
@@ -187,7 +187,7 @@ PolicySpec {
 
 Defaults:
 
-```id="l6w2ok"
+```text
 concurrency: "forbid"
 deadline: "0s"
 suspend: false
@@ -222,7 +222,7 @@ Controller must:
 
 ## Status
 
-```id="k3n9wx"
+```text
 KronJobStatus {
   observedGeneration: int64
   lastPeriodID: string
@@ -267,7 +267,7 @@ These fields are informational and may change if spec changes.
 
 Standard Kubernetes Condition structure:
 
-```id="w1r7hp"
+```text
 Condition {
   type: string
   status: "True" | "False" | "Unknown"
@@ -440,7 +440,7 @@ Behavioral changes require new API version.
 
 Controller must name Jobs deterministically:
 
-```id="m8t2rs"
+```text
 <kronjob-name>-<period-hash>
 ```
 

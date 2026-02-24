@@ -30,7 +30,7 @@ State persistence must guarantee:
 
 Default base directory:
 
-```id="n1u7fa"
+```text
 /var/lib/krond/
 ```
 
@@ -38,7 +38,7 @@ Each job identity maps to one state file.
 
 File name:
 
-```id="p3k4lo"
+```text
 <hex(sha256(identity))>.json
 ```
 
@@ -50,7 +50,7 @@ No identity string is used directly as filename.
 
 Each state file contains a single JSON object.
 
-```id="e8t4qf"
+```text
 State {
   Version              string
   Identity             string
@@ -75,7 +75,7 @@ Semantic version of the state schema.
 
 Format:
 
-```id="x8j9qs"
+```text
 "1"
 ```
 
@@ -130,7 +130,7 @@ UTC timestamp of the nominal time for `LastHandledPeriodID`.
 
 Present only when an execution is currently running.
 
-```id="g0m2rj"
+```text
 ActiveState {
   PeriodID     string
   PID          int
@@ -147,7 +147,7 @@ ActiveState {
 
 Optional bounded history for observability.
 
-```id="z6c4ra"
+```text
 HistoryEntry {
   PeriodID    string
   Outcome     string
@@ -352,13 +352,13 @@ Migration must occur before scheduling begins.
 
 State files must be created with:
 
-```id="r8sz3f"
+```text
 0600
 ```
 
 State directory must be:
 
-```id="v2pkq1"
+```text
 0700
 ```
 

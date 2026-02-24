@@ -5,7 +5,7 @@
 **Kron is deterministic probabilistic scheduling.**
 It exists to make automation look less like a metronome and more like reality, while keeping operations safe, explainable, and controllable.
 
-### What we believe
+## What we believe
 
 1. **Determinism beats surprise.**
    Randomness must be *controlled*: reproducible per job/run, explainable, and debuggable.
@@ -22,7 +22,7 @@ It exists to make automation look less like a metronome and more like reality, w
 7. **Boring tech wins.**
    Prefer simple, testable components over novelty. Kron should be easy to run for 5 years.
 
-### The promise
+## The promise
 
 Kron will provide:
 
@@ -37,7 +37,7 @@ Kron will provide:
 
 **A controller + CRD** that creates normal Kubernetes `Job`s (or `CronJob`s) at computed times.
 
-### CRD sketch: `KronJob` (name flexible)
+## CRD sketch: `KronJob` (name flexible)
 
 Core fields:
 
