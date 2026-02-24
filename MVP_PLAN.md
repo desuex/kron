@@ -1,12 +1,21 @@
 # MVP_PLAN
 
-Simple implementation plan for Kron, based on current repository state (docs complete, code not started).
+Simple implementation plan for Kron, based on current repository state.
 
 ## Current State
 
 - Specifications exist and are detailed in `docs/`.
-- No implementation directories currently exist (`core/`, `cmd/`, `daemon/`, `operator/`).
-- `TODO.md` is still focused on spec-review tasks.
+- `core/` is implemented for deterministic seed/PRNG/window/uniform decisions.
+- `cmd/krontab` implements `lint`, `explain`, and `next`.
+- `daemon/` and `operator/` module scaffolds are present and wired to `core`.
+- CI runs format checks, `go vet`, tests, and a 90% combined coverage threshold.
+
+## Milestone Status (2026-02-24)
+
+- Milestone 1 (Repository Bootstrap): completed.
+- Milestone 2 (Core Engine MVP): in progress.
+- Milestone 3 (CLI MVP): in progress.
+- Milestone 4 (MVP Freeze): pending.
 
 ## MVP Scope (Simple)
 
@@ -14,7 +23,7 @@ Build only what is needed to prove the core value: deterministic probabilistic s
 
 In scope:
 - `kron-core` minimal engine
-- `krontab` minimal CLI (`lint`, `explain`)
+- `krontab` minimal CLI (`lint`, `explain`, `next`)
 - Golden-vector determinism tests
 
 Out of scope for MVP:
@@ -24,6 +33,8 @@ Out of scope for MVP:
 - Full observability and hardening work
 
 ## Milestone 1: Repository Bootstrap (1-2 days)
+
+Status: completed.
 
 Deliverables:
 - Create initial directories:
@@ -40,18 +51,20 @@ Deliverables:
   - `go vet`
 
 Exit criteria:
-- `go test ./...` passes on clean checkout.
-- CI runs green with scaffolded code.
+- module-aware test targets pass on clean checkout.
+- CI runs green with coverage threshold enforcement.
 
 ## Milestone 2: Core Engine MVP (4-6 days)
 
+Status: in progress.
+
 Implement in `core`:
-- Types for job spec, period, window, decision
-- Seed derivation (SHA-256)
-- SplitMix64 PRNG
-- Window modes (`before`, `after`, `center`)
+- Types for job spec, period, window, decision (implemented)
+- Seed derivation (SHA-256) (implemented)
+- SplitMix64 PRNG (implemented)
+- Window modes (`before`, `after`, `center`) (implemented)
 - Distributions:
-  - `uniform`
+  - `uniform` (implemented)
   - `skewEarly`
   - `skewLate`
 - Candidate sampling loop with bounded attempts
@@ -68,9 +81,12 @@ Exit criteria:
 
 ## Milestone 3: CLI MVP (`krontab`) (2-3 days)
 
+Status: in progress.
+
 Commands:
-- `krontab lint --file <path>`
-- `krontab explain <job> --at <RFC3339> [--format text|json]`
+- `krontab lint --file <path>` (implemented)
+- `krontab explain <job> --at <RFC3339> [--format text|json]` (implemented)
+- `krontab next <job> --count N` (implemented)
 
 Behavior:
 - Parse minimal config form from `docs/KRONTAB.md`
@@ -78,7 +94,7 @@ Behavior:
 - Output decision internals required for reproducibility
 
 Testing:
-- CLI integration tests for success/failure exit codes
+- CLI integration tests for success/failure exit codes (implemented for `next`)
 - Snapshot tests for text and json outputs
 
 Exit criteria:
@@ -86,6 +102,8 @@ Exit criteria:
 - Output contract stable under repeated runs.
 
 ## Milestone 4: MVP Freeze (1 day)
+
+Status: pending.
 
 - Tag pre-release (`v0.1.0-alpha.1`)
 - Publish:
@@ -97,10 +115,10 @@ Exit criteria:
 
 ## Immediate Next Tasks (Do First)
 
-1. Create the bootstrap directory/module layout.
-2. Add minimal CI workflow for build/test.
-3. Implement seed + PRNG + uniform distribution with tests.
-4. Implement `krontab explain` wired to core decision path.
+1. Implement `skewEarly` and `skewLate` distributions in `core`.
+2. Add and pass golden vectors for implemented distribution/mode combinations.
+3. Tighten `krontab` config parsing toward `SYNTAX.md` parity.
+4. Add snapshot tests for `explain` and `next` output stability.
 
 ## Risks and Controls
 

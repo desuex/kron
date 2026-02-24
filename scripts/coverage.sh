@@ -24,6 +24,8 @@ cmd_profile="${tmp_dir}/cmd.cover.out"
 combined_profile="${tmp_dir}/combined.cover.out"
 
 go test ./core/... -coverprofile="${core_profile}" -covermode=atomic
+go test ./daemon/... -coverprofile="${tmp_dir}/daemon.cover.out" -covermode=atomic
+go test ./operator/... -coverprofile="${tmp_dir}/operator.cover.out" -covermode=atomic
 go test ./cmd/krontab/... -coverprofile="${cmd_profile}" -covermode=atomic
 
 core_total="$(go tool cover -func="${core_profile}" | awk '/^total:/{print $3}')"
@@ -32,6 +34,8 @@ cmd_total="$(go tool cover -func="${cmd_profile}" | awk '/^total:/{print $3}')"
 {
   echo "mode: atomic"
   tail -n +2 "${core_profile}"
+  tail -n +2 "${tmp_dir}/daemon.cover.out"
+  tail -n +2 "${tmp_dir}/operator.cover.out"
   tail -n +2 "${cmd_profile}"
 } > "${combined_profile}"
 

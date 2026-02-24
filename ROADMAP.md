@@ -12,6 +12,17 @@ Correctness, determinism, and operational safety take priority over feature velo
 
 ---
 
+## Progress Snapshot (2026-02-24)
+
+* Phase 0 (Repository Bootstrap): completed.
+* Phase 1 (kron-core): in progress.
+* Phase 2 (krontab): in progress.
+* `core` deterministic engine MVP exists for uniform scheduling.
+* `krontab` implements `lint`, `explain`, and `next`.
+* CI enforces format, vet, tests, and 90% combined coverage.
+
+---
+
 # Phase 0 — Repository Bootstrap
 
 ## Goals
@@ -58,11 +69,20 @@ Correctness, determinism, and operational safety take priority over feature velo
 * Repository builds.
 * No circular dependencies.
 * `core` imports no Kubernetes or OS packages.
-* CI passes with empty implementations.
+* CI passes with bootstrap implementations.
+
+## Status
+
+Completed.
 
 ---
 
 # Phase 1 — kron-core (Engine Foundation)
+
+## Status
+
+In progress.
+Delivered so far: seed derivation, SplitMix64 PRNG, window calculation, uniform distribution, deterministic decision output, and 90%+ core coverage.
 
 ## Goals
 
@@ -106,6 +126,11 @@ Implement deterministic decision engine exactly as specified.
 ---
 
 # Phase 2 — krontab (CLI Interface to Core)
+
+## Status
+
+In progress.
+Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, and integration tests for `next`.
 
 ## Goals
 

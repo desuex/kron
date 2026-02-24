@@ -2,5 +2,7 @@ go 1.22
 
 use (
 	./core
+	./daemon
+	./operator
 	./cmd/krontab
 )
