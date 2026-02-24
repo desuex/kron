@@ -1,5 +1,7 @@
 # Kron
-[![codecov](https://codecov.io/gh/desuex/kron/branch/main/graph/badge.svg)](https://codecov.io/gh/desuex/kron)
+[![codecov](https://codecov.io/github/desuex/kron/graph/badge.svg?token=8KYI8SHH91)](https://codecov.io/github/desuex/kron)
+
+
 
 Deterministic probabilistic scheduling.
 
