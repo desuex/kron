@@ -63,3 +63,26 @@ func TestDecideRejectsInvalidMode(t *testing.T) {
 		t.Fatalf("expected error for invalid mode")
 	}
 }
+
+func TestDecideAllowsZeroWindow(t *testing.T) {
+	period := time.Date(2026, 2, 24, 10, 0, 0, 0, time.UTC)
+	d, err := Decide(DecideInput{
+		Job:         "backup",
+		PeriodStart: period,
+		Window:      0,
+		Mode:        WindowModeAfter,
+		Dist:        DistributionUniform,
+	})
+	if err != nil {
+		t.Fatalf("Decide error: %v", err)
+	}
+	if !d.WindowStart.Equal(period) {
+		t.Fatalf("window start mismatch: got %s want %s", d.WindowStart, period)
+	}
+	if !d.WindowEnd.Equal(period) {
+		t.Fatalf("window end mismatch: got %s want %s", d.WindowEnd, period)
+	}
+	if !d.ChosenTime.Equal(period) {
+		t.Fatalf("chosen time mismatch: got %s want %s", d.ChosenTime, period)
+	}
+}

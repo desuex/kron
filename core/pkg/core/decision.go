@@ -9,8 +9,8 @@ func Decide(in DecideInput) (Decision, error) {
 	if in.Job == "" {
 		return Decision{}, fmt.Errorf("job is required")
 	}
-	if in.Window <= 0 {
-		return Decision{}, fmt.Errorf("window must be > 0")
+	if in.Window < 0 {
+		return Decision{}, fmt.Errorf("window must be >= 0")
 	}
 	if in.Mode != WindowModeAfter && in.Mode != WindowModeBefore && in.Mode != WindowModeCenter {
 		return Decision{}, fmt.Errorf("invalid mode: %q", in.Mode)
@@ -27,9 +27,6 @@ func Decide(in DecideInput) (Decision, error) {
 
 	startSec := windowStart.Unix()
 	endSec := windowEnd.Unix()
-	if endSec <= startSec {
-		endSec = startSec + 1
-	}
 
 	seedMaterial := fmt.Sprintf(
 		"job=%s|period=%s|mode=%s|window=%s|dist=%s",
@@ -42,15 +39,18 @@ func Decide(in DecideInput) (Decision, error) {
 
 	hash := SeedHash(seedMaterial)
 	rng := NewSplitMix64(SeedUint64(hash))
-	span := endSec - startSec
-	offset := int64(rng.Uint64() % uint64(span))
-	chosen := time.Unix(startSec+offset, 0).UTC()
+	chosen := time.Unix(startSec, 0).UTC()
+	if endSec > startSec {
+		span := endSec - startSec
+		offset := int64(rng.Uint64() % uint64(span))
+		chosen = time.Unix(startSec+offset, 0).UTC()
+	}
 
 	return Decision{
 		Job:             in.Job,
 		PeriodStart:     period,
 		WindowStart:     time.Unix(startSec, 0).UTC(),
-		WindowEnd:       time.Unix(endSec, 0).UTC(),
+		WindowEnd:       windowEnd.UTC(),
 		WindowEndIsOpen: true,
 		Mode:            in.Mode,
 		Distribution:    in.Dist,

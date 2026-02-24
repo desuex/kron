@@ -18,3 +18,10 @@ jobs:
           cache: true
       - name: CI checks
         run: ./scripts/ci.sh
+      - name: Generate coverage report
+        run: go test ./core/... ./cmd/krontab/... -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.txt
