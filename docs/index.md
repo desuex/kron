@@ -1,6 +1,14 @@
 # Kron Documentation
 
-Canonical project specifications and references.
+Start here for installation and day-to-day usage, then use the specification set for formal contracts.
+
+```{toctree}
+:maxdepth: 2
+:caption: Getting Started
+
+SETUP
+USAGE
+```
 
 ```{toctree}
 :maxdepth: 2
