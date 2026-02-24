@@ -2,6 +2,8 @@ name: ci
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
@@ -12,16 +14,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache: true
+          cache-dependency-path: |
+            go.work
+            core/go.mod
+            daemon/go.mod
+            operator/go.mod
+            cmd/krontab/go.mod
       - name: CI checks
         run: ./scripts/ci.sh
       - name: Generate coverage report
         run: go test ./core/... ./daemon/... ./operator/... ./cmd/krontab/... -coverprofile=coverage.txt -covermode=atomic
       - name: Upload coverage reports to Codecov
+        if: ${{ secrets.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
+          disable_search: true
+          fail_ci_if_error: true
+          verbose: true
