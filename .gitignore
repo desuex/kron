@@ -1,0 +1,14 @@
+.DS_Store
+
+# Build artifacts
+bin/
+dist/
+*.test
+
+# Coverage
+coverage.out
+*.coverprofile
+
+# Local scratch
+.tmp/
+tmp/

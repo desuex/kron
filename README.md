@@ -35,9 +35,15 @@ Kron spreads work safely, deterministically, and observably.
 ## Architecture
 
 - `core/` – deterministic scheduling engine (`kron-core`)
-- `daemon/` – host execution daemon (`krond`)
-- `operator/` – Kubernetes controller (`kron-operator`)
 - `cmd/` – CLI tools (`krontab`, `krond`, `kronctl`)
+
+Planned components (`daemon/`, `operator/`) are documented but not implemented yet.
+
+## Current Implementation (MVP)
+
+- `core/`: seed hashing, SplitMix64 PRNG, window computation, deterministic uniform decision selection
+- `cmd/krontab`: `lint` and `explain` commands (MVP subset)
+- CI: format check (`gofmt`), `go vet`, unit tests
 
 ## Documentation
 
@@ -96,6 +102,8 @@ See `LICENSE` for details.
 ## Roadmap
 
 See `ROADMAP.md`.
+
+For the execution-focused minimal delivery track, see `MVP_PLAN.md`.
 
 ---
 
