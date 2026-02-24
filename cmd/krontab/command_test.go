@@ -345,6 +345,34 @@ func TestRunNextUnschedulableDecision(t *testing.T) {
 	}
 }
 
+func TestRunExplainConfigLoadError(t *testing.T) {
+	cfg := writeTempKrontab(t, `
+0 0 * * * @win(after,bad) name=backup command=/usr/bin/backup
+`)
+
+	err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+	if err == nil {
+		t.Fatalf("expected config load error")
+	}
+	if !strings.Contains(err.Error(), "invalid @win duration") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunNextNoMatchingFuturePeriod(t *testing.T) {
+	cfg := writeTempKrontab(t, `
+0 0 31 2 * name=backup command=/usr/bin/backup
+`)
+
+	err := runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+	if err == nil {
+		t.Fatalf("expected no matching future period error")
+	}
+	if !strings.Contains(err.Error(), "no matching time found within 10 years") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunDispatchExitMapping(t *testing.T) {
 	cfg := writeTempKrontab(t, `*/30 * * * * @win(after,0s) @dist(uniform) name=backup command=/usr/bin/backup`)
 

@@ -308,6 +308,18 @@ func TestParseDistModifier(t *testing.T) {
 	if dist != core.DistributionSkewLate || shape != 3.5 {
 		t.Fatalf("skew parse mismatch: dist=%q shape=%v", dist, shape)
 	}
+
+	invalid := []string{
+		"skewLate,shape=",
+		"skewLate,shape=0",
+		"skewLate,shape=-1",
+		"skewLate,badparam",
+	}
+	for _, tt := range invalid {
+		if _, _, err := parseDistModifier(tt); err == nil {
+			t.Fatalf("expected parseDistModifier error for %q", tt)
+		}
+	}
 }
 
 func TestParseSeedModifier(t *testing.T) {
