@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ type explainSettings struct {
 	Window       time.Duration
 	Mode         core.WindowMode
 	Dist         core.Distribution
+	SkewShape    float64
 	Timezone     string
 	SeedStrategy core.SeedStrategy
 	Salt         string
@@ -168,16 +170,13 @@ func parseExplainModifiers(modifiers []string, fallback explainSettings) (explai
 
 		if strings.HasPrefix(tok, "@dist(") && strings.HasSuffix(tok, ")") {
 			body := tok[len("@dist(") : len(tok)-1]
-			name := strings.Split(body, ",")[0]
-			if name == "" {
-				return explainSettings{}, errors.New("invalid @dist arguments")
+			dist, skewShape, err := parseDistModifier(body)
+			if err != nil {
+				return explainSettings{}, err
 			}
-			if name != string(core.DistributionUniform) &&
-				name != string(core.DistributionSkewEarly) &&
-				name != string(core.DistributionSkewLate) {
-				return explainSettings{}, fmt.Errorf("distribution %q is not supported in MVP explain", name)
-			}
-			settings.Dist = core.Distribution(name)
+			settings.Dist = dist
+			settings.SkewShape = skewShape
+			continue
 		}
 
 		if strings.HasPrefix(tok, "@seed(") && strings.HasSuffix(tok, ")") {
@@ -209,6 +208,47 @@ func parseExplainModifiers(modifiers []string, fallback explainSettings) (explai
 	}
 
 	return settings, nil
+}
+
+func parseDistModifier(body string) (core.Distribution, float64, error) {
+	parts := strings.Split(body, ",")
+	if len(parts) == 0 || strings.TrimSpace(parts[0]) == "" {
+		return "", 0, errors.New("invalid @dist arguments")
+	}
+
+	dist := core.Distribution(strings.TrimSpace(parts[0]))
+	switch dist {
+	case core.DistributionUniform, core.DistributionSkewEarly, core.DistributionSkewLate:
+	default:
+		return "", 0, fmt.Errorf("distribution %q is not supported in MVP explain", parts[0])
+	}
+
+	var skewShape float64
+	for _, p := range parts[1:] {
+		kv := strings.SplitN(strings.TrimSpace(p), "=", 2)
+		if len(kv) != 2 || kv[0] == "" || kv[1] == "" {
+			return "", 0, fmt.Errorf("invalid distribution parameter %q", p)
+		}
+
+		key := strings.TrimSpace(kv[0])
+		val := strings.TrimSpace(kv[1])
+
+		switch dist {
+		case core.DistributionUniform:
+			return "", 0, fmt.Errorf("distribution %q does not accept parameters in MVP explain", dist)
+		case core.DistributionSkewEarly, core.DistributionSkewLate:
+			if key != "shape" {
+				return "", 0, fmt.Errorf("unknown %s parameter %q", dist, key)
+			}
+			parsed, err := strconv.ParseFloat(val, 64)
+			if err != nil || parsed <= 0 {
+				return "", 0, fmt.Errorf("invalid shape %q", val)
+			}
+			skewShape = parsed
+		}
+	}
+
+	return dist, skewShape, nil
 }
 
 func parseSeedModifier(body string) (core.SeedStrategy, string, error) {

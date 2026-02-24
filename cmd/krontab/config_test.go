@@ -55,6 +55,9 @@ func TestLoadJobSettingsAcceptsSkewDistribution(t *testing.T) {
 	if got.Dist != core.DistributionSkewEarly {
 		t.Fatalf("dist mismatch: got %s want %s", got.Dist, core.DistributionSkewEarly)
 	}
+	if got.SkewShape != 2.5 {
+		t.Fatalf("skew shape mismatch: got %v want %v", got.SkewShape, 2.5)
+	}
 }
 
 func TestLoadJobSettingsParsesTimezoneAndSeed(t *testing.T) {
@@ -272,11 +275,38 @@ func TestParseExplainModifiersErrors(t *testing.T) {
 	if _, err := parseExplainModifiers([]string{"@dist(normal)"}, fallback); err == nil {
 		t.Fatalf("expected unsupported distribution error")
 	}
+	if _, err := parseExplainModifiers([]string{"@dist(skewLate,shape=bad)"}, fallback); err == nil {
+		t.Fatalf("expected invalid shape error")
+	}
+	if _, err := parseExplainModifiers([]string{"@dist(skewLate,foo=1)"}, fallback); err == nil {
+		t.Fatalf("expected unknown skew parameter error")
+	}
+	if _, err := parseExplainModifiers([]string{"@dist(uniform,shape=2)"}, fallback); err == nil {
+		t.Fatalf("expected uniform parameter error")
+	}
 	if _, err := parseExplainModifiers([]string{"@seed(stable,foo=bar)"}, fallback); err == nil {
 		t.Fatalf("expected unknown seed key error")
 	}
 	if _, err := parseExplainModifiers([]string{"@tz(Not/AZone)"}, fallback); err == nil {
 		t.Fatalf("expected invalid timezone error")
+	}
+}
+
+func TestParseDistModifier(t *testing.T) {
+	dist, shape, err := parseDistModifier("uniform")
+	if err != nil {
+		t.Fatalf("parseDistModifier uniform error: %v", err)
+	}
+	if dist != core.DistributionUniform || shape != 0 {
+		t.Fatalf("uniform parse mismatch: dist=%q shape=%v", dist, shape)
+	}
+
+	dist, shape, err = parseDistModifier("skewLate,shape=3.5")
+	if err != nil {
+		t.Fatalf("parseDistModifier skew error: %v", err)
+	}
+	if dist != core.DistributionSkewLate || shape != 3.5 {
+		t.Fatalf("skew parse mismatch: dist=%q shape=%v", dist, shape)
 	}
 }
 

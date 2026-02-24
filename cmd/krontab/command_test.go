@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestRunDispatchBasic(t *testing.T) {
@@ -220,6 +221,45 @@ func TestRunExplainAppliesTimezoneAndSeedFromConfig(t *testing.T) {
 	}
 	if unsched, ok := parsed["unschedulable"].(bool); !ok || unsched {
 		t.Fatalf("expected schedulable decision, got unschedulable=%#v", parsed["unschedulable"])
+	}
+}
+
+func TestRunExplainAppliesSkewShapeFromConfig(t *testing.T) {
+	defaultCfg := writeTempKrontab(t, `
+0 9 * * * @tz(UTC) @win(around,90m) @dist(skewLate) name=backup command=/usr/bin/backup
+`)
+	shapedCfg := writeTempKrontab(t, `
+0 9 * * * @tz(UTC) @win(around,90m) @dist(skewLate,shape=4) name=backup command=/usr/bin/backup
+`)
+
+	parseChosen := func(cfg string) time.Time {
+		stdout, _ := captureOutput(t, func() {
+			err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-03-01T09:00:00Z", "--format", "json"})
+			if err != nil {
+				t.Fatalf("runExplain error: %v", err)
+			}
+		})
+
+		var parsed map[string]any
+		if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
+			t.Fatalf("json parse error: %v", err)
+		}
+		chosenRaw, ok := parsed["chosenTime"].(string)
+		if !ok || chosenRaw == "" {
+			t.Fatalf("missing chosenTime in parsed json: %#v", parsed["chosenTime"])
+		}
+		chosen, err := time.Parse(time.RFC3339, chosenRaw)
+		if err != nil {
+			t.Fatalf("parse chosenTime: %v", err)
+		}
+		return chosen
+	}
+
+	defaultChosen := parseChosen(defaultCfg)
+	shapedChosen := parseChosen(shapedCfg)
+
+	if !shapedChosen.After(defaultChosen) {
+		t.Fatalf("expected shape=4 skewLate to choose later time: default=%s shaped=%s", defaultChosen, shapedChosen)
 	}
 }
 
