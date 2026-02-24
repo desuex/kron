@@ -20,6 +20,19 @@ func TestLintReaderValid(t *testing.T) {
 	}
 }
 
+func TestLintReaderValidQuotedSeedSalt(t *testing.T) {
+	content := `
+0 0 * * * @seed(stable,salt="team alpha") name=backup command=/usr/bin/backup
+`
+	errs, err := lintReader(strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("lintReader error: %v", err)
+	}
+	if len(errs) != 0 {
+		t.Fatalf("expected no lint errors for quoted seed salt, got: %v", errs)
+	}
+}
+
 func TestLintReaderInvalid(t *testing.T) {
 	content := `
 0 0 * * * @dist(unknown) name=Bad_Name command=
@@ -126,7 +139,10 @@ func TestValidateModifierMatrix(t *testing.T) {
 		{token: "@win(after,bad)", ok: false},
 		{token: "@dist(uniform)", ok: true},
 		{token: "@dist(normal,sigma=10m)", ok: true},
+		{token: "@dist(normal,mu=mid,sigma=10m)", ok: true},
+		{token: "@dist(normal,mu=nominal)", ok: true},
 		{token: "@dist(normal,sigma=bad)", ok: false},
+		{token: "@dist(normal,mu=bad)", ok: false},
 		{token: "@dist(skewEarly,shape=2)", ok: true},
 		{token: "@dist(skewLate,shape=2)", ok: true},
 		{token: "@dist(skewLate,shape=bad)", ok: false},

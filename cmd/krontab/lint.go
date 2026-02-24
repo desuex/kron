@@ -290,11 +290,17 @@ func validateModifier(tok string) error {
 			case "uniform":
 				return fmt.Errorf("distribution %q does not accept parameters", name)
 			case "normal":
-				if k != "sigma" {
+				switch k {
+				case "sigma":
+					if _, err := time.ParseDuration(v); err != nil {
+						return fmt.Errorf("invalid normal sigma %q", v)
+					}
+				case "mu":
+					if v != "nominal" && v != "start" && v != "mid" && v != "end" {
+						return fmt.Errorf("invalid normal mu %q", v)
+					}
+				default:
 					return fmt.Errorf("unknown normal parameter %q", k)
-				}
-				if _, err := time.ParseDuration(v); err != nil {
-					return fmt.Errorf("invalid normal sigma %q", v)
 				}
 			case "skewEarly", "skewLate":
 				if k != "shape" {

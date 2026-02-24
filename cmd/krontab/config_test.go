@@ -86,6 +86,26 @@ func TestLoadJobSettingsParsesTimezoneAndSeed(t *testing.T) {
 	}
 }
 
+func TestLoadJobSettingsParsesQuotedSeedSalt(t *testing.T) {
+	path := writeTempKrontab(t, `
+0 0 * * * @seed(stable,salt="team alpha") name=backup command=/usr/bin/backup
+`)
+
+	got, err := loadJobSettings(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err != nil {
+		t.Fatalf("loadJobSettings error: %v", err)
+	}
+	if got.Salt != "team alpha" {
+		t.Fatalf("quoted salt mismatch: got %q want %q", got.Salt, "team alpha")
+	}
+}
+
 func TestLoadJobSettingsParsesOnlyAvoidConstraints(t *testing.T) {
 	path := writeTempKrontab(t, `
 0 0 * * * @only(hours=8-10;dow=MON-FRI;dom=1-5;months=JAN-MAR;date=2026-03-02) @avoid(between=09:30-09:45;dates=2026-03-10..2026-03-12) name=backup command=/usr/bin/backup
