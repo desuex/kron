@@ -1,0 +1,93 @@
+{
+  "version": "kron-core-v1-uniform",
+  "cases": [
+    {
+      "name": "uniform_after_1h",
+      "input": {
+        "identity": "prod/db-backup",
+        "job": "prod/db-backup",
+        "periodStart": "2026-03-01T00:00:00Z",
+        "window": "1h0m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-01T00:00:00Z",
+        "periodKey": "2026-03-01T00:00:00Z",
+        "windowStart": "2026-03-01T00:00:00Z",
+        "windowEnd": "2026-03-01T01:00:00Z",
+        "seedHash": "4279dd7a284efb4a887f4eb154288b5d14c90a4507251b6ae4f59b877b19ed0f",
+        "chosenTime": "2026-03-01T00:58:29Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "uniform_before_2h",
+      "input": {
+        "identity": "batch/nightly",
+        "job": "batch/nightly",
+        "periodStart": "2026-03-02T10:00:00Z",
+        "window": "2h0m0s",
+        "mode": "before",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-02T10:00:00Z",
+        "periodKey": "2026-03-02T10:00:00Z",
+        "windowStart": "2026-03-02T08:00:00Z",
+        "windowEnd": "2026-03-02T10:00:00Z",
+        "seedHash": "0caaac6620327d09c5fc3f02d4fdc933bbc3e57d4f517090f4bb87a2dfa703c8",
+        "chosenTime": "2026-03-02T08:21:24Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "uniform_center_90m",
+      "input": {
+        "identity": "msgs/paris",
+        "job": "msgs/paris",
+        "periodStart": "2026-03-02T09:00:00Z",
+        "window": "1h30m0s",
+        "mode": "center",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-02T09:00:00Z",
+        "periodKey": "2026-03-02T09:00:00Z",
+        "windowStart": "2026-03-02T08:15:00Z",
+        "windowEnd": "2026-03-02T09:45:00Z",
+        "seedHash": "59fb57aec321eab395a66d7a210a895043ae2aa52706c28c129ae5b279f3bb2d",
+        "chosenTime": "2026-03-02T08:33:22Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "uniform_zero_window",
+      "input": {
+        "identity": "exact/nojitter",
+        "job": "exact/nojitter",
+        "periodStart": "2026-01-01T00:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-01-01T00:00:00Z",
+        "periodKey": "2026-01-01T00:00:00Z",
+        "windowStart": "2026-01-01T00:00:00Z",
+        "windowEnd": "2026-01-01T00:00:00Z",
+        "seedHash": "8b0e1ef5c9c9886e07842b8f00c04697f5257c68188a33de362a414012b4eb84",
+        "chosenTime": "2026-01-01T00:00:00Z",
+        "attempts": 0
+      }
+    }
+  ]
+}

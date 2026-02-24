@@ -1,0 +1,51 @@
+{
+  "version": "kron-core-v1-seed-strategy",
+  "cases": [
+    {
+      "name": "uniform_daily_seed_strategy",
+      "input": {
+        "identity": "daily/test",
+        "job": "daily/test",
+        "periodStart": "2026-03-01T00:00:00Z",
+        "timezone": "UTC",
+        "window": "1h0m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "daily",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-01T00:00:00Z",
+        "periodKey": "2026-03-01",
+        "windowStart": "2026-03-01T00:00:00Z",
+        "windowEnd": "2026-03-01T01:00:00Z",
+        "seedHash": "3a1cbafc74e05e46dc6a4eff53a9d71da286eda9585a70c5c19bd43c52763161",
+        "chosenTime": "2026-03-01T00:21:10Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "uniform_weekly_seed_strategy",
+      "input": {
+        "identity": "weekly/test",
+        "job": "weekly/test",
+        "periodStart": "2026-03-01T00:00:00Z",
+        "timezone": "UTC",
+        "window": "1h0m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "weekly",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-01T00:00:00Z",
+        "periodKey": "2026-W09",
+        "windowStart": "2026-03-01T00:00:00Z",
+        "windowEnd": "2026-03-01T01:00:00Z",
+        "seedHash": "4a8f4cd87a04f42afa0c358db80ec21b64da61360f8a350d6ebda2b86c8828b5",
+        "chosenTime": "2026-03-01T00:08:52Z",
+        "attempts": 1
+      }
+    }
+  ]
+}

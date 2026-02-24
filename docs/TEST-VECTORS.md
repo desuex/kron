@@ -4,6 +4,26 @@
 
 These test vectors are defined against a fixed, fully specified core algorithm set.
 
+## Machine-readable vectors
+
+The executable golden vectors used by `kron-core` tests live in:
+
+* `core/testdata/vectors/v1.json`
+* `core/testdata/vectors/v2.json`
+* `core/testdata/vectors/v3.json`
+* `core/testdata/vectors/v4.json`
+* `core/testdata/vectors/v5.json`
+* `core/testdata/vectors/v6.json`
+
+Current implementation coverage in that file focuses on implemented MVP behavior:
+
+* `uniform`, `skewEarly`, and `skewLate` distributions
+* `after`, `before`, and `around`/`center` window behavior
+* zero-duration window behavior
+* seed strategies (`stable`, `daily`, `weekly`)
+* constraint handling (`hours`, `dow`, `between`, `dom`, `months`, `date`/`dates`) and unschedulable outcomes
+* edge cases: timezone period-key boundaries and odd `around` durations
+
 ### Seed hash
 
 * `HASH = SHA-256`
@@ -222,6 +242,19 @@ If no candidate satisfies constraints after `MaxAttempts`, the period is `unsche
 * `ChosenTime`: empty
 * `Unschedulable`: `true`
 * `Reason`: `no candidate accepted within MaxAttempts`
+
+---
+
+### V6 — calendar constraints (`dom`, `months`, `date`/`dates`) in zero-window cases
+
+`v6.json` adds deterministic zero-window vectors to validate day/month/date-range constraint behavior.
+
+Coverage in this vector set:
+
+* schedulable candidate with combined `Only(dom, months, dates)`
+* unschedulable candidate with `Avoid(dom)`
+* unschedulable candidate with `Avoid(months)`
+* unschedulable candidate with `Avoid(dates range)`
 
 ---
 

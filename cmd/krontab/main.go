@@ -65,7 +65,7 @@ func runExplain(args []string) error {
 	at := fs.String("at", "", "period start timestamp (RFC3339)")
 	window := fs.Duration("window", time.Hour, "window duration")
 	mode := fs.String("mode", string(core.WindowModeAfter), "window mode: after|before|center")
-	dist := fs.String("dist", string(core.DistributionUniform), "distribution (MVP: uniform)")
+	dist := fs.String("dist", string(core.DistributionUniform), "distribution: uniform|skewEarly|skewLate")
 	format := fs.String("format", "text", "output format: text|json")
 
 	if err := fs.Parse(parseArgs); err != nil {
@@ -81,9 +81,12 @@ func runExplain(args []string) error {
 	}
 
 	settings := explainSettings{
-		Window: *window,
-		Mode:   core.WindowMode(*mode),
-		Dist:   core.Distribution(*dist),
+		Window:       *window,
+		Mode:         core.WindowMode(*mode),
+		Dist:         core.Distribution(*dist),
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+		Constraints:  core.ConstraintSpec{},
 	}
 	if *file != "" {
 		var loadErr error
@@ -97,11 +100,15 @@ func runExplain(args []string) error {
 	}
 
 	decision, err := core.Decide(core.DecideInput{
-		Job:         job,
-		PeriodStart: periodStart,
-		Window:      settings.Window,
-		Mode:        settings.Mode,
-		Dist:        settings.Dist,
+		Job:          job,
+		PeriodStart:  periodStart,
+		Window:       settings.Window,
+		Mode:         settings.Mode,
+		Dist:         settings.Dist,
+		Timezone:     settings.Timezone,
+		SeedStrategy: settings.SeedStrategy,
+		Salt:         settings.Salt,
+		Constraints:  settings.Constraints,
 	})
 	if err != nil {
 		return err
@@ -164,9 +171,12 @@ func runNext(args []string) error {
 	}
 
 	def, err := loadJobDefinition(*file, job, explainSettings{
-		Window: 0,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       0,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+		Constraints:  core.ConstraintSpec{},
 	})
 	if err != nil {
 		if errors.Is(err, errJobNotFound) {
@@ -183,11 +193,15 @@ func runNext(args []string) error {
 	decisions := make([]core.Decision, 0, len(periods))
 	for _, period := range periods {
 		d, err := core.Decide(core.DecideInput{
-			Job:         job,
-			PeriodStart: period,
-			Window:      def.Settings.Window,
-			Mode:        def.Settings.Mode,
-			Dist:        def.Settings.Dist,
+			Job:          job,
+			PeriodStart:  period,
+			Window:       def.Settings.Window,
+			Mode:         def.Settings.Mode,
+			Dist:         def.Settings.Dist,
+			Timezone:     def.Settings.Timezone,
+			SeedStrategy: def.Settings.SeedStrategy,
+			Salt:         def.Settings.Salt,
+			Constraints:  def.Settings.Constraints,
 		})
 		if err != nil {
 			return err
@@ -331,6 +345,6 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Usage:")
 	fmt.Println("  krontab lint --file <path> [--format text|json]")
-	fmt.Println("  krontab explain <job> --at <RFC3339> [--file <path>] [--window <duration>] [--mode after|before|center] [--dist uniform] [--format text|json]")
+	fmt.Println("  krontab explain <job> --at <RFC3339> [--file <path>] [--window <duration>] [--mode after|before|center] [--dist uniform|skewEarly|skewLate] [--format text|json]")
 	fmt.Println("  krontab next <job> --file <path> [--count N] [--at <RFC3339>] [--format text|json]")
 }

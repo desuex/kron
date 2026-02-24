@@ -197,7 +197,7 @@ func validateEntry(tokens []string) (string, []string) {
 
 	fieldStart := -1
 	for i, tok := range tokens {
-		if strings.Contains(tok, "=") {
+		if isFieldToken(tok) {
 			fieldStart = i
 			break
 		}
@@ -227,6 +227,10 @@ func validateEntry(tokens []string) (string, []string) {
 	return name, errs
 }
 
+func isFieldToken(tok string) bool {
+	return strings.Contains(tok, "=") && !strings.HasPrefix(tok, "@")
+}
+
 func validateModifier(tok string) error {
 	if !strings.HasPrefix(tok, "@") {
 		return fmt.Errorf("unexpected token before fields: %q", tok)
@@ -246,7 +250,7 @@ func validateModifier(tok string) error {
 
 	switch name {
 	case "tz":
-		if strings.Contains(body, " ") {
+		if _, err := time.LoadLocation(body); err != nil {
 			return fmt.Errorf("invalid timezone %q", body)
 		}
 		return nil
@@ -283,28 +287,36 @@ func validateModifier(tok string) error {
 			k := kv[0]
 			v := kv[1]
 			switch name {
+			case "uniform":
+				return fmt.Errorf("distribution %q does not accept parameters", name)
 			case "normal":
-				if k == "sigma" {
-					if _, err := time.ParseDuration(v); err != nil {
-						return fmt.Errorf("invalid normal sigma %q", v)
-					}
+				if k != "sigma" {
+					return fmt.Errorf("unknown normal parameter %q", k)
+				}
+				if _, err := time.ParseDuration(v); err != nil {
+					return fmt.Errorf("invalid normal sigma %q", v)
 				}
 			case "skewEarly", "skewLate":
-				if k == "shape" {
-					f, err := strconv.ParseFloat(v, 64)
-					if err != nil || f <= 0 {
-						return fmt.Errorf("invalid shape %q", v)
-					}
+				if k != "shape" {
+					return fmt.Errorf("unknown %s parameter %q", name, k)
+				}
+				f, err := strconv.ParseFloat(v, 64)
+				if err != nil || f <= 0 {
+					return fmt.Errorf("invalid shape %q", v)
 				}
 			case "exponential":
-				if k == "lambda" {
+				switch k {
+				case "lambda":
 					f, err := strconv.ParseFloat(v, 64)
 					if err != nil || f <= 0 {
 						return fmt.Errorf("invalid lambda %q", v)
 					}
-				}
-				if k == "dir" && v != "early" && v != "late" {
-					return fmt.Errorf("invalid exponential dir %q", v)
+				case "dir":
+					if v != "early" && v != "late" {
+						return fmt.Errorf("invalid exponential dir %q", v)
+					}
+				default:
+					return fmt.Errorf("unknown exponential parameter %q", k)
 				}
 			}
 		}
@@ -322,6 +334,9 @@ func validateModifier(tok string) error {
 			kv := strings.SplitN(p, "=", 2)
 			if len(kv) != 2 || kv[0] == "" {
 				return fmt.Errorf("invalid seed parameter %q", p)
+			}
+			if kv[0] != "salt" {
+				return fmt.Errorf("unknown seed key %q", kv[0])
 			}
 		}
 		return nil
@@ -352,8 +367,8 @@ func validateModifier(tok string) error {
 		}
 		return nil
 	case "avoid", "only":
-		if strings.TrimSpace(body) == "" {
-			return fmt.Errorf("%s spec cannot be empty", name)
+		if _, err := parseConstraintSpec(body); err != nil {
+			return err
 		}
 		return nil
 	default:

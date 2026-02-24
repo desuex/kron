@@ -171,8 +171,18 @@ func TestRunExplainPaths(t *testing.T) {
 	}
 
 	err = runExplain([]string{"backup", "--at", "2026-02-24T10:00:00Z", "--mode", "bad"})
-	if err == nil || !strings.Contains(err.Error(), "invalid mode") {
+	if err == nil || !strings.Contains(err.Error(), "invalid window mode") {
 		t.Fatalf("expected invalid mode error, got %v", err)
+	}
+
+	stdout, _ = captureOutput(t, func() {
+		err := runExplain([]string{"backup", "--at", "2026-02-24T10:00:00Z", "--window", "30m", "--dist", "skewLate"})
+		if err != nil {
+			t.Fatalf("runExplain error: %v", err)
+		}
+	})
+	if !strings.Contains(stdout, "distribution: skewLate") {
+		t.Fatalf("expected skewLate in output, got %q", stdout)
 	}
 
 	err = runExplain([]string{"missing", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
@@ -183,6 +193,33 @@ func TestRunExplainPaths(t *testing.T) {
 	err = runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "bad"})
 	if err == nil || !strings.Contains(err.Error(), "invalid --format value") {
 		t.Fatalf("expected invalid format error, got %v", err)
+	}
+}
+
+func TestRunExplainAppliesTimezoneAndSeedFromConfig(t *testing.T) {
+	cfg := writeTempKrontab(t, `
+0 9 * * * @tz(America/New_York) @win(after,0s) @seed(daily,salt=nyc) @only(hours=9;dow=TUE) name=backup command=/usr/bin/backup
+`)
+
+	stdout, _ := captureOutput(t, func() {
+		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T14:00:00Z", "--format", "json"})
+		if err != nil {
+			t.Fatalf("runExplain error: %v", err)
+		}
+	})
+
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
+		t.Fatalf("json parse error: %v", err)
+	}
+	if parsed["chosenTime"] != "2026-02-24T14:00:00Z" {
+		t.Fatalf("chosenTime mismatch: got %#v", parsed["chosenTime"])
+	}
+	if parsed["seedStrategy"] != "daily" {
+		t.Fatalf("seedStrategy mismatch: got %#v", parsed["seedStrategy"])
+	}
+	if unsched, ok := parsed["unschedulable"].(bool); !ok || unsched {
+		t.Fatalf("expected schedulable decision, got unschedulable=%#v", parsed["unschedulable"])
 	}
 }
 

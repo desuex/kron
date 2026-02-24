@@ -1,0 +1,73 @@
+{
+  "version": "kron-core-v1-edge-cases",
+  "cases": [
+    {
+      "name": "daily_seed_timezone_day_boundary",
+      "input": {
+        "identity": "daily/edge-la",
+        "job": "daily/edge-la",
+        "periodStart": "2026-03-01T00:30:00Z",
+        "timezone": "America/Los_Angeles",
+        "window": "30m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "daily",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-01T00:30:00Z",
+        "periodKey": "2026-02-28",
+        "windowStart": "2026-03-01T00:30:00Z",
+        "windowEnd": "2026-03-01T01:00:00Z",
+        "seedHash": "d6807b8800901a8fb1be0cc659d2633bf3265eb231a1821ce1667d3e0a8a770f",
+        "chosenTime": "2026-03-01T00:54:54Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "weekly_seed_iso_boundary",
+      "input": {
+        "identity": "weekly/edge-tokyo",
+        "job": "weekly/edge-tokyo",
+        "periodStart": "2026-12-31T23:30:00Z",
+        "timezone": "Asia/Tokyo",
+        "window": "1h0m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "weekly",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-12-31T23:30:00Z",
+        "periodKey": "2026-W53",
+        "windowStart": "2026-12-31T23:30:00Z",
+        "windowEnd": "2027-01-01T00:30:00Z",
+        "seedHash": "3fb8ad964089d085a02bf860ba8bccdb64b61a8b130a08b8bfff90ca84fe9d1e",
+        "chosenTime": "2027-01-01T00:02:46Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "around_odd_duration_window",
+      "input": {
+        "identity": "around/odd-duration",
+        "job": "around/odd-duration",
+        "periodStart": "2026-03-05T12:00:00Z",
+        "window": "1h1m1s",
+        "mode": "around",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-05T12:00:00Z",
+        "periodKey": "2026-03-05T12:00:00Z",
+        "windowStart": "2026-03-05T11:29:29Z",
+        "windowEnd": "2026-03-05T12:30:30Z",
+        "seedHash": "373323945eae5164beab6a959a8c38f293e0f87ae8d978bc6614ec035054527e",
+        "chosenTime": "2026-03-05T11:43:17Z",
+        "attempts": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "version": "kron-core-v1-constraints",
+  "cases": [
+    {
+      "name": "constraints_only_hour_zero_window",
+      "input": {
+        "identity": "constraint/ok",
+        "job": "constraint/ok",
+        "periodStart": "2026-02-24T10:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "onlyHours": [10]
+      },
+      "expected": {
+        "periodId": "2026-02-24T10:00:00Z",
+        "periodKey": "2026-02-24T10:00:00Z",
+        "windowStart": "2026-02-24T10:00:00Z",
+        "windowEnd": "2026-02-24T10:00:00Z",
+        "seedHash": "7a91ec4a5919884d927720e24c68791ec8d5adfeef0c8648bc48bac23a824994",
+        "chosenTime": "2026-02-24T10:00:00Z",
+        "attempts": 0,
+        "unschedulable": false
+      }
+    },
+    {
+      "name": "constraints_unschedulable_zero_window",
+      "input": {
+        "identity": "constraint/unsched-zero",
+        "job": "constraint/unsched-zero",
+        "periodStart": "2026-02-24T10:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "onlyHours": [11]
+      },
+      "expected": {
+        "periodId": "2026-02-24T10:00:00Z",
+        "periodKey": "2026-02-24T10:00:00Z",
+        "windowStart": "2026-02-24T10:00:00Z",
+        "windowEnd": "2026-02-24T10:00:00Z",
+        "seedHash": "1de076d2660cef65520a8f6751b2857fd20b3834fbc3e929a70f09adabc4dc90",
+        "chosenTime": "",
+        "attempts": 0,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    },
+    {
+      "name": "constraints_unschedulable_sampling_budget",
+      "input": {
+        "identity": "constraint/unsched-loop",
+        "job": "constraint/unsched-loop",
+        "periodStart": "2026-02-24T10:00:00Z",
+        "window": "1h0m0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "onlyHours": [12]
+      },
+      "expected": {
+        "periodId": "2026-02-24T10:00:00Z",
+        "periodKey": "2026-02-24T10:00:00Z",
+        "windowStart": "2026-02-24T10:00:00Z",
+        "windowEnd": "2026-02-24T11:00:00Z",
+        "seedHash": "d75bf053ee2e56b04267f9acfa9d8002e1f1d8e18e0d25fcbc5a1fcaf2a684c8",
+        "chosenTime": "",
+        "attempts": 64,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    },
+    {
+      "name": "constraints_only_dow_zero_window",
+      "input": {
+        "identity": "constraint/dow-only",
+        "job": "constraint/dow-only",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "onlyDow": [1]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "32aa605b9652495e515cf9126f4e415fbc66ee918b8f10055b9f3cf9d9f251fd",
+        "chosenTime": "2026-03-02T12:00:00Z",
+        "attempts": 0,
+        "unschedulable": false
+      }
+    },
+    {
+      "name": "constraints_avoid_between_zero_window",
+      "input": {
+        "identity": "constraint/between-avoid",
+        "job": "constraint/between-avoid",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "avoidBetween": [
+          {
+            "startMinute": 720,
+            "endMinute": 720
+          }
+        ]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "3dcb2dfccd40e506615ed29c4b1a1098e980d2845944ae08387e8c4f33108c0d",
+        "chosenTime": "",
+        "attempts": 0,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    }
+  ]
+}

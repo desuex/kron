@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -16,9 +17,11 @@ func TestLoadJobSettingsUsesModifiers(t *testing.T) {
 `)
 
 	got, err := loadJobSettings(path, "backup", explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
 		t.Fatalf("loadJobSettings error: %v", err)
@@ -34,21 +37,96 @@ func TestLoadJobSettingsUsesModifiers(t *testing.T) {
 	}
 }
 
+func TestLoadJobSettingsAcceptsSkewDistribution(t *testing.T) {
+	path := writeTempKrontab(t, `
+0 0 * * * @win(after,30m) @dist(skewEarly,shape=2.5) name=backup command=/usr/bin/backup
+`)
+
+	got, err := loadJobSettings(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err != nil {
+		t.Fatalf("loadJobSettings error: %v", err)
+	}
+	if got.Dist != core.DistributionSkewEarly {
+		t.Fatalf("dist mismatch: got %s want %s", got.Dist, core.DistributionSkewEarly)
+	}
+}
+
+func TestLoadJobSettingsParsesTimezoneAndSeed(t *testing.T) {
+	path := writeTempKrontab(t, `
+0 0 * * * @tz(America/New_York) @seed(daily,salt=team-a) name=backup command=/usr/bin/backup
+`)
+
+	got, err := loadJobSettings(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err != nil {
+		t.Fatalf("loadJobSettings error: %v", err)
+	}
+	if got.Timezone != "America/New_York" {
+		t.Fatalf("timezone mismatch: got %q want %q", got.Timezone, "America/New_York")
+	}
+	if got.SeedStrategy != core.SeedStrategyDaily {
+		t.Fatalf("seed strategy mismatch: got %q want %q", got.SeedStrategy, core.SeedStrategyDaily)
+	}
+	if got.Salt != "team-a" {
+		t.Fatalf("salt mismatch: got %q want %q", got.Salt, "team-a")
+	}
+}
+
+func TestLoadJobSettingsParsesOnlyAvoidConstraints(t *testing.T) {
+	path := writeTempKrontab(t, `
+0 0 * * * @only(hours=8-10;dow=MON-FRI;dom=1-5;months=JAN-MAR;date=2026-03-02) @avoid(between=09:30-09:45;dates=2026-03-10..2026-03-12) name=backup command=/usr/bin/backup
+`)
+
+	got, err := loadJobSettings(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+		Constraints:  core.ConstraintSpec{},
+	})
+	if err != nil {
+		t.Fatalf("loadJobSettings error: %v", err)
+	}
+	if len(got.Constraints.OnlyHours) == 0 ||
+		len(got.Constraints.OnlyDOW) == 0 ||
+		len(got.Constraints.OnlyDOM) == 0 ||
+		len(got.Constraints.OnlyMonths) == 0 ||
+		len(got.Constraints.OnlyDates) == 0 ||
+		len(got.Constraints.AvoidBetween) == 0 ||
+		len(got.Constraints.AvoidDates) == 0 {
+		t.Fatalf("expected parsed constraints, got %+v", got.Constraints)
+	}
+}
+
 func TestLoadJobSettingsFallsBackWithoutModifiers(t *testing.T) {
 	path := writeTempKrontab(t, `
 0 0 * * * name=backup command=/usr/bin/backup
 `)
 
 	fallback := explainSettings{
-		Window: 2 * time.Hour,
-		Mode:   core.WindowModeBefore,
-		Dist:   core.DistributionUniform,
+		Window:       2 * time.Hour,
+		Mode:         core.WindowModeBefore,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	}
 	got, err := loadJobSettings(path, "backup", fallback)
 	if err != nil {
 		t.Fatalf("loadJobSettings error: %v", err)
 	}
-	if got != fallback {
+	if !reflect.DeepEqual(got, fallback) {
 		t.Fatalf("settings mismatch: got %+v want %+v", got, fallback)
 	}
 }
@@ -59,9 +137,11 @@ func TestLoadJobSettingsNotFound(t *testing.T) {
 `)
 
 	_, err := loadJobSettings(path, "missing", explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if !errors.Is(err, errJobNotFound) {
 		t.Fatalf("expected errJobNotFound, got: %v", err)
@@ -74,9 +154,11 @@ func TestLoadJobSettingsRejectsUnsupportedDistribution(t *testing.T) {
 `)
 
 	_, err := loadJobSettings(path, "backup", explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err == nil {
 		t.Fatalf("expected error")
@@ -90,9 +172,11 @@ func TestLoadJobSettingsDuplicateJob(t *testing.T) {
 `)
 
 	_, err := loadJobSettings(path, "backup", explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err == nil {
 		t.Fatalf("expected duplicate job error")
@@ -105,12 +189,17 @@ func TestLoadJobDefinitionIncludesScheduleAndTimezone(t *testing.T) {
 `)
 
 	def, err := loadJobDefinition(path, "backup", explainSettings{
-		Window: 0,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       0,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
 		t.Fatalf("loadJobDefinition error: %v", err)
+	}
+	if def.Settings.Timezone != "America/New_York" {
+		t.Fatalf("timezone mismatch: got %q", def.Settings.Timezone)
 	}
 
 	next, err := def.Schedule.NextAfter(time.Date(2026, 2, 24, 13, 0, 0, 0, time.UTC))
@@ -161,9 +250,11 @@ func TestConfigHelpers(t *testing.T) {
 
 func TestParseExplainModifiersErrors(t *testing.T) {
 	fallback := explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	}
 
 	if _, err := parseExplainModifiers([]string{"@win(after)"}, fallback); err == nil {
@@ -181,6 +272,12 @@ func TestParseExplainModifiersErrors(t *testing.T) {
 	if _, err := parseExplainModifiers([]string{"@dist(normal)"}, fallback); err == nil {
 		t.Fatalf("expected unsupported distribution error")
 	}
+	if _, err := parseExplainModifiers([]string{"@seed(stable,foo=bar)"}, fallback); err == nil {
+		t.Fatalf("expected unknown seed key error")
+	}
+	if _, err := parseExplainModifiers([]string{"@tz(Not/AZone)"}, fallback); err == nil {
+		t.Fatalf("expected invalid timezone error")
+	}
 }
 
 func TestLoadJobDefinitionInvalidLine(t *testing.T) {
@@ -188,9 +285,11 @@ func TestLoadJobDefinitionInvalidLine(t *testing.T) {
 0 0 * * * @win(after,bad) name=backup command=/bin/echo
 `)
 	_, err := loadJobDefinition(path, "backup", explainSettings{
-		Window: time.Hour,
-		Mode:   core.WindowModeAfter,
-		Dist:   core.DistributionUniform,
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err == nil || !strings.Contains(err.Error(), "invalid @win duration") {
 		t.Fatalf("expected invalid win duration error, got %v", err)

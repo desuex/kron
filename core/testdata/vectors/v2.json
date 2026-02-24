@@ -1,0 +1,49 @@
+{
+  "version": "kron-core-v1-skew",
+  "cases": [
+    {
+      "name": "skew_early_center_90m",
+      "input": {
+        "identity": "msgs/skew-early",
+        "job": "msgs/skew-early",
+        "periodStart": "2026-03-03T09:00:00Z",
+        "window": "1h30m0s",
+        "mode": "center",
+        "distribution": "skewEarly",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-03T09:00:00Z",
+        "periodKey": "2026-03-03T09:00:00Z",
+        "windowStart": "2026-03-03T08:15:00Z",
+        "windowEnd": "2026-03-03T09:45:00Z",
+        "seedHash": "900587867615374a17aced78f3ce26c63ec0c01de5cd8c839a4f9fa599345179",
+        "chosenTime": "2026-03-03T08:19:18Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "skew_late_center_90m",
+      "input": {
+        "identity": "msgs/skew-late",
+        "job": "msgs/skew-late",
+        "periodStart": "2026-03-03T09:00:00Z",
+        "window": "1h30m0s",
+        "mode": "center",
+        "distribution": "skewLate",
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-03T09:00:00Z",
+        "periodKey": "2026-03-03T09:00:00Z",
+        "windowStart": "2026-03-03T08:15:00Z",
+        "windowEnd": "2026-03-03T09:45:00Z",
+        "seedHash": "f2d047fa2ba64c65f3747dafbfabc96cff1ae399abe4fa52e0257cc5cb872d39",
+        "chosenTime": "2026-03-03T08:46:47Z",
+        "attempts": 1
+      }
+    }
+  ]
+}

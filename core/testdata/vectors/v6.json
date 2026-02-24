@@ -1,0 +1,116 @@
+{
+  "version": "kron-core-v1-dom-month-date",
+  "cases": [
+    {
+      "name": "constraints_only_dom_month_date_zero_window",
+      "input": {
+        "identity": "constraint/dom-month-date-only",
+        "job": "constraint/dom-month-date-only",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "onlyDom": [2],
+        "onlyMonths": [3],
+        "onlyDates": [
+          {
+            "startDay": 20260301,
+            "endDay": 20260305
+          }
+        ]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "b45e28886e2091ce17c5b760108f203b625780bb19562d5cef5c087c543d4340",
+        "chosenTime": "2026-03-02T12:00:00Z",
+        "attempts": 0,
+        "unschedulable": false
+      }
+    },
+    {
+      "name": "constraints_avoid_dom_zero_window",
+      "input": {
+        "identity": "constraint/dom-avoid",
+        "job": "constraint/dom-avoid",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "avoidDom": [2]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "eebc0033b342551b13e12db0c803c76f2f587b4ab3b73db8c9eb8eea25a11d7c",
+        "chosenTime": "",
+        "attempts": 0,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    },
+    {
+      "name": "constraints_avoid_month_zero_window",
+      "input": {
+        "identity": "constraint/month-avoid",
+        "job": "constraint/month-avoid",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "avoidMonths": [3]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "b04ffb562cd44d08e7fab38772321f5581784af101467ea14137f0ce0ac7e458",
+        "chosenTime": "",
+        "attempts": 0,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    },
+    {
+      "name": "constraints_avoid_dates_range_zero_window",
+      "input": {
+        "identity": "constraint/avoid-date-range",
+        "job": "constraint/avoid-date-range",
+        "periodStart": "2026-03-02T12:00:00Z",
+        "window": "0s",
+        "mode": "after",
+        "distribution": "uniform",
+        "seedStrategy": "stable",
+        "salt": "",
+        "avoidDates": [
+          {
+            "startDay": 20260301,
+            "endDay": 20260303
+          }
+        ]
+      },
+      "expected": {
+        "periodId": "2026-03-02T12:00:00Z",
+        "periodKey": "2026-03-02T12:00:00Z",
+        "windowStart": "2026-03-02T12:00:00Z",
+        "windowEnd": "2026-03-02T12:00:00Z",
+        "seedHash": "380ac56418b889cf67bd1407332c422bd3037d19b56e8b4a7843def901f54606",
+        "chosenTime": "",
+        "attempts": 0,
+        "unschedulable": true,
+        "reason": "no candidate accepted within MaxAttempts"
+      }
+    }
+  ]
+}

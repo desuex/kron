@@ -16,3 +16,8 @@ func (s *SplitMix64) Uint64() uint64 {
 	z = (z ^ (z >> 27)) * 0x94D049BB133111EB
 	return z ^ (z >> 31)
 }
+
+// Float64 returns a value in [0,1) using the high 53 bits of Uint64 output.
+func (s *SplitMix64) Float64() float64 {
+	return float64(s.Uint64()>>11) / float64(uint64(1)<<53)
+}

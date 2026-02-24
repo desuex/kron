@@ -113,6 +113,7 @@ func TestValidateModifierMatrix(t *testing.T) {
 		{token: "@tz(UTC)", ok: true},
 		{token: "@tz(America/New_York)", ok: true},
 		{token: "@tz(Bad TZ)", ok: false},
+		{token: "@tz(Not/AZone)", ok: false},
 		{token: "@win(after,1h)", ok: true},
 		{token: "@win(around,45m)", ok: true},
 		{token: "@win(center,45m)", ok: true},
@@ -130,11 +131,14 @@ func TestValidateModifierMatrix(t *testing.T) {
 		{token: "@dist(exponential,lambda=1.2,dir=bad)", ok: false},
 		{token: "@dist(unknown)", ok: false},
 		{token: "@dist(uniform,bad)", ok: false},
+		{token: "@dist(uniform,shape=2)", ok: false},
+		{token: "@dist(skewLate,foo=1)", ok: false},
 		{token: "@seed(stable)", ok: true},
 		{token: "@seed(daily,salt=team)", ok: true},
 		{token: "@seed(weekly,salt=team)", ok: true},
 		{token: "@seed(bad)", ok: false},
 		{token: "@seed(stable,bad)", ok: false},
+		{token: "@seed(stable,foo=bar)", ok: false},
 		{token: "@policy(concurrency=allow,deadline=1m,suspend=false)", ok: true},
 		{token: "@policy(concurrency=bad)", ok: false},
 		{token: "@policy(deadline=bad)", ok: false},
@@ -143,6 +147,17 @@ func TestValidateModifierMatrix(t *testing.T) {
 		{token: "@policy(bad)", ok: false},
 		{token: "@avoid(dow=MON-FRI)", ok: true},
 		{token: "@only(hours=8-17)", ok: true},
+		{token: "@only(between=09:00-17:00)", ok: true},
+		{token: "@only(dom=1-5)", ok: true},
+		{token: "@only(months=JAN-MAR)", ok: true},
+		{token: "@avoid(date=2026-03-02)", ok: true},
+		{token: "@avoid(dates=2026-03-10..2026-03-12)", ok: true},
+		{token: "@avoid(dom=0)", ok: false},
+		{token: "@avoid(months=FOO)", ok: false},
+		{token: "@avoid(date=bad)", ok: false},
+		{token: "@avoid(dates=2026-03-10..2026-03-01)", ok: false},
+		{token: "@avoid(between=17:00-09:00)", ok: false},
+		{token: "@avoid(unknown=x)", ok: false},
 		{token: "@avoid( )", ok: false},
 		{token: "@only( )", ok: false},
 		{token: "@bad(x)", ok: false},
@@ -221,5 +236,14 @@ func TestValidateFieldsMatrix(t *testing.T) {
 	_, errs = validateFields([]string{"name=backup", "name=backup2", "command=/bin/echo"})
 	if len(errs) == 0 {
 		t.Fatalf("expected duplicate field error")
+	}
+}
+
+func TestIsFieldToken(t *testing.T) {
+	if !isFieldToken("name=backup") {
+		t.Fatalf("expected name token to be field")
+	}
+	if isFieldToken("@dist(skewEarly,shape=2.5)") {
+		t.Fatalf("expected modifier token not to be treated as field")
 	}
 }
