@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -140,5 +141,20 @@ func TestNextNRejectsNonPositiveCount(t *testing.T) {
 	}
 	if _, err := spec.NextN(time.Now(), 0); err == nil {
 		t.Fatalf("expected count error")
+	}
+}
+
+func TestCronNextAfterNoMatchWithinTenYears(t *testing.T) {
+	spec, err := parseCronSpec([5]string{"0", "0", "31", "2", "*"}, "UTC")
+	if err != nil {
+		t.Fatalf("parseCronSpec error: %v", err)
+	}
+
+	_, err = spec.NextAfter(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
+	if err == nil {
+		t.Fatalf("expected no-match error")
+	}
+	if !strings.Contains(err.Error(), "no matching time found within 10 years") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

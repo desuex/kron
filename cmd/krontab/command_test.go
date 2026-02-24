@@ -318,6 +318,33 @@ func TestRunNextPaths(t *testing.T) {
 	}
 }
 
+func TestRunNextUnschedulableDecision(t *testing.T) {
+	cfg := writeTempKrontab(t, `
+*/30 * * * * @win(after,0s) @only(hours=9) name=backup command=/usr/bin/backup
+`)
+
+	stdout, _ := captureOutput(t, func() {
+		err := runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+		if err != nil {
+			t.Fatalf("runNext error: %v", err)
+		}
+	})
+
+	var parsed nextResult
+	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
+		t.Fatalf("json parse error: %v", err)
+	}
+	if len(parsed.Decisions) != 1 {
+		t.Fatalf("expected one decision, got %d", len(parsed.Decisions))
+	}
+	if !parsed.Decisions[0].Unschedulable {
+		t.Fatalf("expected unschedulable decision, got %+v", parsed.Decisions[0])
+	}
+	if parsed.Decisions[0].Reason == "" {
+		t.Fatalf("expected unschedulable reason, got empty")
+	}
+}
+
 func TestRunDispatchExitMapping(t *testing.T) {
 	cfg := writeTempKrontab(t, `*/30 * * * * @win(after,0s) @dist(uniform) name=backup command=/usr/bin/backup`)
 

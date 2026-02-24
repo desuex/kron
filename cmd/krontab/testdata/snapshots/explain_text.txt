@@ -1,0 +1,7 @@
+job: backup
+period_start: 2026-02-24T10:00:00Z
+window: [2026-02-24T09:45:00Z, 2026-02-24T10:15:00Z)
+mode: center
+distribution: skewLate
+seed_hash: 3a3e23db82b81dc2007a74fc4012dbd5d04ffed88213b39f91ecd03c8a42c1d7
+chosen_time: 2026-02-24T10:08:31Z

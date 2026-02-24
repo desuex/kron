@@ -1,0 +1,19 @@
+{
+  "periodId": "2026-02-24T10:00:00Z",
+  "nominalTime": "2026-02-24T10:00:00Z",
+  "job": "backup",
+  "periodStart": "2026-02-24T10:00:00Z",
+  "windowStart": "2026-02-24T09:45:00Z",
+  "windowEnd": "2026-02-24T10:15:00Z",
+  "windowEndIsOpen": false,
+  "mode": "center",
+  "distribution": "skewLate",
+  "seedStrategy": "daily",
+  "periodKey": "2026-02-24",
+  "seedMaterial": "backup\n2026-02-24\nmsgs",
+  "seedHash": "3a3e23db82b81dc2007a74fc4012dbd5d04ffed88213b39f91ecd03c8a42c1d7",
+  "chosenTime": "2026-02-24T10:08:31Z",
+  "unschedulable": false,
+  "attemptCount": 1,
+  "maxAttempts": 64
+}

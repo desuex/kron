@@ -310,6 +310,31 @@ func TestParseDistModifier(t *testing.T) {
 	}
 }
 
+func TestParseSeedModifier(t *testing.T) {
+	strategy, salt, err := parseSeedModifier("weekly,salt=team-x")
+	if err != nil {
+		t.Fatalf("parseSeedModifier error: %v", err)
+	}
+	if strategy != core.SeedStrategyWeekly {
+		t.Fatalf("strategy mismatch: got %q want %q", strategy, core.SeedStrategyWeekly)
+	}
+	if salt != "team-x" {
+		t.Fatalf("salt mismatch: got %q want %q", salt, "team-x")
+	}
+
+	tests := []string{
+		"",
+		"bad",
+		"stable,badparam",
+		"daily,foo=bar",
+	}
+	for _, tt := range tests {
+		if _, _, err := parseSeedModifier(tt); err == nil {
+			t.Fatalf("expected parseSeedModifier error for %q", tt)
+		}
+	}
+}
+
 func TestLoadJobDefinitionInvalidLine(t *testing.T) {
 	path := writeTempKrontab(t, `
 0 0 * * * @win(after,bad) name=backup command=/bin/echo

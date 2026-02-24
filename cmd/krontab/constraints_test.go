@@ -50,3 +50,24 @@ func TestApplyConstraintModifier(t *testing.T) {
 		t.Fatalf("unexpected constraint spec: %+v", spec)
 	}
 }
+
+func TestConstraintHelperEdgeCases(t *testing.T) {
+	if _, err := parseDateRangeYYYYMMDD("2026-03-10"); err == nil {
+		t.Fatalf("expected date range separator error")
+	}
+	if _, err := parseDateRangeYYYYMMDD("2026-03-10..bad"); err == nil {
+		t.Fatalf("expected date range parse error")
+	}
+	if _, err := parseHHMM("24:00"); err == nil {
+		t.Fatalf("expected invalid hour error")
+	}
+	if _, err := parseBetweenRange("09:00"); err == nil {
+		t.Fatalf("expected missing between separator error")
+	}
+	if _, err := parseConstraintIntRangeSet("1,,2", 0, 23, nil, false); err == nil {
+		t.Fatalf("expected empty range element error")
+	}
+	if _, err := parseConstraintIntRangeSet("5-1", 0, 23, nil, false); err == nil {
+		t.Fatalf("expected reversed range error")
+	}
+}

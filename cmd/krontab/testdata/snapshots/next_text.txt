@@ -1,0 +1,5 @@
+job: backup
+anchor: 2026-02-24T10:07:00Z
+1. period_start=2026-02-24T10:30:00Z chosen_time=2026-02-24T10:32:21Z window=[2026-02-24T10:30:00Z, 2026-02-24T10:40:00Z) mode=after dist=uniform
+2. period_start=2026-02-24T11:00:00Z chosen_time=2026-02-24T11:04:34Z window=[2026-02-24T11:00:00Z, 2026-02-24T11:10:00Z) mode=after dist=uniform
+3. period_start=2026-02-24T11:30:00Z chosen_time=2026-02-24T11:38:04Z window=[2026-02-24T11:30:00Z, 2026-02-24T11:40:00Z) mode=after dist=uniform
