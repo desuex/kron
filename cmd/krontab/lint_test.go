@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -85,6 +86,9 @@ func TestSplitTokensErrors(t *testing.T) {
 	}
 	if _, err := splitTokens(`0 0 * * * name=backup command="abc\`); err == nil {
 		t.Fatalf("expected invalid escape error")
+	}
+	if _, err := splitTokens("   \t   "); err == nil {
+		t.Fatalf("expected empty entry error")
 	}
 }
 
@@ -236,6 +240,84 @@ func TestValidateFieldsMatrix(t *testing.T) {
 	_, errs = validateFields([]string{"name=backup", "name=backup2", "command=/bin/echo"})
 	if len(errs) == 0 {
 		t.Fatalf("expected duplicate field error")
+	}
+}
+
+func TestValidateEntryEdgeCases(t *testing.T) {
+	if _, errs := validateEntry([]string{"0", "0", "*", "*"}); len(errs) == 0 {
+		t.Fatalf("expected missing key=value fields error")
+	}
+	if _, errs := validateEntry([]string{"0", "0", "*", "name=backup"}); len(errs) == 0 {
+		t.Fatalf("expected invalid cron expression error")
+	}
+
+	_, errs := validateEntry([]string{
+		"@bad", "0", "*", "*", "*",
+		"name=backup", "command=/bin/echo",
+	})
+	if len(errs) == 0 {
+		t.Fatalf("expected invalid cron field error")
+	}
+
+	_, errs = validateEntry([]string{
+		"0", "0", "*", "*", "*",
+		"naked-token",
+		"name=backup", "command=/bin/echo",
+	})
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e, "unexpected token before fields") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected modifier-position error, got %v", errs)
+	}
+}
+
+func TestLintReaderSplitTokenError(t *testing.T) {
+	content := `0 0 * * * name=backup command="/bin/echo`
+	errs, err := lintReader(strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("lintReader error: %v", err)
+	}
+	if len(errs) == 0 {
+		t.Fatalf("expected lint errors from split token failure")
+	}
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e, "unterminated quote") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected unterminated quote error, got %v", errs)
+	}
+}
+
+type lintErrReader struct {
+	served bool
+}
+
+func (r *lintErrReader) Read(p []byte) (int, error) {
+	if !r.served {
+		r.served = true
+		line := []byte("0 0 * * * name=backup command=/bin/echo\n")
+		n := copy(p, line)
+		return n, nil
+	}
+	return 0, errors.New("boom")
+}
+
+func TestLintReaderScannerError(t *testing.T) {
+	_, err := lintReader(&lintErrReader{})
+	if err == nil {
+		t.Fatalf("expected scanner read error")
+	}
+	if !strings.Contains(err.Error(), "read file: boom") {
+		t.Fatalf("unexpected lintReader error: %v", err)
 	}
 }
 
