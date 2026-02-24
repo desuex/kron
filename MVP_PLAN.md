@@ -1,130 +1,93 @@
-# MVP_PLAN
+# MVP Plan
 
-Simple implementation plan for Kron, based on current repository state.
+This document tracks the minimum delivery path for Kron.
 
-## Current State
+## Snapshot (2026-02-24)
 
-- Specifications exist and are detailed in `docs/`.
-- `core/` is implemented for deterministic seed/PRNG/window/uniform decisions.
-- `cmd/krontab` implements `lint`, `explain`, and `next`.
-- `daemon/` and `operator/` module scaffolds are present and wired to `core`.
-- CI runs format checks, `go vet`, tests, and a 90% combined coverage threshold.
+- Milestone 1: completed
+- Milestone 2: completed
+- Milestone 3: in progress
+- Milestone 4: pending
 
-## Milestone Status (2026-02-24)
+## MVP Goal
 
-- Milestone 1 (Repository Bootstrap): completed.
-- Milestone 2 (Core Engine MVP): in progress.
-- Milestone 3 (CLI MVP): in progress.
-- Milestone 4 (MVP Freeze): pending.
-
-## MVP Scope (Simple)
-
-Build only what is needed to prove the core value: deterministic probabilistic scheduling with a usable local CLI.
+Ship a deterministic scheduling engine with a usable CLI and reproducible outputs.
 
 In scope:
-- `kron-core` minimal engine
-- `krontab` minimal CLI (`lint`, `explain`, `next`)
-- Golden-vector determinism tests
+- `core` deterministic scheduler (`kron-core`)
+- `cmd/krontab` commands: `lint`, `explain`, `next`
+- Golden vectors and deterministic tests
+- CI enforcement for formatting, vet, tests, and coverage
 
 Out of scope for MVP:
-- `krond` daemon execution loop
-- Kubernetes operator (`kron-operator`)
-- Advanced distributions (`normal`, `exponential`)
-- Full observability and hardening work
+- `krond` execution loop
+- Kubernetes controller features
+- Advanced distributions beyond implemented MVP set
+- Production observability/hardening program
 
-## Milestone 1: Repository Bootstrap (1-2 days)
+## Milestone 1: Repository Bootstrap
 
-Status: completed.
+Status: completed
 
-Deliverables:
-- Create initial directories:
-  - `core/`
-  - `cmd/krontab/`
-  - `scripts/`
-  - `.github/workflows/`
-- Initialize Go modules:
-  - `core/go.mod`
-  - root or workspace wiring for `cmd/krontab`
-- Add baseline CI:
-  - build
-  - unit test
-  - `go vet`
+Delivered:
+- Monorepo layout and module wiring
+- Baseline CI
+- Initial specs in `docs/`
 
-Exit criteria:
-- module-aware test targets pass on clean checkout.
-- CI runs green with coverage threshold enforcement.
+Exit criteria: met.
 
-## Milestone 2: Core Engine MVP (4-6 days)
+## Milestone 2: Core Engine MVP
 
-Status: in progress.
+Status: completed
 
-Implement in `core`:
-- Types for job spec, period, window, decision (implemented)
-- Seed derivation (SHA-256) (implemented)
-- SplitMix64 PRNG (implemented)
-- Window modes (`before`, `after`, `center`) (implemented)
-- Distributions:
-  - `uniform` (implemented)
-  - `skewEarly`
-  - `skewLate`
-- Candidate sampling loop with bounded attempts
-- Basic constraints support from `docs/CORE-SPEC.md`
+Delivered in `core`:
+- deterministic seed derivation and period-key strategies
+- SplitMix64 PRNG
+- window modes: `after`, `before`, `center` (`around` alias supported at CLI layer)
+- distributions: `uniform`, `skewEarly`, `skewLate`
+- deterministic sampling with bounded attempts
+- constraint evaluation with unschedulable handling
+- typed error model for invalid core inputs
+- golden vector coverage (`core/testdata/vectors/v1.json` through `v7.json`)
 
-Testing:
-- Port vectors from `docs/TEST-VECTORS.md` for implemented distributions
-- Determinism test (same input -> exact same decision)
-- Boundary tests for window and deadline behavior
+Exit criteria: met.
 
-Exit criteria:
-- All implemented vectors pass byte-for-byte.
-- Determinism tests stable across repeated runs.
+## Milestone 3: CLI MVP (`krontab`)
 
-## Milestone 3: CLI MVP (`krontab`) (2-3 days)
+Status: in progress
 
-Status: in progress.
+Current capabilities:
+- `krontab lint --file <path> [--format text|json]`
+- `krontab explain <job> --at <RFC3339> [--file <path>] [--format text|json]`
+- `krontab next <job> --file <path> [--count N] [--at <RFC3339>] [--format text|json]`
+- config-driven timezone/seed/constraint behavior in `explain` and `next`
 
-Commands:
-- `krontab lint --file <path>` (implemented)
-- `krontab explain <job> --at <RFC3339> [--format text|json]` (implemented)
-- `krontab next <job> --count N` (implemented)
-
-Behavior:
-- Parse minimal config form from `docs/KRONTAB.md`
-- Return stable, explicit errors (aligned with `docs/ERROR-MODEL.md`)
-- Output decision internals required for reproducibility
-
-Testing:
-- CLI integration tests for success/failure exit codes (implemented for `next`)
-- Snapshot tests for text and json outputs
+Remaining work:
+1. Close remaining syntax parity gaps against `docs/SYNTAX.md`.
+2. Expand integration/snapshot coverage for CLI output stability.
+3. Keep error messages and exit code behavior aligned with `docs/ERROR-MODEL.md` and `docs/CLI-SPEC.md`.
 
 Exit criteria:
-- `krontab explain` reproduces same decision for same inputs.
-- Output contract stable under repeated runs.
+- deterministic outputs for repeated invocations with identical inputs
+- stable text/json contracts covered by tests
 
-## Milestone 4: MVP Freeze (1 day)
+## Milestone 4: MVP Freeze
 
-Status: pending.
+Status: pending
 
-- Tag pre-release (`v0.1.0-alpha.1`)
-- Publish:
-  - quickstart in `README.md`
-  - implemented subset vs full roadmap matrix
+Tasks:
+- finalize MVP scope statement in docs/README
+- tag pre-release (`v0.1.0-alpha.1`)
+- publish quickstart and implemented-vs-planned matrix
 
 Exit criteria:
-- New contributor can run lint/explain locally in under 5 minutes.
+- new contributor can run setup, lint, explain, and next in under five minutes
 
-## Immediate Next Tasks (Do First)
+## Current Risks
 
-1. Implement `skewEarly` and `skewLate` distributions in `core`.
-2. Add and pass golden vectors for implemented distribution/mode combinations.
-3. Tighten `krontab` config parsing toward `SYNTAX.md` parity.
-4. Add snapshot tests for `explain` and `next` output stability.
-
-## Risks and Controls
-
-- Risk: spec breadth slows delivery.
-  - Control: enforce strict MVP scope and defer daemon/operator.
-- Risk: non-deterministic behavior from time parsing/randomness.
-  - Control: deterministic test fixtures and exact golden outputs.
-- Risk: parsing complexity in full KRONTAB.
-  - Control: support minimal subset first and fail clearly on unsupported fields.
+- Syntax breadth can expand faster than test coverage.
+  - Control: merge syntax features only with deterministic tests.
+- CLI behavior can drift from specs during rapid iteration.
+  - Control: treat docs and tests as the compatibility gate.
+- Docs quality can regress with new content.
+  - Control: keep Sphinx warnings as CI failures.

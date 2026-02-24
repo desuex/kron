@@ -1,21 +1,22 @@
 # TODO
 
-Tracking remaining specification and documentation work before implementation begins.
+Current working list after Milestone 2 completion.
 
-## Specs pending review
+## Milestone 3 (CLI MVP)
 
-- [ ] ERROR-MODEL.md — review ExecutionError edge cases (fork fails vs exec fails)
-- [ ] STATE.md — confirm crash recovery flow with real fsync semantics
-- [ ] SECURITY.md — validate privilege drop sequence on Linux vs Darwin
-- [ ] COMPAT.md — add concrete DST test cases
-- [ ] TEST-VECTORS.md — add vectors for `normal` and `exponential` distributions
-- [ ] CRD-SPEC.md — finalize Job naming scheme (`<kronjob-name>-<period-hash>`)
+- [ ] Finish remaining syntax parity gaps between `cmd/krontab` and `docs/SYNTAX.md`.
+- [ ] Add snapshot-style output tests for `krontab explain` text and JSON modes.
+- [ ] Expand integration tests for modifier combinations (`@seed`, `@tz`, `@only`, `@avoid`, `@dist` params).
+- [ ] Reconcile `docs/CLI-SPEC.md` examples with actual implemented flags and output fields.
 
-## Missing guides
+## Documentation and Quality
 
-- [ ] Deployment guide for `kron-operator` (Helm values, RBAC examples)
-- [ ] Deployment guide for `krond` (systemd unit, permissions setup)
+- [ ] Keep Read the Docs build warning-free under `sphinx-build -n -W`.
+- [ ] Add a short "implemented vs planned" matrix in `README.md`.
+- [ ] Review spec docs for any stale examples that still imply unimplemented features in MVP commands.
 
-## Structural
+## Next Milestone Preparation
 
-- [ ] Decide whether MANIFESTO.md should remain in `docs/` or move to project root
+- [ ] Define a concrete Milestone 4 freeze checklist and release criteria (`v0.1.0-alpha.1`).
+- [ ] Decide the exact API stability statement for pre-1.0 CLI output.
+- [ ] Prepare daemon/operator kickoff backlog after CLI freeze.

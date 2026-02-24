@@ -10,15 +10,25 @@ The project adheres to Semantic Versioning.
 ## [Unreleased]
 
 ### Added
-- Initial specifications
-- Repository structure
+- `kron-core` golden vector suite expanded through `v7.json`.
+- Read the Docs integration files (`.readthedocs.yaml`, `docs/conf.py`, docs requirements).
+- `docs/SETUP.md` and `docs/USAGE.md` onboarding guides.
+- CI docs build step (`sphinx-build -n -W`) in GitHub Actions.
+- Codecov upload in CI with explicit coverage file configuration.
 
 ### Changed
+- Milestone 2 (Core Engine MVP) status moved to completed.
+- Core decision engine supports deterministic `skewEarly` / `skewLate` with optional skew shape input.
+- Constraint coverage expanded (`hours`, `dow`, `dom`, `months`, `between`, `date`, `dates`).
+- README and planning documents updated to reflect current MVP scope and progress.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- Read the Docs build warnings from invalid fenced-code info strings in spec docs.
+- Read the Docs heading-level warnings in `docs/MANIFESTO.md`.
+- Go cache warning in CI by setting explicit dependency paths for `actions/setup-go`.
 
 ### Security

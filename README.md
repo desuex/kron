@@ -11,7 +11,7 @@ Kron is a scheduling system designed to eliminate synchronized execution spikes 
 It provides:
 
 - Window-based scheduling
-- Biased distributions (uniform, skewed, normal, exponential)
+- Biased distributions (`uniform`, `skewEarly`, `skewLate`)
 - Deterministic seed strategies
 - Strict idempotency guarantees
 - Transparent, human-readable decision logs
@@ -45,9 +45,9 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 
 ## Current Implementation (MVP)
 
-- `core/`: seed hashing, SplitMix64 PRNG, window computation, deterministic uniform decision selection
-- `cmd/krontab`: `lint` and `explain` commands (MVP subset)
-- CI: format check (`gofmt`), `go vet`, unit tests
+- `core/`: deterministic seed hashing, SplitMix64 PRNG, window computation, bounded candidate sampling, constraint handling, and golden vectors (`v1`-`v7`)
+- `cmd/krontab`: `lint`, `explain`, and `next` commands
+- CI: `gofmt` check, `go vet`, tests, coverage threshold, and Sphinx docs build
 
 ## Documentation
 
@@ -83,10 +83,11 @@ Reference specifications:
 
 ## Status
 
-Early development.
+Early development, active MVP delivery.
 
-Core specifications are defined.
-Implementation is in progress.
+Milestone 1 (repository bootstrap) is complete.
+Milestone 2 (core engine MVP) is complete.
+Milestone 3 (CLI MVP) is in progress.
 
 API and behavior are subject to change until v1.0.
 

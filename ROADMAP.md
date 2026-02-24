@@ -15,11 +15,11 @@ Correctness, determinism, and operational safety take priority over feature velo
 ## Progress Snapshot (2026-02-24)
 
 * Phase 0 (Repository Bootstrap): completed.
-* Phase 1 (kron-core): in progress.
+* Phase 1 (kron-core): completed.
 * Phase 2 (krontab): in progress.
-* `core` deterministic engine MVP exists for uniform scheduling.
+* `core` deterministic engine MVP is implemented and validated with golden vectors (`v1`-`v7`).
 * `krontab` implements `lint`, `explain`, and `next`.
-* CI enforces format, vet, tests, and 90% combined coverage.
+* CI enforces format, vet, tests, docs build, and 90% combined coverage.
 
 ---
 
@@ -81,8 +81,8 @@ Completed.
 
 ## Status
 
-In progress.
-Delivered so far: seed derivation, SplitMix64 PRNG, window calculation, uniform distribution, deterministic decision output, and 90%+ core coverage.
+Completed.
+Delivered: seed derivation, SplitMix64 PRNG, window calculation, implemented MVP distributions (`uniform`, `skewEarly`, `skewLate`), bounded candidate sampling, constraint evaluation, deterministic decision output, and 90%+ core coverage.
 
 ## Goals
 
@@ -122,6 +122,12 @@ Implement deterministic decision engine exactly as specified.
 * 90%+ test coverage in `core`.
 * No nondeterministic failures in CI.
 * Public API stable.
+
+## Completion Notes
+
+* Golden vectors are implemented and passing (`core/testdata/vectors/v1.json` through `v7.json`).
+* Deterministic behavior is covered by unit tests and vector tests.
+* Remaining work moves to CLI parity and downstream adapters.
 
 ---
 

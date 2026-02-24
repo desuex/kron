@@ -1,144 +1,82 @@
 # Repository Structure
 
-```
+This file describes the current repository layout and the intended direction for MVP work.
+
+## Current Layout (as implemented)
+
+```text
 kron/
-  README.md
-  LICENSE
-  SECURITY.md
-  CODE_OF_CONDUCT.md
-  CONTRIBUTING.md
-  GOVERNANCE.md
-  ROADMAP.md
+  .github/workflows/ci.yml
+  .readthedocs.yaml
   CHANGELOG.md
+  MVP_PLAN.md
+  ROADMAP.md
+  STRUCTURE.md
+  TODO.md
+  go.work
 
-  docs/                           # specifications and design documents
-    MANIFESTO.md
-    HELLOKRON.md
-    SPEC.md
-    CORE-SPEC.md
-    SYNTAX.md
-    KRONTAB.md
-    EXECUTION.md
-    STATE.md
-    ERROR-MODEL.md
-    LOGGING.md
-    SECURITY.md
-    COMPAT.md
-    TEST-VECTORS.md
-    CRD-SPEC.md
-    CLI-SPEC.md
+  docs/
+    SETUP.md
+    USAGE.md
+    index.md
+    conf.py
+    requirements.txt
+    *.md specs
 
-  core/                           # pure deterministic scheduling engine
+  core/
     go.mod
-    go.sum
-    README.md
-    pkg/
-      core/
-        decision.go
-        window.go
-        seed.go
-        prng.go
-        distribution/
-          uniform.go
-          skew_early.go
-          skew_late.go
-          normal.go
-          exponential.go
-        constraints/
-          model.go
-          eval.go
-          parse.go
-        errors.go
-        vectors.go
-    testdata/
-      vectors/
-        v1.json
-        v2.json
-        ...
-    internal/
-      tzdb/
+    pkg/core/
+      decision.go
+      errors.go
+      prng.go
+      seed.go
+      types.go
+      vectors_test.go
+      *_test.go
+    testdata/vectors/
+      v1.json ... v7.json
 
-  cmd/                            # binary entrypoints
-    krond/
-      main.go
-    krontab/
-      main.go
-    kronctl/
-      main.go
-
-  daemon/                         # host daemon adapter
+  cmd/krontab/
     go.mod
-    go.sum
-    README.md
-    pkg/
-      daemon/
-        daemon.go
-        scheduler.go
-        runner/
-          runner.go
-          signals.go
-          timeout.go
-        state/
-          state.go
-          store.go
-          migrate.go
-        config/
-          load.go
-          model.go
-        logging/
-          text.go
-          json.go
-        limits/
-          rlimits.go
-    testdata/
-      configs/
-      state/
+    main.go
+    lint.go
+    config.go
+    constraints.go
+    cron.go
+    *_test.go
+    integration_test.go
 
-  operator/                       # Kubernetes controller adapter
+  daemon/
     go.mod
-    go.sum
     README.md
-    api/
-      v1alpha1/
-        kronjob_types.go
-        groupversion_info.go
-    controllers/
-      kronjob_controller.go
-    pkg/
-      adapters/
-        decision.go
-        jobs.go
-      logging/
-        text.go
-        json.go
-      metrics/
-        metrics.go
-    config/
-      crd/
-      rbac/
-      manager/
-      samples/
-    charts/
-      kron/
-    hack/
-      kind-e2e.sh
+    pkg/daemon/
+      dependency.go
+      doc.go
 
-  tooling/                        # build and release configuration
-    golangci-lint.yml
-    goreleaser/
-      .goreleaser.yaml
-    cosign/
-    sbom/
+  operator/
+    go.mod
+    README.md
+    pkg/operator/
+      dependency.go
+      doc.go
 
-  scripts/                        # development and CI scripts
-    generate.sh
+  scripts/
+    ci.sh
+    coverage.sh
     test.sh
-    e2e.sh
-
-  .github/
-    workflows/
-      ci-core.yml
-      ci-daemon.yml
-      ci-operator.yml
-      release.yml
 ```
+
+## Responsibility Boundaries
+
+- `core/`: deterministic scheduling logic and vector-backed behavior.
+- `cmd/krontab/`: local CLI interface and config parsing for MVP workflows.
+- `daemon/`: host adapter scaffold (implementation pending).
+- `operator/`: Kubernetes adapter scaffold (implementation pending).
+- `docs/`: specs, onboarding, and reference documentation.
+- `scripts/`: local and CI helper scripts.
+
+## Near-Term Direction
+
+- Keep `core` free from adapter concerns.
+- Continue CLI parity work in `cmd/krontab`.
+- Add daemon/operator implementation only after CLI MVP freeze criteria are met.
