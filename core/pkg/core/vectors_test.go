@@ -28,6 +28,7 @@ type vectorInput struct {
 	Window       string          `json:"window"`
 	Mode         string          `json:"mode"`
 	Distribution string          `json:"distribution"`
+	SkewShape    float64         `json:"skewShape,omitempty"`
 	SeedStrategy string          `json:"seedStrategy"`
 	Salt         string          `json:"salt"`
 	OnlyHours    []int           `json:"onlyHours,omitempty"`
@@ -167,6 +168,7 @@ func mustVectorInput(t *testing.T, in vectorInput) DecideInput {
 		Window:       window,
 		Mode:         WindowMode(in.Mode),
 		Dist:         Distribution(in.Distribution),
+		SkewShape:    in.SkewShape,
 		SeedStrategy: SeedStrategy(in.SeedStrategy),
 		Salt:         in.Salt,
 		Constraints: ConstraintSpec{

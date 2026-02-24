@@ -67,6 +67,7 @@ type DecideInput struct {
 	Window       time.Duration
 	Mode         WindowMode
 	Dist         Distribution
+	SkewShape    float64
 	SeedStrategy SeedStrategy
 	Salt         string
 	MaxAttempts  int

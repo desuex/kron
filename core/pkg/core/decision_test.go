@@ -120,14 +120,81 @@ func TestDecideAllowsZeroWindow(t *testing.T) {
 func TestMapDistribution(t *testing.T) {
 	u := 0.25
 
-	if got := mapDistribution(DistributionUniform, u); got != u {
+	if got := mapDistribution(DistributionUniform, u, 2.0); got != u {
 		t.Fatalf("uniform mapping mismatch: got %f want %f", got, u)
 	}
-	if got := mapDistribution(DistributionSkewEarly, u); got >= u {
+	if got := mapDistribution(DistributionSkewEarly, u, 2.0); got >= u {
 		t.Fatalf("skewEarly expected <= u for u in (0,1), got %f u=%f", got, u)
 	}
-	if got := mapDistribution(DistributionSkewLate, u); got <= u {
+	if got := mapDistribution(DistributionSkewLate, u, 2.0); got <= u {
 		t.Fatalf("skewLate expected >= u for u in (0,1), got %f u=%f", got, u)
+	}
+
+	earlyWeak := mapDistribution(DistributionSkewEarly, u, 1.2)
+	earlyStrong := mapDistribution(DistributionSkewEarly, u, 4.0)
+	if earlyStrong >= earlyWeak {
+		t.Fatalf("expected stronger skewEarly shape to push earlier: weak=%f strong=%f", earlyWeak, earlyStrong)
+	}
+
+	lateWeak := mapDistribution(DistributionSkewLate, u, 1.2)
+	lateStrong := mapDistribution(DistributionSkewLate, u, 4.0)
+	if lateStrong <= lateWeak {
+		t.Fatalf("expected stronger skewLate shape to push later: weak=%f strong=%f", lateWeak, lateStrong)
+	}
+}
+
+func TestDecideSkewShapeValidation(t *testing.T) {
+	_, err := Decide(DecideInput{
+		Identity:    "x",
+		Job:         "x",
+		PeriodStart: time.Now(),
+		Window:      time.Second,
+		Mode:        WindowModeAfter,
+		Dist:        DistributionUniform,
+		SkewShape:   1.5,
+	})
+	if !errors.Is(err, ErrInvalidDistribution) {
+		t.Fatalf("expected ErrInvalidDistribution for uniform skew shape, got %v", err)
+	}
+
+	_, err = Decide(DecideInput{
+		Identity:    "x",
+		Job:         "x",
+		PeriodStart: time.Now(),
+		Window:      time.Second,
+		Mode:        WindowModeAfter,
+		Dist:        DistributionSkewLate,
+		SkewShape:   -1,
+	})
+	if !errors.Is(err, ErrInvalidDistribution) {
+		t.Fatalf("expected ErrInvalidDistribution for negative skew shape, got %v", err)
+	}
+}
+
+func TestDecideSkewShapeAffectsDecision(t *testing.T) {
+	base := DecideInput{
+		Identity:    "shape/test",
+		Job:         "shape/test",
+		PeriodStart: time.Date(2026, 3, 1, 9, 0, 0, 0, time.UTC),
+		Window:      90 * time.Minute,
+		Mode:        WindowModeCenter,
+		Dist:        DistributionSkewLate,
+	}
+
+	weak, err := Decide(base)
+	if err != nil {
+		t.Fatalf("Decide weak shape error: %v", err)
+	}
+
+	strongInput := base
+	strongInput.SkewShape = 4.0
+	strong, err := Decide(strongInput)
+	if err != nil {
+		t.Fatalf("Decide strong shape error: %v", err)
+	}
+
+	if !strong.ChosenTime.After(weak.ChosenTime) {
+		t.Fatalf("expected stronger skew shape to choose later time: weak=%s strong=%s", weak.ChosenTime, strong.ChosenTime)
 	}
 }
 

@@ -14,10 +14,11 @@ The executable golden vectors used by `kron-core` tests live in:
 * `core/testdata/vectors/v4.json`
 * `core/testdata/vectors/v5.json`
 * `core/testdata/vectors/v6.json`
+* `core/testdata/vectors/v7.json`
 
 Current implementation coverage in that file focuses on implemented MVP behavior:
 
-* `uniform`, `skewEarly`, and `skewLate` distributions
+* `uniform`, `skewEarly`, and `skewLate` distributions (including skew shape parameter coverage)
 * `after`, `before`, and `around`/`center` window behavior
 * zero-duration window behavior
 * seed strategies (`stable`, `daily`, `weekly`)
@@ -255,6 +256,18 @@ Coverage in this vector set:
 * unschedulable candidate with `Avoid(dom)`
 * unschedulable candidate with `Avoid(months)`
 * unschedulable candidate with `Avoid(dates range)`
+
+---
+
+### V7 — skew-shape parameter determinism
+
+`v7.json` adds deterministic vectors for `skewLate` with explicit `shape` values.
+
+Coverage in this vector set:
+
+* explicit `shape=1.5`
+* explicit `shape=2.5`
+* stable output differences from shape changes under fixed period/window/seed strategy
 
 ---
 

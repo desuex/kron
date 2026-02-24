@@ -29,6 +29,10 @@ func Decide(in DecideInput) (Decision, error) {
 	if in.Dist != DistributionUniform && in.Dist != DistributionSkewEarly && in.Dist != DistributionSkewLate {
 		return Decision{}, fmt.Errorf("%w: %q", ErrInvalidDistribution, in.Dist)
 	}
+	skewShape, err := resolveSkewShape(in.Dist, in.SkewShape)
+	if err != nil {
+		return Decision{}, err
+	}
 	if in.SeedStrategy == "" {
 		in.SeedStrategy = SeedStrategyStable
 	}
@@ -74,7 +78,7 @@ func Decide(in DecideInput) (Decision, error) {
 		found := false
 		for attempt := 1; attempt <= maxAttempts; attempt++ {
 			u := rng.Float64()
-			x := clampUnit(mapDistribution(in.Dist, u))
+			x := clampUnit(mapDistribution(in.Dist, u, skewShape))
 			// +1 permits selecting the exact window end at second granularity.
 			offset := int64(math.Floor(x * float64(span+1)))
 			if offset > span {
@@ -124,19 +128,36 @@ func Decide(in DecideInput) (Decision, error) {
 	}, nil
 }
 
-func mapDistribution(dist Distribution, u float64) float64 {
-	const defaultSkewShape = 2.0
-
+func mapDistribution(dist Distribution, u, skewShape float64) float64 {
 	switch dist {
 	case DistributionSkewEarly:
-		return math.Pow(u, defaultSkewShape)
+		return math.Pow(u, skewShape)
 	case DistributionSkewLate:
-		return 1 - math.Pow(1-u, defaultSkewShape)
+		return 1 - math.Pow(1-u, skewShape)
 	case DistributionUniform:
 		fallthrough
 	default:
 		return u
 	}
+}
+
+func resolveSkewShape(dist Distribution, raw float64) (float64, error) {
+	const defaultSkewShape = 2.0
+
+	if dist == DistributionUniform {
+		if raw != 0 {
+			return 0, fmt.Errorf("%w: skew shape is only supported for skew distributions", ErrInvalidDistribution)
+		}
+		return defaultSkewShape, nil
+	}
+
+	if raw == 0 {
+		return defaultSkewShape, nil
+	}
+	if raw < 0 {
+		return 0, fmt.Errorf("%w: skew shape must be > 0", ErrInvalidDistribution)
+	}
+	return raw, nil
 }
 
 func computeWindow(periodStart time.Time, mode WindowMode, window time.Duration) (time.Time, time.Time) {

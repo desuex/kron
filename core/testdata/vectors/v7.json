@@ -1,0 +1,51 @@
+{
+  "version": "kron-core-v1-skew-shape",
+  "cases": [
+    {
+      "name": "skew_late_center_shape_1_5",
+      "input": {
+        "identity": "msgs/shape-1-5",
+        "job": "msgs/shape-1-5",
+        "periodStart": "2026-03-04T09:00:00Z",
+        "window": "1h30m0s",
+        "mode": "center",
+        "distribution": "skewLate",
+        "skewShape": 1.5,
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-04T09:00:00Z",
+        "periodKey": "2026-03-04T09:00:00Z",
+        "windowStart": "2026-03-04T08:15:00Z",
+        "windowEnd": "2026-03-04T09:45:00Z",
+        "seedHash": "2d161cc57245b9d21ea4fb1496e9a72f15132372fd548c3168d88a3d2f8cb4d1",
+        "chosenTime": "2026-03-04T09:25:39Z",
+        "attempts": 1
+      }
+    },
+    {
+      "name": "skew_late_center_shape_2_5",
+      "input": {
+        "identity": "msgs/shape-2-5",
+        "job": "msgs/shape-2-5",
+        "periodStart": "2026-03-04T09:00:00Z",
+        "window": "1h30m0s",
+        "mode": "center",
+        "distribution": "skewLate",
+        "skewShape": 2.5,
+        "seedStrategy": "stable",
+        "salt": ""
+      },
+      "expected": {
+        "periodId": "2026-03-04T09:00:00Z",
+        "periodKey": "2026-03-04T09:00:00Z",
+        "windowStart": "2026-03-04T08:15:00Z",
+        "windowEnd": "2026-03-04T09:45:00Z",
+        "seedHash": "d9a0d311c2f36cccd6d5e1ad250a9f735192dacac203b72fcaa05f3d926b5f36",
+        "chosenTime": "2026-03-04T09:44:26Z",
+        "attempts": 1
+      }
+    }
+  ]
+}
