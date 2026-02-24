@@ -92,12 +92,12 @@ Deliverable: a working alpha that spreads CronJobs across a window (uniform).
 
 Deliverable: production-shaped MVP.
 
-## Phase 2 — Your differentiator: distribution bias
+## Phase 2 — Distribution and Constraint Capabilities
 
 Add distributions that matter for your 3 pains:
 
 * `uniform`: spread load
-* `skewEarly` / `skewLate`: human-ish behavior (tendency to be late, etc.)
+* `skewEarly` / `skewLate`: behavioral timing bias (earlier/later tendencies)
 * `normal` (bounded/truncated): clustered around target time
 * `exponential` (bounded): “usually near start, sometimes later” (or vice versa)
 
@@ -106,9 +106,9 @@ Also add:
 * `constraints`: “don’t run during these hours”, business hours, weekends, etc.
 * `calendar`: optional exclusions (maintenance windows)
 
-Deliverable: the thing that’s *not* just jitter.
+Deliverable: deterministic scheduling capabilities beyond basic jitter.
 
-## Phase 3 — Enterprise features (adoption unlockers)
+## Phase 3 — Enterprise Adoption Requirements
 
 * RBAC minimized + documented
 * Multi-namespace watch option
@@ -123,9 +123,9 @@ Deliverable: the thing that’s *not* just jitter.
   * predictable status updates
 * Compatibility story with existing CronJobs (migration guide)
 
-Deliverable: “security team won’t block it” release.
+Deliverable: release suitable for enterprise security and operations review.
 
-## Phase 4 — “Become that guy” maintainership mode
+## Phase 4 — Long-Term Maintainership and Governance
 
 * SemVer, release notes, upgrade notes
 * conformance test suite (kind-based)
@@ -136,7 +136,7 @@ Deliverable: “security team won’t block it” release.
   * CONTRIBUTING
   * issue templates
 * stability policy: what is guaranteed, what is experimental
-* optional: CNCF Sandbox pitch (only if you want that life)
+* optional: evaluate CNCF Sandbox candidacy when project maturity supports it
 
 Deliverable: mature project with contributors.
 
