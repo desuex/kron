@@ -86,6 +86,32 @@ func TestLoadJobSettingsParsesTimezoneAndSeed(t *testing.T) {
 	}
 }
 
+func TestLoadJobSettingsParsesPolicy(t *testing.T) {
+	path := writeTempKrontab(t, `
+0 0 * * * @policy(concurrency=replace,deadline=10m,suspend=true) name=backup command=/usr/bin/backup
+`)
+
+	got, err := loadJobSettings(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err != nil {
+		t.Fatalf("loadJobSettings error: %v", err)
+	}
+	if got.Policy.Concurrency != "replace" {
+		t.Fatalf("policy concurrency mismatch: got %q want %q", got.Policy.Concurrency, "replace")
+	}
+	if got.Policy.Deadline != 10*time.Minute {
+		t.Fatalf("policy deadline mismatch: got %s want %s", got.Policy.Deadline, 10*time.Minute)
+	}
+	if !got.Policy.Suspend {
+		t.Fatalf("policy suspend mismatch: got %v want true", got.Policy.Suspend)
+	}
+}
+
 func TestLoadJobSettingsParsesQuotedSeedSalt(t *testing.T) {
 	path := writeTempKrontab(t, `
 0 0 * * * @seed(stable,salt="team alpha") name=backup command=/usr/bin/backup
@@ -310,6 +336,12 @@ func TestParseExplainModifiersErrors(t *testing.T) {
 	if _, err := parseExplainModifiers([]string{"@tz(Not/AZone)"}, fallback); err == nil {
 		t.Fatalf("expected invalid timezone error")
 	}
+	if _, err := parseExplainModifiers([]string{"@policy(concurrency=bad)"}, fallback); err == nil {
+		t.Fatalf("expected invalid policy concurrency error")
+	}
+	if _, err := parseExplainModifiers([]string{"@unknown(x=y)"}, fallback); err == nil {
+		t.Fatalf("expected unknown modifier error")
+	}
 }
 
 func TestParseDistModifier(t *testing.T) {
@@ -363,6 +395,36 @@ func TestParseSeedModifier(t *testing.T) {
 	for _, tt := range tests {
 		if _, _, err := parseSeedModifier(tt); err == nil {
 			t.Fatalf("expected parseSeedModifier error for %q", tt)
+		}
+	}
+}
+
+func TestParsePolicyModifier(t *testing.T) {
+	policy, err := parsePolicyModifier("concurrency=allow,deadline=5m,suspend=true")
+	if err != nil {
+		t.Fatalf("parsePolicyModifier error: %v", err)
+	}
+	if policy.Concurrency != "allow" {
+		t.Fatalf("policy concurrency mismatch: got %q want %q", policy.Concurrency, "allow")
+	}
+	if policy.Deadline != 5*time.Minute {
+		t.Fatalf("policy deadline mismatch: got %s want %s", policy.Deadline, 5*time.Minute)
+	}
+	if !policy.Suspend {
+		t.Fatalf("policy suspend mismatch: got %v want true", policy.Suspend)
+	}
+
+	tests := []string{
+		"",
+		"badparam",
+		"concurrency=bad",
+		"deadline=bad",
+		"suspend=bad",
+		"foo=bar",
+	}
+	for _, tt := range tests {
+		if _, err := parsePolicyModifier(tt); err == nil {
+			t.Fatalf("expected parsePolicyModifier error for %q", tt)
 		}
 	}
 }

@@ -25,6 +25,11 @@ All CLI behavior must be stable within a major version.
 
 `krontab` manages local Kron configuration files for `krond`.
 
+MVP implementation status:
+
+* Implemented: `lint`, `explain`, `next`
+* Planned (not implemented in MVP): `add`, `remove`
+
 ## Configuration Location
 
 Default:
@@ -66,6 +71,11 @@ Exit codes:
 * `1` invalid
 * `2` system error
 
+MVP canonical stderr text:
+
+* missing file: `error: --file is required for MVP`
+* positional args provided: `error: lint does not accept positional arguments`
+
 Output (text):
 
 ```
@@ -89,16 +99,18 @@ Output (json):
 Explains decision for a specific job and period.
 
 ```
-krontab explain <job> --at <RFC3339> [--format text|json]
+krontab explain <job> --at <RFC3339> [--file <path>] [--window <duration>] [--mode after|before|center] [--dist uniform|skewEarly|skewLate] [--format text|json]
 ```
 
 Behavior:
 
-* Loads job definition.
+* Loads job definition from `--file` when provided.
 * Resolves nominal period for `--at`.
 * Calls `kron-core`.
 * Outputs full decision explanation.
 * Does not execute job.
+* In MVP runtime, `--dist` and `@dist(...)` for `explain` support: `uniform`, `skewEarly`, `skewLate`.
+* `normal`/`exponential` distribution syntax can be linted but is not executed by MVP `explain`/`next`.
 
 Exit codes:
 
@@ -106,18 +118,25 @@ Exit codes:
 * `1` job not found
 * `2` invalid input
 
+MVP canonical stderr text:
+
+* missing timestamp: `error: --at is required`
+* missing job: `error: explain requires exactly one <job> argument`
+* unknown job: `error: job not found: <job>`
+
 Text output example:
 
 ```
-Identity: prod/db-backup
-PeriodID: 2026-03-01T00:00:00Z
-Window: [2026-03-01T00:00:00Z, 2026-03-01T03:00:00Z]
-Distribution: uniform
-SeedHash: 9c85657760a63b4d925af6088cceb2bb4448380b2e6856b203915a0a51ab5101
-ChosenTime: 2026-03-01T02:32:20Z
+job: backup
+period_start: 2026-03-01T00:00:00Z
+window: [2026-03-01T00:00:00Z, 2026-03-01T03:00:00Z)
+mode: after
+distribution: uniform
+seed_hash: 9c85657760a63b4d925af6088cceb2bb4448380b2e6856b203915a0a51ab5101
+chosen_time: 2026-03-01T02:32:20Z
 ```
 
-JSON output must include full DecisionResult fields.
+JSON output is a single `core.Decision` object.
 
 ---
 
@@ -126,13 +145,14 @@ JSON output must include full DecisionResult fields.
 Shows next N scheduled decisions.
 
 ```
-krontab next <job> [--count N] [--format text|json]
+krontab next <job> --file <path> [--count N] [--at <RFC3339>] [--format text|json]
 ```
 
 Default `N=1`.
 
 Behavior:
 
+* Loads job definition from `--file`.
 * Iteratively compute next periods using `kron-core`.
 * Do not mutate state.
 * Deterministic output.
@@ -141,10 +161,19 @@ Exit codes:
 
 * `0` success
 * `1` job not found
+* `2` invalid input/config
+
+MVP canonical stderr text:
+
+* missing file: `error: --file is required for MVP`
+* missing job: `error: next requires exactly one <job> argument`
+* invalid count: `error: --count must be > 0`
 
 ---
 
 ## Command: `krontab add`
+
+Status: planned (not implemented in MVP CLI binary).
 
 Adds or updates job definition.
 
@@ -168,6 +197,8 @@ Exit codes:
 
 ## Command: `krontab remove`
 
+Status: planned (not implemented in MVP CLI binary).
+
 Removes job.
 
 ```
@@ -189,6 +220,8 @@ Exit codes:
 # krond
 
 `krond` is the daemon.
+
+Status: planned (not implemented in current MVP).
 
 ---
 
@@ -275,6 +308,8 @@ Exit codes:
 # kronctl (Kubernetes helper)
 
 Optional CLI for Kubernetes users.
+
+Status: planned (not implemented in current MVP).
 
 ---
 

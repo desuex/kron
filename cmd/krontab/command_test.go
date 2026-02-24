@@ -413,6 +413,41 @@ func TestRunDispatchExitMapping(t *testing.T) {
 	}
 }
 
+func TestRunCanonicalErrorText(t *testing.T) {
+	cfg := writeTempKrontab(t, `*/30 * * * * @win(after,0s) @dist(uniform) name=backup command=/usr/bin/backup`)
+
+	var code int
+	_, stderr := captureOutput(t, func() {
+		code = run([]string{"krontab", "explain", "missing", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+	})
+	if code != 1 {
+		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 1, stderr)
+	}
+	if stderr != "error: job not found: missing\n" {
+		t.Fatalf("stderr mismatch: got %q", stderr)
+	}
+
+	_, stderr = captureOutput(t, func() {
+		code = run([]string{"krontab", "next", "backup"})
+	})
+	if code != 2 {
+		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+	}
+	if stderr != "error: --file is required for MVP\n" {
+		t.Fatalf("stderr mismatch: got %q", stderr)
+	}
+
+	_, stderr = captureOutput(t, func() {
+		code = run([]string{"krontab", "lint", "--file", cfg, "extra"})
+	})
+	if code != 2 {
+		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+	}
+	if stderr != "error: lint does not accept positional arguments\n" {
+		t.Fatalf("stderr mismatch: got %q", stderr)
+	}
+}
+
 func captureOutput(t *testing.T, fn func()) (stdout string, stderr string) {
 	t.Helper()
 

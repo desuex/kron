@@ -1,22 +1,38 @@
 # TODO
 
-Current working list after Milestone 2 completion.
+MVP-only backlog for Milestone 3 (CLI MVP) and Milestone 4 (MVP freeze).
+Last updated: 2026-02-24.
 
-## Milestone 3 (CLI MVP)
+## Completed Recently
 
-- [ ] Finish remaining syntax parity gaps between `cmd/krontab` and `docs/SYNTAX.md`.
-- [ ] Add snapshot-style output tests for `krontab explain` text and JSON modes.
-- [ ] Expand integration tests for modifier combinations (`@seed`, `@tz`, `@only`, `@avoid`, `@dist` params).
-- [ ] Reconcile `docs/CLI-SPEC.md` examples with actual implemented flags and output fields.
+- [x] Implement `krontab` MVP commands: `lint`, `explain`, `next`.
+- [x] Add golden vectors in `core` (`v1` through `v7`) and keep core coverage above 90%.
+- [x] Enforce CI quality gates for format, vet, tests, coverage threshold, and docs build.
+- [x] Add snapshot tests for stable `krontab explain` / `krontab next` output.
+- [x] Expand integration tests for modifier combinations and pessimistic paths.
+- [x] Add strict runtime parsing for `@policy(...)` in `explain`/`next` config loading.
+- [x] Reconcile `docs/CLI-SPEC.md` with current MVP command flags and runtime behavior.
+- [x] Resolve distribution scope for MVP runtime: `normal`/`exponential` are lint-validated but not executed by `explain`/`next`.
+- [x] Add vector-parity CLI tests from selected `core/testdata/vectors` cases.
+- [x] Freeze canonical stderr text and exit-code expectations in tests and `docs/CLI-SPEC.md`.
+- [x] Add an explicit implemented-vs-planned matrix in `README.md`.
+- [x] Add release workflow that builds `krontab` binaries for Linux/macOS/Windows and publishes checksums on tags.
+
+## Milestone 3 Blockers (Must Finish)
+
+- [ ] Expand CLI vector parity beyond selected cases to cover all currently supported vector families.
+- [ ] Final pass on docs/examples to ensure no MVP command examples imply unimplemented runtime behavior.
 
 ## Documentation and Quality
 
-- [ ] Keep Read the Docs build warning-free under `sphinx-build -n -W`.
-- [ ] Add a short "implemented vs planned" matrix in `README.md`.
-- [ ] Review spec docs for any stale examples that still imply unimplemented features in MVP commands.
+- [ ] Keep Read the Docs warning-free (`sphinx-build -n -W`) on every main-branch change.
+- [ ] Keep local `scripts/ci.sh` and GitHub Actions quality gates aligned.
 
-## Next Milestone Preparation
+## Milestone 4 (MVP Freeze and Alpha Readiness)
 
-- [ ] Define a concrete Milestone 4 freeze checklist and release criteria (`v0.1.0-alpha.1`).
-- [ ] Decide the exact API stability statement for pre-1.0 CLI output.
-- [ ] Prepare daemon/operator kickoff backlog after CLI freeze.
+- [ ] Create a concrete freeze checklist document for `v0.1.0-alpha.1`.
+- [ ] Publish `krontab` release binaries for Linux, macOS, and Windows (with checksums).
+- [ ] Define pre-1.0 CLI/API stability policy and publish it in docs.
+- [ ] Prepare changelog section for the first alpha release.
+- [ ] Verify "new contributor in under 5 minutes" path from `SETUP.md` and `USAGE.md`.
+- [ ] Prepare post-MVP backlog handoff for `daemon/` and `operator/` work.

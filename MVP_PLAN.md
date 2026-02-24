@@ -61,11 +61,14 @@ Current capabilities:
 - `krontab explain <job> --at <RFC3339> [--file <path>] [--format text|json]`
 - `krontab next <job> --file <path> [--count N] [--at <RFC3339>] [--format text|json]`
 - config-driven timezone/seed/constraint behavior in `explain` and `next`
+- selected CLI parity tests against `core/testdata/vectors` (`v1`, `v3`, `v4`, `v7`)
+- canonical error and exit-code expectations covered by tests
+- MVP runtime distribution execution scope: `uniform`, `skewEarly`, `skewLate` (`normal`/`exponential` remain lint-validated only)
 
 Remaining work:
-1. Close remaining syntax parity gaps against `docs/SYNTAX.md`.
-2. Expand integration/snapshot coverage for CLI output stability.
-3. Keep error messages and exit code behavior aligned with `docs/ERROR-MODEL.md` and `docs/CLI-SPEC.md`.
+1. Expand vector parity coverage for all supported distribution/constraint families.
+2. Final docs sweep to remove stale examples that imply non-MVP runtime behavior.
+3. Keep Read the Docs and CI warning/error free while freezing CLI contracts.
 
 Exit criteria:
 - deterministic outputs for repeated invocations with identical inputs
@@ -78,6 +81,7 @@ Status: pending
 Tasks:
 - finalize MVP scope statement in docs/README
 - tag pre-release (`v0.1.0-alpha.1`)
+- publish `krontab` binaries for Linux/macOS/Windows with SHA256 checksums
 - publish quickstart and implemented-vs-planned matrix
 
 Exit criteria:

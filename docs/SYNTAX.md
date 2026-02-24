@@ -139,6 +139,11 @@ If omitted, window is `after,0s`.
 
 Parameters are `k=v` pairs. Unknown keys are invalid.
 
+MVP runtime status:
+
+* `krontab explain` and `krontab next` execute: `uniform`, `skewEarly`, `skewLate`
+* `normal` and `exponential` are syntax-valid and lint-validated, but runtime execution is not part of current MVP
+
 ### uniform
 
 ```
@@ -335,6 +340,7 @@ Examples:
 * Window duration must be non-negative.
 * For `around` mode, `duration/2` is computed with nanosecond precision.
 * Distributions must be recognized; parameters must be valid and within allowed ranges.
+* In current MVP runtime, only `uniform`, `skewEarly`, and `skewLate` are executable in `explain`/`next`.
 * Seed strategy must be recognized.
 * Policy keys must be recognized; values must be valid.
 * Constraint specs must be parseable; unknown clause keys are invalid.

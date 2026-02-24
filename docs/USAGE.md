@@ -2,6 +2,11 @@
 
 This guide shows practical usage of the current `krontab` MVP commands.
 
+Runtime distribution scope in MVP:
+
+- Executed by `explain`/`next`: `uniform`, `skewEarly`, `skewLate`
+- Accepted by `lint` but not executed by MVP runtime: `normal`, `exponential`
+
 ## 1. Create a Configuration File
 
 Example `example.kron`:

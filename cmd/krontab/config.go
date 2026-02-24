@@ -23,6 +23,13 @@ type explainSettings struct {
 	SeedStrategy core.SeedStrategy
 	Salt         string
 	Constraints  core.ConstraintSpec
+	Policy       policySettings
+}
+
+type policySettings struct {
+	Concurrency string
+	Deadline    time.Duration
+	Suspend     bool
 }
 
 type jobDefinition struct {
@@ -139,17 +146,19 @@ func parseExplainModifiers(modifiers []string, fallback explainSettings) (explai
 	settings := fallback
 
 	for _, tok := range modifiers {
-		if strings.HasPrefix(tok, "@tz(") && strings.HasSuffix(tok, ")") {
-			tz := strings.TrimSpace(tok[len("@tz(") : len(tok)-1])
+		name, body, err := splitModifier(tok)
+		if err != nil {
+			return explainSettings{}, err
+		}
+
+		switch name {
+		case "tz":
+			tz := strings.TrimSpace(body)
 			if _, err := time.LoadLocation(tz); err != nil {
 				return explainSettings{}, fmt.Errorf("invalid timezone %q", tz)
 			}
 			settings.Timezone = tz
-			continue
-		}
-
-		if strings.HasPrefix(tok, "@win(") && strings.HasSuffix(tok, ")") {
-			body := tok[len("@win(") : len(tok)-1]
+		case "win":
 			parts := strings.SplitN(body, ",", 2)
 			if len(parts) != 2 {
 				return explainSettings{}, fmt.Errorf("invalid @win arguments %q", body)
@@ -165,45 +174,36 @@ func parseExplainModifiers(modifiers []string, fallback explainSettings) (explai
 			}
 			settings.Mode = mode
 			settings.Window = dur
-			continue
-		}
-
-		if strings.HasPrefix(tok, "@dist(") && strings.HasSuffix(tok, ")") {
-			body := tok[len("@dist(") : len(tok)-1]
+		case "dist":
 			dist, skewShape, err := parseDistModifier(body)
 			if err != nil {
 				return explainSettings{}, err
 			}
 			settings.Dist = dist
 			settings.SkewShape = skewShape
-			continue
-		}
-
-		if strings.HasPrefix(tok, "@seed(") && strings.HasSuffix(tok, ")") {
-			body := tok[len("@seed(") : len(tok)-1]
+		case "seed":
 			strategy, salt, err := parseSeedModifier(body)
 			if err != nil {
 				return explainSettings{}, err
 			}
 			settings.SeedStrategy = strategy
 			settings.Salt = salt
-			continue
-		}
-
-		if strings.HasPrefix(tok, "@only(") && strings.HasSuffix(tok, ")") {
-			body := tok[len("@only(") : len(tok)-1]
+		case "only":
 			if err := applyConstraintModifier(&settings.Constraints, "only", body); err != nil {
 				return explainSettings{}, err
 			}
-			continue
-		}
-
-		if strings.HasPrefix(tok, "@avoid(") && strings.HasSuffix(tok, ")") {
-			body := tok[len("@avoid(") : len(tok)-1]
+		case "avoid":
 			if err := applyConstraintModifier(&settings.Constraints, "avoid", body); err != nil {
 				return explainSettings{}, err
 			}
-			continue
+		case "policy":
+			policy, err := parsePolicyModifier(body)
+			if err != nil {
+				return explainSettings{}, err
+			}
+			settings.Policy = policy
+		default:
+			return explainSettings{}, fmt.Errorf("unknown modifier @%s", name)
 		}
 	}
 
@@ -279,6 +279,68 @@ func parseSeedModifier(body string) (core.SeedStrategy, string, error) {
 	}
 
 	return strategy, salt, nil
+}
+
+func splitModifier(tok string) (string, string, error) {
+	if !strings.HasPrefix(tok, "@") {
+		return "", "", fmt.Errorf("unexpected token before fields: %q", tok)
+	}
+	i := strings.IndexByte(tok, '(')
+	if i <= 1 || !strings.HasSuffix(tok, ")") {
+		return "", "", fmt.Errorf("invalid modifier syntax: %q", tok)
+	}
+
+	name := tok[1:i]
+	body := tok[i+1 : len(tok)-1]
+	if body == "" {
+		if name == "avoid" || name == "only" {
+			return "", "", fmt.Errorf("%s spec cannot be empty", name)
+		}
+		return "", "", fmt.Errorf("modifier %q body cannot be empty", name)
+	}
+
+	return name, body, nil
+}
+
+func parsePolicyModifier(body string) (policySettings, error) {
+	policy := policySettings{
+		Concurrency: "forbid",
+		Deadline:    0,
+		Suspend:     false,
+	}
+
+	for _, p := range strings.Split(body, ",") {
+		kv := strings.SplitN(p, "=", 2)
+		if len(kv) != 2 || strings.TrimSpace(kv[0]) == "" {
+			return policySettings{}, fmt.Errorf("invalid policy parameter %q", p)
+		}
+
+		key := strings.TrimSpace(kv[0])
+		val := strings.TrimSpace(kv[1])
+
+		switch key {
+		case "concurrency":
+			if val != "allow" && val != "forbid" && val != "replace" {
+				return policySettings{}, fmt.Errorf("invalid concurrency %q", val)
+			}
+			policy.Concurrency = val
+		case "deadline":
+			d, err := time.ParseDuration(val)
+			if err != nil {
+				return policySettings{}, fmt.Errorf("invalid deadline %q", val)
+			}
+			policy.Deadline = d
+		case "suspend":
+			if val != "true" && val != "false" {
+				return policySettings{}, fmt.Errorf("invalid suspend %q", val)
+			}
+			policy.Suspend = val == "true"
+		default:
+			return policySettings{}, fmt.Errorf("unknown policy key %q", key)
+		}
+	}
+
+	return policy, nil
 }
 
 func mapWindowMode(mode string) (core.WindowMode, error) {

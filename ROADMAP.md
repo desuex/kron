@@ -20,6 +20,7 @@ Correctness, determinism, and operational safety take priority over feature velo
 * `core` deterministic engine MVP is implemented and validated with golden vectors (`v1`-`v7`).
 * `krontab` implements `lint`, `explain`, and `next`.
 * CI enforces format, vet, tests, docs build, and 90% combined coverage.
+* Release workflow builds tagged `krontab` binaries for Linux/macOS/Windows with checksums.
 
 ---
 
@@ -136,7 +137,7 @@ Implement deterministic decision engine exactly as specified.
 ## Status
 
 In progress.
-Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, and integration tests for `next`.
+Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, snapshot tests, expanded integration tests, and selected vector-parity tests.
 
 ## Goals
 
@@ -162,6 +163,7 @@ Expose deterministic scheduling to users.
 * `krontab explain` reproduces TEST-VECTORS.
 * No daemon required.
 * Output stable across runs.
+* Milestone 4 freeze includes cross-platform `krontab` release artifacts (Linux, macOS, Windows).
 
 ---
 
