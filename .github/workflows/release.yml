@@ -121,7 +121,7 @@ jobs:
           cd dist
           sha256sum krontab_* > SHA256SUMS
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@a06a81ae8f6ba8d919b3a3dfeb3b17e415e1f4d1 # v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           name: Kron ${{ github.ref_name }}
           generate_release_notes: true
