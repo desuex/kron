@@ -91,6 +91,7 @@ Reference specifications:
 | [LOGGING.md](docs/LOGGING.md) | Structured log format specification |
 | [SECURITY.md](docs/SECURITY.md) | Security model and hardening requirements |
 | [COMPAT.md](docs/COMPAT.md) | Compatibility with cron, systemd, CronJob |
+| [CRON-DROPIN.md](docs/CRON-DROPIN.md) | Next-stage cron replacement compatibility profile |
 | [TEST-VECTORS.md](docs/TEST-VECTORS.md) | Golden test vectors for determinism |
 | [CRD-SPEC.md](docs/CRD-SPEC.md) | Kubernetes CRD schema and behavior |
 | [CLI-SPEC.md](docs/CLI-SPEC.md) | CLI commands, flags, and exit codes |

@@ -17,6 +17,18 @@ Kron aims for predictable behavior, not bug-for-bug compatibility.
 
 ---
 
+## Cron Drop-in Profile (Next Stage)
+
+Kron defines "drop-in replacement" as high compatibility for common cron workloads, not full implementation-specific parity.
+
+The staged compatibility matrix and acceptance criteria for the next stage are defined in:
+
+* [`docs/CRON-DROPIN.md`](CRON-DROPIN.md)
+
+This profile is the contract for `krond` host-daemon development.
+
+---
+
 ## Cron Expression Compatibility
 
 Kron supports standard 5-field cron syntax:
