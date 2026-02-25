@@ -86,6 +86,22 @@ func TestLoadSystemCronRejectsInvalidEntries(t *testing.T) {
 	}
 }
 
+func TestLoadSystemCronErrorPaths(t *testing.T) {
+	if _, err := LoadSystemCron(filepath.Join(t.TempDir(), "missing.cron")); err == nil {
+		t.Fatalf("expected stat path error")
+	}
+
+	emptyDir := t.TempDir()
+	if _, err := LoadSystemCron(emptyDir); err == nil {
+		t.Fatalf("expected empty cron dir error")
+	}
+
+	commentsOnly := writeTempCronFile(t, "# nothing\n\n")
+	if _, err := LoadSystemCron(commentsOnly); err == nil {
+		t.Fatalf("expected no jobs found error")
+	}
+}
+
 func TestParseSystemCronEntryMacroAndHelpers(t *testing.T) {
 	fields, user, cmd, err := parseSystemCronEntry("@hourly root /usr/bin/date")
 	if err != nil {
@@ -105,6 +121,54 @@ func TestParseSystemCronEntryMacroAndHelpers(t *testing.T) {
 
 	if got := sanitizeJobPart("Root.User"); got != "root-user" {
 		t.Fatalf("sanitizeJobPart mismatch: got %q", got)
+	}
+}
+
+func TestParseSystemCronEntryStandardAndEnvErrors(t *testing.T) {
+	fields, user, cmd, err := parseSystemCronEntry("5 4 * * * daemon /usr/bin/job --run")
+	if err != nil {
+		t.Fatalf("parseSystemCronEntry standard error: %v", err)
+	}
+	if fields != [5]string{"5", "4", "*", "*", "*"} || user != "daemon" || cmd != "/usr/bin/job --run" {
+		t.Fatalf("unexpected standard parse result: fields=%v user=%q cmd=%q", fields, user, cmd)
+	}
+
+	if _, _, _, err := parseSystemCronEntry("@foo root /bin/true"); err == nil {
+		t.Fatalf("expected unsupported macro error")
+	}
+	if _, _, _, err := parseSystemCronEntry("bad entry"); err == nil {
+		t.Fatalf("expected invalid entry error")
+	}
+
+	if _, _, err := parseEnvAssignment("NO_EQUALS"); err == nil {
+		t.Fatalf("expected invalid env assignment error")
+	}
+	if _, _, err := parseEnvAssignment(" =value"); err == nil {
+		t.Fatalf("expected empty env key error")
+	}
+}
+
+func TestOrderedEnvTimezoneFallback(t *testing.T) {
+	env := newOrderedEnv()
+	if got := env.Timezone(); got != "UTC" {
+		t.Fatalf("expected UTC fallback, got %q", got)
+	}
+
+	env.Set("TZ", "America/Los_Angeles")
+	if got := env.Timezone(); got != "America/Los_Angeles" {
+		t.Fatalf("expected TZ fallback, got %q", got)
+	}
+
+	env.Set("CRON_TZ", "Europe/Berlin")
+	if got := env.Timezone(); got != "Europe/Berlin" {
+		t.Fatalf("expected CRON_TZ precedence, got %q", got)
+	}
+
+	if got := sanitizeJobPart("   "); got != "job" {
+		t.Fatalf("expected empty sanitize fallback, got %q", got)
+	}
+	if got := sanitizeJobPart("###"); got != "job" {
+		t.Fatalf("expected punctuation sanitize fallback, got %q", got)
 	}
 }
 

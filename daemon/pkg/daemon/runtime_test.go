@@ -867,6 +867,34 @@ func waitRuntimeIdle(t *testing.T, rt *runtime) {
 	}
 }
 
+func TestWrapRecordOutcomeErrorVariants(t *testing.T) {
+	base := errors.New("state save failed")
+	if err := wrapRecordOutcomeError(OutcomeSkipped, base); !strings.Contains(err.Error(), "record skipped outcome") {
+		t.Fatalf("unexpected skipped wrap: %v", err)
+	}
+	if err := wrapRecordOutcomeError(OutcomeMissed, base); !strings.Contains(err.Error(), "record missed outcome") {
+		t.Fatalf("unexpected missed wrap: %v", err)
+	}
+	if err := wrapRecordOutcomeError(OutcomeUnsched, base); !strings.Contains(err.Error(), "record unsched outcome") {
+		t.Fatalf("unexpected unsched wrap: %v", err)
+	}
+	if err := wrapRecordOutcomeError("other", base); !strings.Contains(err.Error(), "record executed outcome") {
+		t.Fatalf("unexpected default wrap: %v", err)
+	}
+}
+
+func TestWaitInFlightContextCanceled(t *testing.T) {
+	rt := &runtime{
+		completions: make(chan runCompletion),
+		running:     1,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := rt.waitInFlight(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
 func impossibleCronSpec() CronSpec {
 	var spec CronSpec
 	spec.location = time.UTC

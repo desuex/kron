@@ -74,3 +74,24 @@ func TestConstraintHelperEdgeCases(t *testing.T) {
 		t.Fatalf("expected reversed range error")
 	}
 }
+
+func TestConstraintHelperAdditionalCoverage(t *testing.T) {
+	rng, err := parseBetweenRange("00:00-23:59")
+	if err != nil {
+		t.Fatalf("expected full-day between range parse: %v", err)
+	}
+	if rng.StartMinute != 0 || rng.EndMinute != 1439 {
+		t.Fatalf("unexpected between range parse: %+v", rng)
+	}
+
+	if _, err := parseBetweenRange("10:00-bad"); err == nil {
+		t.Fatalf("expected invalid end time error")
+	}
+
+	if v, err := parseConstraintValue("7", nil, true); err != nil || v != 0 {
+		t.Fatalf("expected DOW 7 remap to 0, got value=%d err=%v", v, err)
+	}
+	if _, err := parseConstraintValue("bad", nil, false); err == nil {
+		t.Fatalf("expected parseConstraintValue error")
+	}
+}

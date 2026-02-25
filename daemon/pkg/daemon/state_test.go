@@ -138,3 +138,18 @@ func TestFileStateStoreSaveRenameError(t *testing.T) {
 		t.Fatalf("expected rename state file error, got %v", err)
 	}
 }
+
+func TestFileStateStoreLoadReadError(t *testing.T) {
+	store := FileStateStore{Dir: t.TempDir()}
+	const identity = "/etc/krond.d/jobs.kron:read-error"
+
+	path := store.statePath(identity)
+	if err := os.Mkdir(path, 0o755); err != nil {
+		t.Fatalf("mkdir state path: %v", err)
+	}
+
+	_, err := store.Load(identity)
+	if err == nil || !strings.Contains(err.Error(), "read state") {
+		t.Fatalf("expected read state error, got %v", err)
+	}
+}

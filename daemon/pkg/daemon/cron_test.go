@@ -70,6 +70,18 @@ func TestParseCronSpecInvalid(t *testing.T) {
 	if _, err := parseCronSpec([5]string{"bad", "*", "*", "*", "*"}, "UTC"); err == nil {
 		t.Fatalf("expected minute parse error")
 	}
+	if _, err := parseCronSpec([5]string{"*", "bad", "*", "*", "*"}, "UTC"); err == nil {
+		t.Fatalf("expected hour parse error")
+	}
+	if _, err := parseCronSpec([5]string{"*", "*", "0", "*", "*"}, "UTC"); err == nil {
+		t.Fatalf("expected dom parse error")
+	}
+	if _, err := parseCronSpec([5]string{"*", "*", "*", "13", "*"}, "UTC"); err == nil {
+		t.Fatalf("expected month parse error")
+	}
+	if _, err := parseCronSpec([5]string{"*", "*", "*", "*", "8"}, "UTC"); err == nil {
+		t.Fatalf("expected dow parse error")
+	}
 	if _, err := parseCronSpec([5]string{"0", "0", "*", "*", "*"}, "No/Such_TZ"); err == nil {
 		t.Fatalf("expected timezone error")
 	}
@@ -87,6 +99,15 @@ func TestParseFieldAndValuePaths(t *testing.T) {
 	}
 	if _, _, err := parseField("MON", 0, 6, dowAliases, true); err != nil {
 		t.Fatalf("expected alias value success: %v", err)
+	}
+	if _, _, err := parseField("*", 0, 6, nil, false); err != nil {
+		t.Fatalf("expected wildcard success: %v", err)
+	}
+	if _, _, err := parseField("1-", 0, 59, nil, false); err == nil {
+		t.Fatalf("expected invalid range parse error")
+	}
+	if _, _, err := parseField("*/x", 0, 59, nil, false); err == nil {
+		t.Fatalf("expected invalid step parse error")
 	}
 	if _, err := parseCronValue("7", nil, true); err != nil {
 		t.Fatalf("expected 7->0 mapping for dow: %v", err)

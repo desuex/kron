@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -161,6 +162,90 @@ func TestParseJobModifiersUnknownAndConstraints(t *testing.T) {
 	err := parseJobModifiers(&job, []string{"@tz(No/Such_TZ)"})
 	if err == nil || !strings.Contains(err.Error(), "invalid timezone") {
 		t.Fatalf("expected timezone error, got %v", err)
+	}
+}
+
+func TestLoadJobsAndHelpersErrorPaths(t *testing.T) {
+	if _, err := LoadJobs(filepath.Join(t.TempDir(), "missing.kron")); err == nil {
+		t.Fatalf("expected stat path error")
+	}
+
+	file := writeTempConfig(t, "0 0 * * * name=job command=true\n")
+	if _, err := loadJobsFromDir(file); err == nil {
+		t.Fatalf("expected read dir error when path is file")
+	}
+
+	if _, err := loadJobsFromFile(filepath.Join(t.TempDir(), "missing.kron")); err == nil {
+		t.Fatalf("expected open file error")
+	}
+}
+
+func TestLoadJobsFromFileDuplicateNameError(t *testing.T) {
+	path := writeTempConfig(t, strings.Join([]string{
+		`0 0 * * * name=dup command=true`,
+		`0 1 * * * name=dup command=true`,
+	}, "\n"))
+	_, err := loadJobsFromFile(path)
+	if err == nil || !strings.Contains(err.Error(), `duplicate job "dup" in file`) {
+		t.Fatalf("expected duplicate name error, got %v", err)
+	}
+}
+
+func TestParseJobLineAndModifiersCoverage(t *testing.T) {
+	cfgPath := filepath.Join(t.TempDir(), "jobs.kron")
+	line := `0 0 * * * @tz(UTC) @win(before,10m) @dist(uniform) @seed(weekly,salt=ops) @policy(concurrency=allow,deadline=1m,suspend=true) name=nightly command=/bin/true`
+	job, err := parseJobLine(cfgPath, line)
+	if err != nil {
+		t.Fatalf("parseJobLine error: %v", err)
+	}
+	if job.Mode != core.WindowModeBefore || job.Window != 10*time.Minute {
+		t.Fatalf("unexpected window parse: mode=%s window=%s", job.Mode, job.Window)
+	}
+	if job.Seed != core.SeedStrategyWeekly || job.Salt != "ops" {
+		t.Fatalf("unexpected seed parse: %s %q", job.Seed, job.Salt)
+	}
+	if job.Policy.Concurrency != "allow" || job.Policy.Deadline != time.Minute || !job.Policy.Suspend {
+		t.Fatalf("unexpected policy parse: %+v", job.Policy)
+	}
+	if !strings.HasSuffix(job.Identity, ":nightly") {
+		t.Fatalf("identity mismatch: %q", job.Identity)
+	}
+}
+
+func TestParseJobModifiersWinAndDistErrors(t *testing.T) {
+	job := JobConfig{}
+	if err := parseJobModifiers(&job, []string{"@win(after)"}); err == nil {
+		t.Fatalf("expected invalid @win arguments error")
+	}
+	if err := parseJobModifiers(&job, []string{"@win(after,nope)"}); err == nil {
+		t.Fatalf("expected invalid @win duration error")
+	}
+}
+
+func TestSplitTokensUnknownEscapePassThrough(t *testing.T) {
+	tokens, err := splitTokens(`0 0 * * * name=x command="a\qb"`)
+	if err != nil {
+		t.Fatalf("splitTokens error: %v", err)
+	}
+	if len(tokens) < 7 || tokens[6] != `command=a\qb` {
+		t.Fatalf("unexpected tokens: %+v", tokens)
+	}
+}
+
+func TestLoadJobsFromDirSkipsSubdirectories(t *testing.T) {
+	dir := t.TempDir()
+	sub := filepath.Join(dir, "nested")
+	if err := os.Mkdir(sub, 0o755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
+	writeFile(t, filepath.Join(dir, "a.kron"), "0 0 * * * name=ok command=true\n")
+
+	jobs, err := loadJobsFromDir(dir)
+	if err != nil {
+		t.Fatalf("loadJobsFromDir error: %v", err)
+	}
+	if len(jobs) != 1 {
+		t.Fatalf("expected one job, got %d", len(jobs))
 	}
 }
 
