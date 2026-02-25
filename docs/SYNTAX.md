@@ -158,6 +158,8 @@ No parameters.
 @dist(normal[,mu=<anchor>][,sigma=<duration>])
 ```
 
+MVP runtime note: syntax-valid and lint-validated, but not executed by `krontab explain`/`krontab next`.
+
 * `mu` sets the mean anchor point.
 * `sigma` sets standard deviation.
 
@@ -204,6 +206,8 @@ Examples:
 ```
 @dist(exponential[,lambda=<float>][,dir=<dir>])
 ```
+
+MVP runtime note: syntax-valid and lint-validated, but not executed by `krontab explain`/`krontab next`.
 
 * `lambda` is a positive float controlling decay rate.
 * `dir`:
@@ -349,7 +353,7 @@ Examples:
 
 ---
 
-## Examples
+## Examples (MVP executable with `explain`/`next`)
 
 ### Load smoothing (spread backups)
 
@@ -366,7 +370,7 @@ Examples:
 ### Home automation (gentle unpredictability)
 
 ```
-0 18 * * * @tz(America/Los_Angeles) @win(around,20m) @dist(normal,sigma=5m) @seed(daily,salt=lights)
+0 18 * * * @tz(America/Los_Angeles) @win(around,20m) @dist(skewLate,shape=1.4) @seed(daily,salt=lights)
 ```
 
 ### Avoid nights and weekends
@@ -379,4 +383,13 @@ Examples:
 
 ```
 0 2 1 * * @tz(UTC) @win(after,8h) @dist(uniform) @policy(concurrency=forbid,deadline=15m)
+```
+
+## Lint-only Examples (planned runtime distributions)
+
+These pass `krontab lint` but are not executable by MVP `krontab explain`/`krontab next`.
+
+```
+0 10 * * * @win(around,2h) @dist(normal,sigma=20m)
+0 10 * * * @win(after,2h)  @dist(exponential,dir=early,lambda=1.2)
 ```

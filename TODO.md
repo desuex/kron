@@ -20,8 +20,8 @@ Last updated: 2026-02-24.
 
 ## Milestone 3 Blockers (Must Finish)
 
-- [ ] Expand CLI vector parity beyond selected cases to cover all currently supported vector families.
-- [ ] Final pass on docs/examples to ensure no MVP command examples imply unimplemented runtime behavior.
+- [x] Expand CLI vector parity beyond selected cases to cover all currently supported vector families.
+- [x] Final pass on docs/examples to ensure no MVP command examples imply unimplemented runtime behavior.
 
 ## Documentation and Quality
 

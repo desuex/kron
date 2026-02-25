@@ -61,14 +61,13 @@ Current capabilities:
 - `krontab explain <job> --at <RFC3339> [--file <path>] [--format text|json]`
 - `krontab next <job> --file <path> [--count N] [--at <RFC3339>] [--format text|json]`
 - config-driven timezone/seed/constraint behavior in `explain` and `next`
-- selected CLI parity tests against `core/testdata/vectors` (`v1`, `v3`, `v4`, `v7`)
+- CLI parity coverage across supported `core/testdata/vectors` families
 - canonical error and exit-code expectations covered by tests
 - MVP runtime distribution execution scope: `uniform`, `skewEarly`, `skewLate` (`normal`/`exponential` remain lint-validated only)
 
 Remaining work:
-1. Expand vector parity coverage for all supported distribution/constraint families.
-2. Final docs sweep to remove stale examples that imply non-MVP runtime behavior.
-3. Keep Read the Docs and CI warning/error free while freezing CLI contracts.
+1. Final docs sweep to remove stale examples that imply non-MVP runtime behavior.
+2. Keep Read the Docs and CI warning/error free while freezing CLI contracts.
 
 Exit criteria:
 - deterministic outputs for repeated invocations with identical inputs

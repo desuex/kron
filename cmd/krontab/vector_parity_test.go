@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,6 +37,17 @@ type coreVectorInput struct {
 	SeedStrategy string  `json:"seedStrategy"`
 	Salt         string  `json:"salt"`
 	OnlyHours    []int   `json:"onlyHours"`
+	AvoidHours   []int   `json:"avoidHours"`
+	OnlyDOW      []int   `json:"onlyDow"`
+	AvoidDOW     []int   `json:"avoidDow"`
+	OnlyDOM      []int   `json:"onlyDom"`
+	AvoidDOM     []int   `json:"avoidDom"`
+	OnlyMonths   []int   `json:"onlyMonths"`
+	AvoidMonths  []int   `json:"avoidMonths"`
+	OnlyBetween  []vectorTimeRange
+	AvoidBetween []vectorTimeRange
+	OnlyDates    []vectorDateRange
+	AvoidDates   []vectorDateRange
 }
 
 type coreVectorExpected struct {
@@ -50,21 +62,27 @@ type coreVectorExpected struct {
 	Reason        string `json:"reason"`
 }
 
-func TestExplainMatchesSelectedCoreVectors(t *testing.T) { // NOSONAR
-	tests := []struct {
-		file string
-		name string
-	}{
-		{file: "v1.json", name: "uniform_after_1h"},
-		{file: "v3.json", name: "uniform_daily_seed_strategy"},
-		{file: "v7.json", name: "skew_late_center_shape_2_5"},
-		{file: "v4.json", name: "constraints_unschedulable_zero_window"},
-	}
+type vectorTimeRange struct {
+	StartMinute int `json:"startMinute"`
+	EndMinute   int `json:"endMinute"`
+}
 
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.file+"/"+tt.name, func(t *testing.T) {
-			vec := loadCoreVectorCase(t, tt.file, tt.name)
+type vectorDateRange struct {
+	StartDay int `json:"startDay"`
+	EndDay   int `json:"endDay"`
+}
+
+type namedCoreVectorCase struct {
+	file string
+	c    coreVectorCase
+}
+
+func TestExplainMatchesSupportedCoreVectors(t *testing.T) { // NOSONAR
+	cases := loadAllCoreVectorCases(t)
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.file+"/"+tc.c.Name, func(t *testing.T) {
+			vec := tc.c
 			cfg := writeTempKrontab(t, buildKrontabLineFromVector(t, vec))
 
 			stdout, _ := captureOutput(t, func() {
@@ -119,27 +137,34 @@ func TestExplainMatchesSelectedCoreVectors(t *testing.T) { // NOSONAR
 	}
 }
 
-func loadCoreVectorCase(t *testing.T, file, name string) coreVectorCase {
+func loadAllCoreVectorCases(t *testing.T) []namedCoreVectorCase {
 	t.Helper()
 
-	path := coreVectorPath(t, file)
-	raw, err := os.ReadFile(path)
+	matches, err := filepath.Glob(coreVectorPath(t, "*.json"))
 	if err != nil {
-		t.Fatalf("read vector file %s: %v", path, err)
+		t.Fatalf("glob vector files: %v", err)
 	}
-
-	var vf coreVectorFile
-	if err := json.Unmarshal(raw, &vf); err != nil {
-		t.Fatalf("decode vector file %s: %v", path, err)
+	if len(matches) == 0 {
+		t.Fatalf("no vector files found")
 	}
+	sort.Strings(matches)
 
-	for _, c := range vf.Cases {
-		if c.Name == name {
-			return c
+	out := make([]namedCoreVectorCase, 0)
+	for _, path := range matches {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read vector file %s: %v", path, err)
+		}
+		var vf coreVectorFile
+		if err := json.Unmarshal(raw, &vf); err != nil {
+			t.Fatalf("decode vector file %s: %v", path, err)
+		}
+		file := filepath.Base(path)
+		for _, c := range vf.Cases {
+			out = append(out, namedCoreVectorCase{file: file, c: c})
 		}
 	}
-	t.Fatalf("vector case %q not found in %s", name, path)
-	return coreVectorCase{}
+	return out
 }
 
 func coreVectorPath(t *testing.T, file string) string {
@@ -209,18 +234,81 @@ func buildKrontabLineFromVector(t *testing.T, c coreVectorCase) string { // NOSO
 		mods = append(mods, fmt.Sprintf("@seed(%s)", seedStrategy))
 	}
 
-	if len(c.Input.OnlyHours) > 0 {
-		hours := make([]string, 0, len(c.Input.OnlyHours))
-		for _, h := range c.Input.OnlyHours {
-			hours = append(hours, strconv.Itoa(h))
-		}
-		mods = append(mods, fmt.Sprintf("@only(hours=%s)", strings.Join(hours, ",")))
+	if onlyBody := constraintBodyFromVector(
+		c.Input.OnlyHours,
+		c.Input.OnlyDOW,
+		c.Input.OnlyDOM,
+		c.Input.OnlyMonths,
+		c.Input.OnlyBetween,
+		c.Input.OnlyDates,
+	); onlyBody != "" {
+		mods = append(mods, "@only("+onlyBody+")")
+	}
+	if avoidBody := constraintBodyFromVector(
+		c.Input.AvoidHours,
+		c.Input.AvoidDOW,
+		c.Input.AvoidDOM,
+		c.Input.AvoidMonths,
+		c.Input.AvoidBetween,
+		c.Input.AvoidDates,
+	); avoidBody != "" {
+		mods = append(mods, "@avoid("+avoidBody+")")
 	}
 
 	tokens := []string{"*", "*", "*", "*", "*"}
 	tokens = append(tokens, mods...)
 	tokens = append(tokens, "name="+job, "command=/bin/true")
 	return strings.Join(tokens, " ")
+}
+
+func constraintBodyFromVector(hours, dow, dom, months []int, between []vectorTimeRange, dates []vectorDateRange) string {
+	parts := make([]string, 0, 8)
+
+	if len(hours) > 0 {
+		parts = append(parts, "hours="+joinInts(hours))
+	}
+	if len(dow) > 0 {
+		parts = append(parts, "dow="+joinInts(dow))
+	}
+	if len(dom) > 0 {
+		parts = append(parts, "dom="+joinInts(dom))
+	}
+	if len(months) > 0 {
+		parts = append(parts, "months="+joinInts(months))
+	}
+	for _, r := range between {
+		parts = append(parts, fmt.Sprintf("between=%s-%s", hhmm(r.StartMinute), hhmm(r.EndMinute)))
+	}
+	for _, r := range dates {
+		if r.StartDay == r.EndDay {
+			parts = append(parts, "date="+yyyymmdd(r.StartDay))
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("dates=%s..%s", yyyymmdd(r.StartDay), yyyymmdd(r.EndDay)))
+	}
+
+	return strings.Join(parts, ";")
+}
+
+func joinInts(v []int) string {
+	out := make([]string, 0, len(v))
+	for _, n := range v {
+		out = append(out, strconv.Itoa(n))
+	}
+	return strings.Join(out, ",")
+}
+
+func hhmm(totalMinutes int) string {
+	h := totalMinutes / 60
+	m := totalMinutes % 60
+	return fmt.Sprintf("%02d:%02d", h, m)
+}
+
+func yyyymmdd(day int) string {
+	y := day / 10000
+	mon := (day / 100) % 100
+	d := day % 100
+	return fmt.Sprintf("%04d-%02d-%02d", y, mon, d)
 }
 
 func mustParseRFC3339(t *testing.T, value string) time.Time {

@@ -10,6 +10,9 @@ coverage.out
 coverage.txt
 *.coverprofile
 
+# Docs build artifacts
+docs/_build/
+
 # Local scratch
 .tmp/
 tmp/

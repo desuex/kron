@@ -154,6 +154,8 @@ Behavior:
 
 * Loads job definition from `--file`.
 * Iteratively compute next periods using `kron-core`.
+* Runtime distribution execution is limited to `uniform`, `skewEarly`, `skewLate`.
+* `normal`/`exponential` distribution syntax can be linted but is not executed by MVP `next`.
 * Do not mutate state.
 * Deterministic output.
 
