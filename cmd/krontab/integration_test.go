@@ -14,6 +14,16 @@ import (
 
 var integrationBinaryPath string
 
+const (
+	intArgFile         = "--file"
+	intArgCount        = "--count"
+	intArgFormat       = "--format"
+	intAt20260224T1007 = "2026-02-24T10:07:00Z"
+	intAt20260224T0900 = "2026-02-24T09:00:00Z"
+	errRunKrontab      = "runKrontab error: %v"
+	errDecodeJSON      = "decode json output: %v"
+)
+
 func TestMain(m *testing.M) {
 	tmpDir, err := os.MkdirTemp("", "krontab-integration-*")
 	if err != nil {
@@ -36,13 +46,13 @@ func TestNextIntegrationText(t *testing.T) {
 `)
 
 	stdout, stderr, code, err := runKrontab("next", "backup",
-		"--file", cfg,
-		"--count", "2",
-		"--at", "2026-02-24T10:07:00Z",
-		"--format", "text",
+		intArgFile, cfg,
+		intArgCount, "2",
+		"--at", intAt20260224T1007,
+		intArgFormat, "text",
 	)
 	if err != nil {
-		t.Fatalf("runKrontab error: %v", err)
+		t.Fatalf(errRunKrontab, err)
 	}
 	if code != 0 {
 		t.Fatalf("unexpected exit code: got %d stderr=%q", code, stderr)
@@ -64,13 +74,13 @@ func TestNextIntegrationJSON(t *testing.T) {
 `)
 
 	stdout, stderr, code, err := runKrontab("next", "backup",
-		"--file", cfg,
-		"--count", "2",
-		"--at", "2026-02-24T10:07:00Z",
-		"--format", "json",
+		intArgFile, cfg,
+		intArgCount, "2",
+		"--at", intAt20260224T1007,
+		intArgFormat, "json",
 	)
 	if err != nil {
-		t.Fatalf("runKrontab error: %v", err)
+		t.Fatalf(errRunKrontab, err)
 	}
 	if code != 0 {
 		t.Fatalf("unexpected exit code: got %d stderr=%q", code, stderr)
@@ -78,7 +88,7 @@ func TestNextIntegrationJSON(t *testing.T) {
 
 	var got nextResult
 	if err := json.Unmarshal([]byte(stdout), &got); err != nil {
-		t.Fatalf("decode json output: %v", err)
+		t.Fatalf(errDecodeJSON, err)
 	}
 	if got.Job != "backup" {
 		t.Fatalf("job mismatch: got %q want %q", got.Job, "backup")
@@ -100,12 +110,12 @@ func TestNextIntegrationMissingJobExitCode(t *testing.T) {
 `)
 
 	_, stderr, code, err := runKrontab("next", "missing",
-		"--file", cfg,
-		"--count", "1",
-		"--at", "2026-02-24T10:07:00Z",
+		intArgFile, cfg,
+		intArgCount, "1",
+		"--at", intAt20260224T1007,
 	)
 	if err != nil {
-		t.Fatalf("runKrontab error: %v", err)
+		t.Fatalf(errRunKrontab, err)
 	}
 	if code != 1 {
 		t.Fatalf("unexpected exit code: got %d want %d; stderr=%q", code, 1, stderr)
@@ -121,12 +131,12 @@ func TestNextIntegrationInvalidCountExitCode(t *testing.T) {
 `)
 
 	_, stderr, code, err := runKrontab("next", "backup",
-		"--file", cfg,
-		"--count", "0",
-		"--at", "2026-02-24T10:07:00Z",
+		intArgFile, cfg,
+		intArgCount, "0",
+		"--at", intAt20260224T1007,
 	)
 	if err != nil {
-		t.Fatalf("runKrontab error: %v", err)
+		t.Fatalf(errRunKrontab, err)
 	}
 	if code != 2 {
 		t.Fatalf("unexpected exit code: got %d want %d; stderr=%q", code, 2, stderr)
@@ -136,7 +146,7 @@ func TestNextIntegrationInvalidCountExitCode(t *testing.T) {
 	}
 }
 
-func TestExplainIntegrationModifierMatrix(t *testing.T) {
+func TestExplainIntegrationModifierMatrix(t *testing.T) { // NOSONAR
 	tests := []struct {
 		name            string
 		config          string
@@ -155,7 +165,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			assert: func(t *testing.T, out string) {
 				var got core.Decision
 				if err := json.Unmarshal([]byte(out), &got); err != nil {
-					t.Fatalf("decode json output: %v", err)
+					t.Fatalf(errDecodeJSON, err)
 				}
 				if got.Mode != core.WindowModeCenter {
 					t.Fatalf("mode mismatch: got %q", got.Mode)
@@ -184,7 +194,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			assert: func(t *testing.T, out string) {
 				var got core.Decision
 				if err := json.Unmarshal([]byte(out), &got); err != nil {
-					t.Fatalf("decode json output: %v", err)
+					t.Fatalf(errDecodeJSON, err)
 				}
 				if !strings.HasSuffix(got.SeedMaterial, "\nteam alpha") {
 					t.Fatalf("seed material mismatch: got %q", got.SeedMaterial)
@@ -196,7 +206,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			config: `
 0 9 * * * @dist(normal,mu=start,sigma=5m) name=backup command=/usr/bin/backup
 `,
-			at:              "2026-02-24T09:00:00Z",
+			at:              intAt20260224T0900,
 			wantCode:        2,
 			wantErrContains: `distribution "normal" is not supported in MVP explain`,
 		},
@@ -205,7 +215,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			config: `
 	0 9 * * * @only(unknown=x) name=backup command=/usr/bin/backup
 `,
-			at:              "2026-02-24T09:00:00Z",
+			at:              intAt20260224T0900,
 			wantCode:        2,
 			wantErrContains: `unknown constraint clause`,
 		},
@@ -214,7 +224,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			config: `
 	0 9 * * * @policy(concurrency=bad) name=backup command=/usr/bin/backup
 `,
-			at:              "2026-02-24T09:00:00Z",
+			at:              intAt20260224T0900,
 			wantCode:        2,
 			wantErrContains: `invalid concurrency "bad"`,
 		},
@@ -223,7 +233,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			config: `
 	0 9 * * * @oops(x=y) name=backup command=/usr/bin/backup
 `,
-			at:              "2026-02-24T09:00:00Z",
+			at:              intAt20260224T0900,
 			wantCode:        2,
 			wantErrContains: `unknown modifier @oops`,
 		},
@@ -235,12 +245,12 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 			cfg := writeTempKrontab(t, tt.config)
 			stdout, stderr, code, err := runKrontab(
 				"explain", "backup",
-				"--file", cfg,
+				intArgFile, cfg,
 				"--at", tt.at,
-				"--format", "json",
+				intArgFormat, "json",
 			)
 			if err != nil {
-				t.Fatalf("runKrontab error: %v", err)
+				t.Fatalf(errRunKrontab, err)
 			}
 			if code != tt.wantCode {
 				t.Fatalf("unexpected exit code: got %d want %d stderr=%q", code, tt.wantCode, stderr)
@@ -255,7 +265,7 @@ func TestExplainIntegrationModifierMatrix(t *testing.T) {
 	}
 }
 
-func TestNextIntegrationModifierMatrix(t *testing.T) {
+func TestNextIntegrationModifierMatrix(t *testing.T) { // NOSONAR
 	tests := []struct {
 		name            string
 		config          string
@@ -272,7 +282,7 @@ func TestNextIntegrationModifierMatrix(t *testing.T) {
 			assert: func(t *testing.T, out string) {
 				var got nextResult
 				if err := json.Unmarshal([]byte(out), &got); err != nil {
-					t.Fatalf("decode json output: %v", err)
+					t.Fatalf(errDecodeJSON, err)
 				}
 				if len(got.Decisions) != 2 {
 					t.Fatalf("expected 2 decisions, got %d", len(got.Decisions))
@@ -299,7 +309,7 @@ func TestNextIntegrationModifierMatrix(t *testing.T) {
 			assert: func(t *testing.T, out string) {
 				var got nextResult
 				if err := json.Unmarshal([]byte(out), &got); err != nil {
-					t.Fatalf("decode json output: %v", err)
+					t.Fatalf(errDecodeJSON, err)
 				}
 				if len(got.Decisions) != 2 {
 					t.Fatalf("expected 2 decisions, got %d", len(got.Decisions))
@@ -333,13 +343,13 @@ func TestNextIntegrationModifierMatrix(t *testing.T) {
 			cfg := writeTempKrontab(t, tt.config)
 			stdout, stderr, code, err := runKrontab(
 				"next", "backup",
-				"--file", cfg,
-				"--count", "2",
-				"--at", "2026-02-24T10:07:00Z",
-				"--format", "json",
+				intArgFile, cfg,
+				intArgCount, "2",
+				"--at", intAt20260224T1007,
+				intArgFormat, "json",
 			)
 			if err != nil {
-				t.Fatalf("runKrontab error: %v", err)
+				t.Fatalf(errRunKrontab, err)
 			}
 			if code != tt.wantCode {
 				t.Fatalf("unexpected exit code: got %d want %d stderr=%q", code, tt.wantCode, stderr)
@@ -358,7 +368,7 @@ func TestLintIntegrationModifierMatrix(t *testing.T) {
 	validCfg := writeTempKrontab(t, `
 0 10 * * * @tz(UTC) @win(after,2h) @dist(normal,mu=mid,sigma=10m) @seed(stable,salt="team alpha") @policy(concurrency=forbid,deadline=10m,suspend=false) @only(dow=MON-FRI;hours=8-18) name=backup command=/usr/bin/backup
 `)
-	stdout, stderr, code, err := runKrontab("lint", "--file", validCfg, "--format", "json")
+	stdout, stderr, code, err := runKrontab("lint", intArgFile, validCfg, intArgFormat, "json")
 	if err != nil {
 		t.Fatalf("runKrontab lint valid error: %v", err)
 	}
@@ -376,7 +386,7 @@ func TestLintIntegrationModifierMatrix(t *testing.T) {
 	invalidCfg := writeTempKrontab(t, `
 0 10 * * * @dist(normal,mu=bad,sigma=10m) name=backup command=/usr/bin/backup
 `)
-	stdout, stderr, code, err = runKrontab("lint", "--file", invalidCfg, "--format", "json")
+	stdout, stderr, code, err = runKrontab("lint", intArgFile, invalidCfg, intArgFormat, "json")
 	if err != nil {
 		t.Fatalf("runKrontab lint invalid error: %v", err)
 	}

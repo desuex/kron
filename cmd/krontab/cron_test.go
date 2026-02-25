@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+const errParseCronSpec = "parseCronSpec error: %v"
+
 func TestCronNextAfterStep(t *testing.T) {
 	spec, err := parseCronSpec([5]string{"*/15", "*", "*", "*", "*"}, "UTC")
 	if err != nil {
-		t.Fatalf("parseCronSpec error: %v", err)
+		t.Fatalf(errParseCronSpec, err)
 	}
 
 	start := time.Date(2026, 2, 24, 10, 7, 30, 0, time.UTC)
@@ -27,7 +29,7 @@ func TestCronNextAfterStep(t *testing.T) {
 func TestCronNextN(t *testing.T) {
 	spec, err := parseCronSpec([5]string{"0", "0", "*", "*", "*"}, "UTC")
 	if err != nil {
-		t.Fatalf("parseCronSpec error: %v", err)
+		t.Fatalf(errParseCronSpec, err)
 	}
 
 	start := time.Date(2026, 2, 24, 10, 7, 0, 0, time.UTC)
@@ -49,7 +51,7 @@ func TestCronNextN(t *testing.T) {
 func TestCronWithTimezone(t *testing.T) {
 	spec, err := parseCronSpec([5]string{"0", "9", "*", "*", "*"}, "America/New_York")
 	if err != nil {
-		t.Fatalf("parseCronSpec error: %v", err)
+		t.Fatalf(errParseCronSpec, err)
 	}
 
 	anchor := time.Date(2026, 2, 24, 13, 0, 0, 0, time.UTC) // 08:00 EST
@@ -137,7 +139,7 @@ func TestCronMatchesModes(t *testing.T) {
 func TestNextNRejectsNonPositiveCount(t *testing.T) {
 	spec, err := parseCronSpec([5]string{"*", "*", "*", "*", "*"}, "UTC")
 	if err != nil {
-		t.Fatalf("parseCronSpec error: %v", err)
+		t.Fatalf(errParseCronSpec, err)
 	}
 	if _, err := spec.NextN(time.Now(), 0); err == nil {
 		t.Fatalf("expected count error")
@@ -147,7 +149,7 @@ func TestNextNRejectsNonPositiveCount(t *testing.T) {
 func TestCronNextAfterNoMatchWithinTenYears(t *testing.T) {
 	spec, err := parseCronSpec([5]string{"0", "0", "31", "2", "*"}, "UTC")
 	if err != nil {
-		t.Fatalf("parseCronSpec error: %v", err)
+		t.Fatalf(errParseCronSpec, err)
 	}
 
 	_, err = spec.NextAfter(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))

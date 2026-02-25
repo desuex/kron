@@ -6,6 +6,12 @@ import (
 	"testing"
 )
 
+const (
+	errLintReader    = "lintReader error: %v"
+	fieldNameBackup  = "name=backup"
+	fieldCommandEcho = "command=/bin/echo"
+)
+
 func TestLintReaderValid(t *testing.T) {
 	content := `
 # backup job
@@ -13,7 +19,7 @@ func TestLintReaderValid(t *testing.T) {
 `
 	errs, err := lintReader(strings.NewReader(content))
 	if err != nil {
-		t.Fatalf("lintReader error: %v", err)
+		t.Fatalf(errLintReader, err)
 	}
 	if len(errs) != 0 {
 		t.Fatalf("expected no lint errors, got: %v", errs)
@@ -26,7 +32,7 @@ func TestLintReaderValidQuotedSeedSalt(t *testing.T) {
 `
 	errs, err := lintReader(strings.NewReader(content))
 	if err != nil {
-		t.Fatalf("lintReader error: %v", err)
+		t.Fatalf(errLintReader, err)
 	}
 	if len(errs) != 0 {
 		t.Fatalf("expected no lint errors for quoted seed salt, got: %v", errs)
@@ -39,7 +45,7 @@ func TestLintReaderInvalid(t *testing.T) {
 `
 	errs, err := lintReader(strings.NewReader(content))
 	if err != nil {
-		t.Fatalf("lintReader error: %v", err)
+		t.Fatalf(errLintReader, err)
 	}
 	if len(errs) == 0 {
 		t.Fatalf("expected lint errors")
@@ -53,7 +59,7 @@ func TestLintReaderDuplicateNames(t *testing.T) {
 `
 	errs, err := lintReader(strings.NewReader(content))
 	if err != nil {
-		t.Fatalf("lintReader error: %v", err)
+		t.Fatalf(errLintReader, err)
 	}
 	if len(errs) == 0 {
 		t.Fatalf("expected duplicate-name lint error")
@@ -198,62 +204,62 @@ func TestValidateModifierMatrix(t *testing.T) {
 }
 
 func TestValidateFieldsMatrix(t *testing.T) {
-	_, errs := validateFields([]string{"name=backup", "command=/bin/echo"})
+	_, errs := validateFields([]string{fieldNameBackup, fieldCommandEcho})
 	if len(errs) != 0 {
 		t.Fatalf("expected valid fields, got %v", errs)
 	}
 
-	_, errs = validateFields([]string{"name=backup"})
+	_, errs = validateFields([]string{fieldNameBackup})
 	if len(errs) == 0 {
 		t.Fatalf("expected missing command error")
 	}
 
-	_, errs = validateFields([]string{"command=/bin/echo"})
+	_, errs = validateFields([]string{fieldCommandEcho})
 	if len(errs) == 0 {
 		t.Fatalf("expected missing name error")
 	}
 
-	_, errs = validateFields([]string{"name=Bad_Name", "command=/bin/echo"})
+	_, errs = validateFields([]string{"name=Bad_Name", fieldCommandEcho})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid name error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "shell=maybe"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "shell=maybe"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid shell error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "umask=98"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "umask=98"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid umask error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "timeout=bad"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "timeout=bad"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid timeout error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "stdout=file:"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "stdout=file:"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid stdout file path error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "stderr=weird"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "stderr=weird"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid stderr error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "env=BAD"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "env=BAD"})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid env error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "command=/bin/echo", "unknown=v"})
+	_, errs = validateFields([]string{fieldNameBackup, fieldCommandEcho, "unknown=v"})
 	if len(errs) == 0 {
 		t.Fatalf("expected unknown field error")
 	}
 
-	_, errs = validateFields([]string{"name=backup", "name=backup2", "command=/bin/echo"})
+	_, errs = validateFields([]string{fieldNameBackup, "name=backup2", fieldCommandEcho})
 	if len(errs) == 0 {
 		t.Fatalf("expected duplicate field error")
 	}
@@ -263,13 +269,13 @@ func TestValidateEntryEdgeCases(t *testing.T) {
 	if _, errs := validateEntry([]string{"0", "0", "*", "*"}); len(errs) == 0 {
 		t.Fatalf("expected missing key=value fields error")
 	}
-	if _, errs := validateEntry([]string{"0", "0", "*", "name=backup"}); len(errs) == 0 {
+	if _, errs := validateEntry([]string{"0", "0", "*", fieldNameBackup}); len(errs) == 0 {
 		t.Fatalf("expected invalid cron expression error")
 	}
 
 	_, errs := validateEntry([]string{
 		"@bad", "0", "*", "*", "*",
-		"name=backup", "command=/bin/echo",
+		fieldNameBackup, fieldCommandEcho,
 	})
 	if len(errs) == 0 {
 		t.Fatalf("expected invalid cron field error")
@@ -278,7 +284,7 @@ func TestValidateEntryEdgeCases(t *testing.T) {
 	_, errs = validateEntry([]string{
 		"0", "0", "*", "*", "*",
 		"naked-token",
-		"name=backup", "command=/bin/echo",
+		fieldNameBackup, fieldCommandEcho,
 	})
 	found := false
 	for _, e := range errs {
@@ -296,7 +302,7 @@ func TestLintReaderSplitTokenError(t *testing.T) {
 	content := `0 0 * * * name=backup command="/bin/echo`
 	errs, err := lintReader(strings.NewReader(content))
 	if err != nil {
-		t.Fatalf("lintReader error: %v", err)
+		t.Fatalf(errLintReader, err)
 	}
 	if len(errs) == 0 {
 		t.Fatalf("expected lint errors from split token failure")
@@ -338,7 +344,7 @@ func TestLintReaderScannerError(t *testing.T) {
 }
 
 func TestIsFieldToken(t *testing.T) {
-	if !isFieldToken("name=backup") {
+	if !isFieldToken(fieldNameBackup) {
 		t.Fatalf("expected name token to be field")
 	}
 	if isFieldToken("@dist(skewEarly,shape=2.5)") {

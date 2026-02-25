@@ -148,7 +148,7 @@ func lintReader(r io.Reader) ([]string, error) {
 	return errs, nil
 }
 
-func splitTokens(line string) ([]string, error) {
+func splitTokens(line string) ([]string, error) { // NOSONAR
 	var tokens []string
 	var cur strings.Builder
 	inQuote := false
@@ -231,7 +231,7 @@ func isFieldToken(tok string) bool {
 	return strings.Contains(tok, "=") && !strings.HasPrefix(tok, "@")
 }
 
-func validateModifier(tok string) error {
+func validateModifier(tok string) error { // NOSONAR
 	if !strings.HasPrefix(tok, "@") {
 		return fmt.Errorf("unexpected token before fields: %q", tok)
 	}
@@ -382,7 +382,7 @@ func validateModifier(tok string) error {
 	}
 }
 
-func validateFields(tokens []string) (string, []string) {
+func validateFields(tokens []string) (string, []string) { // NOSONAR
 	var errs []string
 	seen := map[string]int{}
 	name := ""

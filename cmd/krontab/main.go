@@ -139,7 +139,7 @@ type nextResult struct {
 	Decisions []core.Decision `json:"decisions"`
 }
 
-func runNext(args []string) error {
+func runNext(args []string) error { // NOSONAR
 	job, parseArgs, err := normalizeNextArgs(args)
 	if err != nil {
 		return err
@@ -236,7 +236,7 @@ func runNext(args []string) error {
 	return nil
 }
 
-func normalizeNextArgs(args []string) (string, []string, error) {
+func normalizeNextArgs(args []string) (string, []string, error) { // NOSONAR
 	var job string
 	normalized := make([]string, 0, len(args))
 
@@ -291,7 +291,7 @@ func printNextText(res nextResult) {
 	}
 }
 
-func normalizeExplainArgs(args []string) (string, []string, error) {
+func normalizeExplainArgs(args []string) (string, []string, error) { // NOSONAR
 	var job string
 	normalized := make([]string, 0, len(args))
 

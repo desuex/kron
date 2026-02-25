@@ -11,6 +11,11 @@ import (
 	"kron/core/pkg/core"
 )
 
+const (
+	errLoadJobSettings = "loadJobSettings error: %v"
+	tzNewYork          = "America/New_York"
+)
+
 func TestLoadJobSettingsUsesModifiers(t *testing.T) {
 	path := writeTempKrontab(t, `
 0 0 * * * @win(around,30m) @dist(uniform) name=backup command=/usr/bin/backup
@@ -24,7 +29,7 @@ func TestLoadJobSettingsUsesModifiers(t *testing.T) {
 		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if got.Mode != core.WindowModeCenter {
 		t.Fatalf("mode mismatch: got %s want %s", got.Mode, core.WindowModeCenter)
@@ -50,7 +55,7 @@ func TestLoadJobSettingsAcceptsSkewDistribution(t *testing.T) {
 		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if got.Dist != core.DistributionSkewEarly {
 		t.Fatalf("dist mismatch: got %s want %s", got.Dist, core.DistributionSkewEarly)
@@ -73,10 +78,10 @@ func TestLoadJobSettingsParsesTimezoneAndSeed(t *testing.T) {
 		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
-	if got.Timezone != "America/New_York" {
-		t.Fatalf("timezone mismatch: got %q want %q", got.Timezone, "America/New_York")
+	if got.Timezone != tzNewYork {
+		t.Fatalf("timezone mismatch: got %q want %q", got.Timezone, tzNewYork)
 	}
 	if got.SeedStrategy != core.SeedStrategyDaily {
 		t.Fatalf("seed strategy mismatch: got %q want %q", got.SeedStrategy, core.SeedStrategyDaily)
@@ -99,7 +104,7 @@ func TestLoadJobSettingsParsesPolicy(t *testing.T) {
 		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if got.Policy.Concurrency != "replace" {
 		t.Fatalf("policy concurrency mismatch: got %q want %q", got.Policy.Concurrency, "replace")
@@ -125,7 +130,7 @@ func TestLoadJobSettingsParsesQuotedSeedSalt(t *testing.T) {
 		SeedStrategy: core.SeedStrategyStable,
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if got.Salt != "team alpha" {
 		t.Fatalf("quoted salt mismatch: got %q want %q", got.Salt, "team alpha")
@@ -146,7 +151,7 @@ func TestLoadJobSettingsParsesOnlyAvoidConstraints(t *testing.T) {
 		Constraints:  core.ConstraintSpec{},
 	})
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if len(got.Constraints.OnlyHours) == 0 ||
 		len(got.Constraints.OnlyDOW) == 0 ||
@@ -173,7 +178,7 @@ func TestLoadJobSettingsFallsBackWithoutModifiers(t *testing.T) {
 	}
 	got, err := loadJobSettings(path, "backup", fallback)
 	if err != nil {
-		t.Fatalf("loadJobSettings error: %v", err)
+		t.Fatalf(errLoadJobSettings, err)
 	}
 	if !reflect.DeepEqual(got, fallback) {
 		t.Fatalf("settings mismatch: got %+v want %+v", got, fallback)
@@ -247,7 +252,7 @@ func TestLoadJobDefinitionIncludesScheduleAndTimezone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadJobDefinition error: %v", err)
 	}
-	if def.Settings.Timezone != "America/New_York" {
+	if def.Settings.Timezone != tzNewYork {
 		t.Fatalf("timezone mismatch: got %q", def.Settings.Timezone)
 	}
 

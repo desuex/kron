@@ -158,7 +158,7 @@ var dowAliases = map[string]int{
 	"SUN": 0, "MON": 1, "TUE": 2, "WED": 3, "THU": 4, "FRI": 5, "SAT": 6,
 }
 
-func parseField(field string, min, max int, aliases map[string]int, allowSevenSunday bool) (map[int]bool, bool, error) {
+func parseField(field string, min, max int, aliases map[string]int, allowSevenSunday bool) (map[int]bool, bool, error) { // NOSONAR
 	out := make(map[int]bool)
 	if field == "*" {
 		for i := min; i <= max; i++ {

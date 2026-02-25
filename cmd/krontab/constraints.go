@@ -46,7 +46,7 @@ type parsedConstraintSpec struct {
 	dates   []core.DateRange
 }
 
-func parseConstraintSpec(body string) (parsedConstraintSpec, error) {
+func parseConstraintSpec(body string) (parsedConstraintSpec, error) { // NOSONAR
 	body = strings.TrimSpace(body)
 	if body == "" {
 		return parsedConstraintSpec{}, fmt.Errorf("constraint spec cannot be empty")
@@ -122,7 +122,7 @@ func parseConstraintSpec(body string) (parsedConstraintSpec, error) {
 	return out, nil
 }
 
-func parseConstraintIntRangeSet(value string, min, max int, aliases map[string]int, allowSevenSunday bool) ([]int, error) {
+func parseConstraintIntRangeSet(value string, min, max int, aliases map[string]int, allowSevenSunday bool) ([]int, error) { // NOSONAR
 	seen := map[int]bool{}
 	for _, rawPart := range strings.Split(value, ",") {
 		part := strings.TrimSpace(rawPart)

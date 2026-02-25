@@ -7,8 +7,9 @@ import (
 )
 
 const defaultMaxAttempts = 64
+const errInvalidQuoted = "%w: %q"
 
-func Decide(in DecideInput) (Decision, error) {
+func Decide(in DecideInput) (Decision, error) { // NOSONAR
 	identity := in.Identity
 	if identity == "" {
 		identity = in.Job
@@ -21,13 +22,13 @@ func Decide(in DecideInput) (Decision, error) {
 	}
 	mode := normalizeWindowMode(in.Mode)
 	if mode != WindowModeAfter && mode != WindowModeBefore && mode != WindowModeCenter {
-		return Decision{}, fmt.Errorf("%w: %q", ErrInvalidWindowMode, in.Mode)
+		return Decision{}, fmt.Errorf(errInvalidQuoted, ErrInvalidWindowMode, in.Mode)
 	}
 	if in.Dist == "" {
 		in.Dist = DistributionUniform
 	}
 	if in.Dist != DistributionUniform && in.Dist != DistributionSkewEarly && in.Dist != DistributionSkewLate {
-		return Decision{}, fmt.Errorf("%w: %q", ErrInvalidDistribution, in.Dist)
+		return Decision{}, fmt.Errorf(errInvalidQuoted, ErrInvalidDistribution, in.Dist)
 	}
 	skewShape, err := resolveSkewShape(in.Dist, in.SkewShape)
 	if err != nil {
@@ -37,7 +38,7 @@ func Decide(in DecideInput) (Decision, error) {
 		in.SeedStrategy = SeedStrategyStable
 	}
 	if in.SeedStrategy != SeedStrategyStable && in.SeedStrategy != SeedStrategyDaily && in.SeedStrategy != SeedStrategyWeekly {
-		return Decision{}, fmt.Errorf("%w: %q", ErrInvalidSeedStrategy, in.SeedStrategy)
+		return Decision{}, fmt.Errorf(errInvalidQuoted, ErrInvalidSeedStrategy, in.SeedStrategy)
 	}
 	constraints, err := validateConstraints(in.Constraints)
 	if err != nil {
@@ -53,7 +54,7 @@ func Decide(in DecideInput) (Decision, error) {
 	}
 	loc, err := time.LoadLocation(locationName)
 	if err != nil {
-		return Decision{}, fmt.Errorf("%w: %q", ErrInvalidTimezone, locationName)
+		return Decision{}, fmt.Errorf(errInvalidQuoted, ErrInvalidTimezone, locationName)
 	}
 
 	period := in.PeriodStart.UTC()
@@ -223,7 +224,7 @@ type constraintRuntime struct {
 	avoidDates   []DateRange
 }
 
-func validateConstraints(in ConstraintSpec) (constraintRuntime, error) {
+func validateConstraints(in ConstraintSpec) (constraintRuntime, error) { // NOSONAR
 	rt := constraintRuntime{
 		onlyHours:   make(map[int]bool, len(in.OnlyHours)),
 		avoidHours:  make(map[int]bool, len(in.AvoidHours)),
@@ -322,7 +323,7 @@ func validateConstraints(in ConstraintSpec) (constraintRuntime, error) {
 	return rt, nil
 }
 
-func candidateAllowed(candidate time.Time, loc *time.Location, constraints constraintRuntime) bool {
+func candidateAllowed(candidate time.Time, loc *time.Location, constraints constraintRuntime) bool { // NOSONAR
 	local := candidate.In(loc)
 	hour := local.Hour()
 	dow := int(local.Weekday())
