@@ -36,3 +36,10 @@ Last updated: 2026-02-25.
 - [x] Prepare changelog section for the first alpha release.
 - [ ] Verify "new contributor in under 5 minutes" path from `SETUP.md` and `USAGE.md`.
 - [ ] Prepare post-MVP backlog handoff for `daemon/` and `operator/` work.
+
+## Next Stage (Cron Drop-in Replacement)
+
+- [x] Define cron drop-in compatibility profile and boundaries (`docs/CRON-DROPIN.md`).
+- [ ] Build `krond` cron-source adapters for `/etc/crontab` and `/etc/cron.d/*`.
+- [ ] Add cron compatibility corpus tests for Tier 1 capabilities.
+- [ ] Publish migration guide from cron files to Kron runtime execution model.

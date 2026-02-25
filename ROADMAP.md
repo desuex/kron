@@ -23,6 +23,7 @@ Correctness, determinism, and operational safety take priority over feature velo
 * CI enforces format, vet, tests, docs build, and 90% combined coverage.
 * Release workflow builds tagged `krontab` binaries for Linux/macOS/Windows with checksums.
 * Freeze checklist and tag runbook are documented in `docs/RELEASE.md`.
+* Cron drop-in compatibility profile is documented in `docs/CRON-DROPIN.md`.
 
 ---
 
@@ -169,11 +170,11 @@ Expose deterministic scheduling to users.
 
 ---
 
-# Phase 3 — krond (Host Daemon MVP)
+# Phase 3 — krond (Host Daemon MVP + Cron Drop-in Track)
 
 ## Goals
 
-Minimal but correct execution engine.
+Deliver a minimal but correct execution daemon and a defined cron drop-in compatibility profile.
 
 ## Work
 
@@ -182,18 +183,27 @@ Minimal but correct execution engine.
 * Atomic writes
 * Lock enforcement
 * Fork/exec runner
+* Cron source adapters:
+
+  * `/etc/crontab`
+  * `/etc/cron.d/*`
+  * exported user crontab inputs
+* Compatibility matrix implementation from `docs/CRON-DROPIN.md`
 * Concurrency policies:
 
   * allow
   * forbid
 * Deadline handling
 * Structured logging per LOGGING.md
+* Migration documentation and compatibility test corpus
 
 ## Exclusions
 
 * No retry system.
 * No advanced resource limits.
 * No plugin system.
+* No full bug-for-bug parity with all cron variants.
+* No `run-parts` / `MAILTO` parity in this phase.
 
 ## Testing
 
@@ -201,6 +211,7 @@ Minimal but correct execution engine.
 * Crash recovery simulation.
 * Duplicate execution prevention tests.
 * Deadline edge case tests.
+* Cron compatibility corpus for Tier 1/Tier 2 features.
 
 ## Exit Criteria
 
@@ -208,6 +219,7 @@ Minimal but correct execution engine.
 * State file integrity guaranteed.
 * Concurrency policies enforced.
 * Deterministic decision preserved.
+* Tier 1 cron drop-in capabilities are green and documented.
 
 ---
 
