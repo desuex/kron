@@ -31,6 +31,7 @@ Last updated: 2026-02-25.
 - [ ] Keep local `scripts/ci.sh` and GitHub Actions quality gates aligned.
 - [ ] Promote benchmark gate checks in CI from non-blocking to blocking after Linux baseline stabilization.
 - [ ] Collect and review Linux CI benchmark summaries for at least 10 successful main-branch runs before tightening thresholds.
+- [ ] Remove temporary Sonar CPD parser exclusions by extracting shared cron/config parser package used by both `krontab` and `krond`.
 
 ## Milestone 4 (MVP Freeze and Alpha Readiness)
 
