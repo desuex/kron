@@ -73,6 +73,7 @@ Start here:
 | [Read the Docs](https://krontab.readthedocs.io/) | Hosted documentation |
 | [SETUP.md](docs/SETUP.md) | Local setup and build instructions |
 | [USAGE.md](docs/USAGE.md) | MVP CLI usage (`lint`, `explain`, `next`) |
+| [RELEASE.md](docs/RELEASE.md) | Freeze checklist, tag flow, and release artifact verification |
 
 Reference specifications:
 
@@ -102,7 +103,8 @@ Early development, active MVP delivery.
 
 Milestone 1 (repository bootstrap) is complete.
 Milestone 2 (core engine MVP) is complete.
-Milestone 3 (CLI MVP) is in progress.
+Milestone 3 (CLI MVP) is complete.
+Milestone 4 (MVP freeze) is in progress.
 
 API and behavior are subject to change until v1.0.
 

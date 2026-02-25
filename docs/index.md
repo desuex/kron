@@ -8,6 +8,7 @@ Start here for installation and day-to-day usage, then use the specification set
 
 SETUP
 USAGE
+RELEASE
 ```
 
 ```{toctree}

@@ -2,12 +2,12 @@
 
 This document tracks the minimum delivery path for Kron.
 
-## Snapshot (2026-02-24)
+## Snapshot (2026-02-25)
 
 - Milestone 1: completed
 - Milestone 2: completed
-- Milestone 3: in progress
-- Milestone 4: pending
+- Milestone 3: completed
+- Milestone 4: in progress
 
 ## MVP Goal
 
@@ -54,7 +54,7 @@ Exit criteria: met.
 
 ## Milestone 3: CLI MVP (`krontab`)
 
-Status: in progress
+Status: completed
 
 Current capabilities:
 - `krontab lint --file <path> [--format text|json]`
@@ -65,20 +65,19 @@ Current capabilities:
 - canonical error and exit-code expectations covered by tests
 - MVP runtime distribution execution scope: `uniform`, `skewEarly`, `skewLate` (`normal`/`exponential` remain lint-validated only)
 
-Remaining work:
-1. Final docs sweep to remove stale examples that imply non-MVP runtime behavior.
-2. Keep Read the Docs and CI warning/error free while freezing CLI contracts.
-
 Exit criteria:
 - deterministic outputs for repeated invocations with identical inputs
 - stable text/json contracts covered by tests
 
+Exit criteria: met.
+
 ## Milestone 4: MVP Freeze
 
-Status: pending
+Status: in progress
 
 Tasks:
 - finalize MVP scope statement in docs/README
+- complete and execute freeze checklist in `docs/RELEASE.md`
 - tag pre-release (`v0.1.0-alpha.1`)
 - publish `krontab` binaries for Linux/macOS/Windows with SHA256 checksums
 - publish quickstart and implemented-vs-planned matrix

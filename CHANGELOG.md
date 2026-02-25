@@ -32,3 +32,20 @@ The project adheres to Semantic Versioning.
 - Go cache warning in CI by setting explicit dependency paths for `actions/setup-go`.
 
 ### Security
+
+---
+
+## [v0.1.0-alpha.1] - 2026-02-25 (planned)
+
+### Added
+- `krontab` MVP commands: `lint`, `explain`, `next`.
+- `kron-core` deterministic engine coverage with golden vectors (`v1`-`v7`).
+- Release workflow for tagged cross-platform `krontab` binaries and `SHA256SUMS`.
+- Release runbook and freeze checklist (`docs/RELEASE.md`).
+
+### Changed
+- CLI parity tests expanded across supported vector families.
+- MVP docs aligned with current runtime distribution scope.
+
+### Fixed
+- Read the Docs and Sphinx strict-build issues addressed for MVP docs set.
