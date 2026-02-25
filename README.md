@@ -75,6 +75,7 @@ Start here:
 | [SETUP.md](docs/SETUP.md) | Local setup and build instructions |
 | [USAGE.md](docs/USAGE.md) | MVP CLI usage (`lint`, `explain`, `next`) |
 | [RELEASE.md](docs/RELEASE.md) | Freeze checklist, tag flow, and release artifact verification |
+| [BENCHMARK.md](docs/BENCHMARK.md) | Performance and reliability benchmark gates for `krond` |
 
 Reference specifications:
 
