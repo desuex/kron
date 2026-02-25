@@ -9,6 +9,7 @@ Start here for installation and day-to-day usage, then use the specification set
 SETUP
 USAGE
 RELEASE
+BENCHMARK
 ```
 
 ```{toctree}
@@ -27,6 +28,7 @@ LOGGING
 SECURITY
 COMPAT
 CRON-DROPIN
+CRON-MIGRATION
 TEST-VECTORS
 CRD-SPEC
 CLI-SPEC

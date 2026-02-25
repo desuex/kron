@@ -1,0 +1,11 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+CRON_TZ=UTC
+
+# Complex five-field expression with names, ranges, lists, and steps.
+*/10 8-10 * JAN,MAR MON-FRI root /usr/bin/echo weekday-morning
+
+# Vixie semantics: day-of-month OR day-of-week.
+0 0 1 * MON root /usr/bin/echo dom-dow-or
+
+# Tier 2 macro currently supported by adapter parser.
+@hourly root /usr/bin/echo hourly
