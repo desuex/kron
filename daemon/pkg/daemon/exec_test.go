@@ -1,12 +1,14 @@
 package daemon
 
 import (
-	"context"
+	"fmt"
+	"os/exec"
+	"syscall"
 	"testing"
 )
 
 func TestBuildExecCommandDirect(t *testing.T) {
-	cmd, err := buildExecCommand(context.Background(), CommandSpec{
+	cmd, err := buildExecCommand(CommandSpec{
 		Raw:   "/bin/echo hello world",
 		Shell: false,
 		Cwd:   "/tmp",
@@ -27,7 +29,7 @@ func TestBuildExecCommandDirect(t *testing.T) {
 }
 
 func TestBuildExecCommandShell(t *testing.T) {
-	cmd, err := buildExecCommand(context.Background(), CommandSpec{
+	cmd, err := buildExecCommand(CommandSpec{
 		Raw:   "echo hello",
 		Shell: true,
 	})
@@ -43,7 +45,34 @@ func TestBuildExecCommandShell(t *testing.T) {
 }
 
 func TestBuildExecCommandRejectsEmpty(t *testing.T) {
-	if _, err := buildExecCommand(context.Background(), CommandSpec{}); err == nil {
+	if _, err := buildExecCommand(CommandSpec{}); err == nil {
 		t.Fatalf("expected empty command error")
+	}
+}
+
+func TestProcessGroupHelpersHandleNilAndExitedProcess(t *testing.T) {
+	cmd := &exec.Cmd{}
+	terminateProcessGroup(cmd)
+	killProcessGroup(cmd)
+
+	if err := signalProcessGroup(cmd, syscall.SIGTERM); err != nil {
+		t.Fatalf("expected nil error for nil process, got %v", err)
+	}
+
+	doneCmd := exec.Command("/bin/sh", "-c", "exit 0")
+	if err := doneCmd.Start(); err != nil {
+		t.Fatalf("start command: %v", err)
+	}
+	if err := doneCmd.Wait(); err != nil {
+		t.Fatalf("wait command: %v", err)
+	}
+	if err := signalProcessGroup(doneCmd, syscall.SIGTERM); err != nil {
+		t.Fatalf("expected nil error for exited process, got %v", err)
+	}
+}
+
+func TestExitCodeFromWaitUnknownError(t *testing.T) {
+	if got := exitCodeFromWait(fmt.Errorf("unknown")); got != -1 {
+		t.Fatalf("expected -1, got %d", got)
 	}
 }

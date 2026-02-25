@@ -97,6 +97,33 @@ Each run should emit a machine-readable summary (`json`) and a human summary (`m
 - percent delta vs previous accepted baseline
 - top contributors when regressions are detected
 
+### Baseline Command (Current)
+
+Initial benchmark harness command:
+
+```bash
+./scripts/bench.sh
+```
+
+This currently runs Go benchmark suites in `daemon/pkg/daemon` for:
+
+- runtime loop step cost (due and not-due paths across `S`/`M`/`L`)
+- state store atomic save/load overhead
+
+Initial CI guard command:
+
+```bash
+./scripts/bench_check.sh
+```
+
+CI baseline collection command:
+
+```bash
+./scripts/bench_check.sh --report-dir artifacts/bench
+```
+
+`bench_check` currently uses conservative median thresholds for selected benchmarks and is configured as non-blocking in CI during baseline stabilization. CI appends a Markdown summary table to the workflow job summary and writes machine-readable output to `artifacts/bench/summary.json`.
+
 ---
 
 ## Required Benchmark Scenarios
@@ -164,7 +191,10 @@ The following are mandatory on release candidate branches:
 ## Current Status (2026-02-25)
 
 - `krond` is an early usable slice with deterministic scheduling, synchronous execution, and atomic per-job state.
-- A formal benchmark harness is not yet wired into CI.
+- Initial benchmark harness exists via `go test -bench` and `./scripts/bench.sh`.
+- Initial `bench_check` thresholds are wired into CI in non-blocking mode.
+- Linux CI benchmark runs now publish summary artifacts for threshold tuning.
+- Blocking enforcement is planned after Linux baseline stabilization.
 - This document defines the gates and scenarios to implement for the cron-drop-in stage.
 
 Implementation backlog for this benchmark program should be tracked under milestone work items and enforced before broader production claims.

@@ -17,6 +17,8 @@ Last updated: 2026-02-25.
 - [x] Freeze canonical stderr text and exit-code expectations in tests and `docs/CLI-SPEC.md`.
 - [x] Add an explicit implemented-vs-planned matrix in `README.md`.
 - [x] Add release workflow that builds `krontab` binaries for Linux/macOS/Windows and publishes checksums on tags.
+- [x] Add initial `krond` benchmark harness (`go test -bench`) and `scripts/bench.sh` report wrapper.
+- [x] Add initial `krond` benchmark threshold check script and wire it in CI (non-blocking).
 
 ## Milestone 3 Blockers (Must Finish)
 
@@ -27,6 +29,8 @@ Last updated: 2026-02-25.
 
 - [ ] Keep Read the Docs warning-free (`sphinx-build -n -W`) on every main-branch change.
 - [ ] Keep local `scripts/ci.sh` and GitHub Actions quality gates aligned.
+- [ ] Promote benchmark gate checks in CI from non-blocking to blocking after Linux baseline stabilization.
+- [ ] Collect and review Linux CI benchmark summaries for at least 10 successful main-branch runs before tightening thresholds.
 
 ## Milestone 4 (MVP Freeze and Alpha Readiness)
 
