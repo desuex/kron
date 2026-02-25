@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -140,6 +142,110 @@ func TestStartForegroundReturnsStepError(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("expected start loop to return step error")
+	}
+}
+
+func TestStartFailsWhenStateLockHeld(t *testing.T) {
+	if goruntime.GOOS == "windows" {
+		t.Skip("state lock contention is only enforced on unix builds")
+	}
+
+	cfg := writeTempDaemonConfig(t, "0 0 * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+	lock, err := acquireStateLock(stateDir)
+	if err != nil {
+		t.Fatalf("acquireStateLock error: %v", err)
+	}
+	defer func() { _ = lock.Release() }()
+
+	err = Start(context.Background(), StartOptions{
+		ConfigPath: cfg,
+		Source:     "kron",
+		StateDir:   stateDir,
+		Tick:       time.Millisecond,
+		Once:       true,
+	})
+	if err == nil || !strings.Contains(err.Error(), "state lock already held") {
+		t.Fatalf("expected lock held error, got %v", err)
+	}
+}
+
+func TestStartReleasesStateLockAfterOnce(t *testing.T) {
+	cfg := writeTempDaemonConfig(t, "0 0 * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+
+	err := Start(context.Background(), StartOptions{
+		ConfigPath: cfg,
+		Source:     "kron",
+		StateDir:   stateDir,
+		Tick:       time.Millisecond,
+		Once:       true,
+	})
+	if err != nil {
+		t.Fatalf("Start once error: %v", err)
+	}
+
+	lock, err := acquireStateLock(stateDir)
+	if err != nil {
+		t.Fatalf("expected lock to be releasable after Start returns, got %v", err)
+	}
+	if err := lock.Release(); err != nil {
+		t.Fatalf("lock release error: %v", err)
+	}
+}
+
+func TestStartForegroundHoldsStateLockUntilExit(t *testing.T) {
+	if goruntime.GOOS == "windows" {
+		t.Skip("state lock contention is only enforced on unix builds")
+	}
+
+	cfg := writeTempDaemonConfig(t, "0 0 * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- Start(ctx, StartOptions{
+			ConfigPath: cfg,
+			Source:     "kron",
+			StateDir:   stateDir,
+			Tick:       10 * time.Millisecond,
+			Once:       false,
+		})
+	}()
+
+	// Give Start a moment to acquire lock.
+	time.Sleep(30 * time.Millisecond)
+
+	err := Start(context.Background(), StartOptions{
+		ConfigPath: cfg,
+		Source:     "kron",
+		StateDir:   stateDir,
+		Tick:       time.Millisecond,
+		Once:       true,
+	})
+	if err == nil || !strings.Contains(err.Error(), "state lock already held") {
+		t.Fatalf("expected foreground lock contention error, got %v", err)
+	}
+
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("foreground Start exit error: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatalf("timed out waiting for foreground Start to exit")
+	}
+
+	// Lock should be released after foreground exits.
+	lock, err := acquireStateLock(stateDir)
+	if err != nil {
+		t.Fatalf("expected lock to be released after foreground exit, got %v", err)
+	}
+	if err := lock.Release(); err != nil {
+		t.Fatalf("lock release error: %v", err)
 	}
 }
 

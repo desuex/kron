@@ -43,7 +43,7 @@ type runCompletion struct {
 	err      error
 }
 
-func Start(ctx context.Context, opts StartOptions) error {
+func Start(ctx context.Context, opts StartOptions) (retErr error) {
 	if opts.ConfigPath == "" {
 		return fmt.Errorf("config path is required")
 	}
@@ -56,6 +56,16 @@ func Start(ctx context.Context, opts StartOptions) error {
 	if opts.Tick <= 0 {
 		opts.Tick = time.Second
 	}
+
+	lock, err := acquireStateLock(opts.StateDir)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := lock.Release(); err != nil && retErr == nil {
+			retErr = fmt.Errorf("release state lock: %w", err)
+		}
+	}()
 
 	jobs, err := loadJobsBySource(opts.Source, opts.ConfigPath)
 	if err != nil {
