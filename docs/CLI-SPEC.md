@@ -223,30 +223,37 @@ Exit codes:
 
 `krond` is the daemon.
 
-Status: planned (not implemented in current MVP).
+Status: in progress.
+Current implementation includes an early `start` command slice for local execution workflows.
 
 ---
 
 ## Command: `krond start`
 
 ```
-krond start [--config <dir>] [--foreground] [--log-format text|json]
+krond start --config <file|dir> [--state-dir <path>] [--tick <duration>] [--once]
 ```
 
 Behavior:
 
-* Starts daemon.
-* Acquires lock.
-* Loads configuration.
-* Enters scheduler loop.
+* Loads configuration from a file or directory.
+* Loads per-job persistent state from `--state-dir`.
+* Computes deterministic decisions via `kron-core`.
+* Executes due jobs.
+* Persists last handled period state atomically after outcomes.
+* When `--once` is set, runs one scheduler step and exits.
+
+Current limitations of this slice:
+
+* No single-instance lock enforcement.
+* No hot reload command.
+* No daemon status API.
+* Compatibility-focused cron ecosystem features are still staged in roadmap.
 
 Exit codes:
 
 * `0` clean exit
-* `1` configuration error
-* `2` state error
-* `3` lock error
-* `4` fatal persistence error
+* `2` invalid input/runtime error
 
 ---
 

@@ -20,6 +20,7 @@ Correctness, determinism, and operational safety take priority over feature velo
 * MVP freeze track: in progress.
 * `core` deterministic engine MVP is implemented and validated with golden vectors (`v1`-`v7`).
 * `krontab` implements `lint`, `explain`, and `next`.
+* `krond` initial `start` runtime slice is implemented (config load, deterministic scheduling, execution, state persistence).
 * CI enforces format, vet, tests, docs build, and 90% combined coverage.
 * Release workflow builds tagged `krontab` binaries for Linux/macOS/Windows with checksums.
 * Freeze checklist and tag runbook are documented in `docs/RELEASE.md`.

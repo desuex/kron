@@ -40,6 +40,7 @@ Last updated: 2026-02-25.
 ## Next Stage (Cron Drop-in Replacement)
 
 - [x] Define cron drop-in compatibility profile and boundaries (`docs/CRON-DROPIN.md`).
+- [x] Implement initial `krond start` runtime slice (config parse, deterministic scheduling, execution, atomic state).
 - [ ] Build `krond` cron-source adapters for `/etc/crontab` and `/etc/cron.d/*`.
 - [ ] Add cron compatibility corpus tests for Tier 1 capabilities.
 - [ ] Publish migration guide from cron files to Kron runtime execution model.

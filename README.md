@@ -47,6 +47,7 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 
 - `core/`: deterministic seed hashing, SplitMix64 PRNG, window computation, bounded candidate sampling, constraint handling, and golden vectors (`v1`-`v7`)
 - `cmd/krontab`: `lint`, `explain`, and `next` commands
+- `daemon/cmd/krond`: early `start` command slice (config load, deterministic scheduling, execution, state persistence)
 - Runtime distributions in `explain`/`next`: `uniform`, `skewEarly`, `skewLate`
 - `normal` and `exponential` syntax is validated by `lint` but not executed by MVP runtime commands
 - CI: `gofmt` check, `go vet`, tests, coverage threshold, and Sphinx docs build
@@ -60,7 +61,7 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 | `krontab explain` | Implemented | Deterministic decision output, text/JSON |
 | `krontab next` | Implemented | Deterministic multi-period preview |
 | Runtime `normal`/`exponential` distributions | Planned | Currently lint-validated only |
-| `krond` daemon | Planned | Post-CLI MVP |
+| `krond` daemon | In progress | Early `start` slice implemented; full drop-in parity staged |
 | `kronctl` helper CLI | Planned | Post-CLI MVP |
 | Cross-platform release binaries | In progress | Milestone 4: Linux/macOS/Windows assets |
 
