@@ -14,6 +14,15 @@ func TestRunUsagePaths(t *testing.T) {
 	if code := run([]string{"krond", "help"}); code != 0 {
 		t.Fatalf("expected exit 0 for help, got %d", code)
 	}
+	if code := run([]string{"krond", "-h"}); code != 0 {
+		t.Fatalf("expected exit 0 for -h, got %d", code)
+	}
+	if code := run([]string{"krond", "--help"}); code != 0 {
+		t.Fatalf("expected exit 0 for --help, got %d", code)
+	}
+	if code := run([]string{"krond", "unknown"}); code != 2 {
+		t.Fatalf("expected exit 2 for unknown command, got %d", code)
+	}
 	if code := run([]string{"krond", "start"}); code != 2 {
 		t.Fatalf("expected exit 2 for missing config, got %d", code)
 	}
@@ -32,6 +41,69 @@ func TestRunStartOnce(t *testing.T) {
 	})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
+
+func TestRunStartInvalidSource(t *testing.T) {
+	cfg := writeTempConfig(t, "0 0 * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+
+	code := run([]string{
+		"krond",
+		"start",
+		"--config", cfg,
+		"--source", "invalid",
+		"--state-dir", stateDir,
+		"--once",
+	})
+	if code != 2 {
+		t.Fatalf("expected exit 2, got %d", code)
+	}
+}
+
+func TestRunStartCronSourceOnce(t *testing.T) {
+	cfg := writeTempConfig(t, "0 0 * * * root true\n")
+	stateDir := t.TempDir()
+
+	code := run([]string{
+		"krond",
+		"start",
+		"--config", cfg,
+		"--source", "cron",
+		"--state-dir", stateDir,
+		"--once",
+	})
+	if code != 0 {
+		t.Fatalf("expected exit 0 for cron source, got %d", code)
+	}
+}
+
+func TestRunStartFlagParsingErrors(t *testing.T) {
+	cfg := writeTempConfig(t, "0 0 * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+
+	code := run([]string{
+		"krond",
+		"start",
+		"--config", cfg,
+		"--state-dir", stateDir,
+		"--tick", "not-a-duration",
+		"--once",
+	})
+	if code != 2 {
+		t.Fatalf("expected exit 2 for bad duration flag, got %d", code)
+	}
+
+	code = run([]string{
+		"krond",
+		"start",
+		"--config", cfg,
+		"--state-dir", stateDir,
+		"--once",
+		"extra-positional",
+	})
+	if code != 2 {
+		t.Fatalf("expected exit 2 for positional args, got %d", code)
 	}
 }
 

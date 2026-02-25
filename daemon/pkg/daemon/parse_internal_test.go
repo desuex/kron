@@ -106,6 +106,9 @@ func TestParseJobFieldsAcceptsCompatibilityFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseJobFields error: %v", err)
 	}
+	if job.Command.User != "root" || job.Command.Group != "wheel" {
+		t.Fatalf("expected user/group fields to be parsed, got user=%q group=%q", job.Command.User, job.Command.Group)
+	}
 	if !job.Command.Shell || job.Command.Timeout != 5*time.Second || job.Command.Cwd != "/tmp" {
 		t.Fatalf("command field parse mismatch: %+v", job.Command)
 	}
@@ -157,5 +160,79 @@ func TestParseJobModifiersUnknownAndConstraints(t *testing.T) {
 	err := parseJobModifiers(&job, []string{"@tz(No/Such_TZ)"})
 	if err == nil || !strings.Contains(err.Error(), "invalid timezone") {
 		t.Fatalf("expected timezone error, got %v", err)
+	}
+}
+
+func TestParseJobFieldsValidationErrors(t *testing.T) {
+	tests := []struct {
+		name   string
+		fields []string
+		want   string
+	}{
+		{
+			name:   "invalid raw field token",
+			fields: []string{"name=backup", "command=/bin/true", "badfield"},
+			want:   "invalid field",
+		},
+		{
+			name:   "empty name",
+			fields: []string{"name=", "command=/bin/true"},
+			want:   "name cannot be empty",
+		},
+		{
+			name:   "empty command",
+			fields: []string{"name=backup", "command=   "},
+			want:   "command cannot be empty",
+		},
+		{
+			name:   "invalid shell",
+			fields: []string{"name=backup", "command=/bin/true", "shell=maybe"},
+			want:   "invalid shell value",
+		},
+		{
+			name:   "invalid env",
+			fields: []string{"name=backup", "command=/bin/true", "env=NOT_VALID"},
+			want:   "invalid env value",
+		},
+		{
+			name:   "empty user",
+			fields: []string{"name=backup", "command=/bin/true", "user=   "},
+			want:   "user cannot be empty",
+		},
+		{
+			name:   "empty group",
+			fields: []string{"name=backup", "command=/bin/true", "group=   "},
+			want:   "group cannot be empty",
+		},
+		{
+			name:   "invalid timeout",
+			fields: []string{"name=backup", "command=/bin/true", "timeout=nope"},
+			want:   "invalid timeout",
+		},
+		{
+			name:   "unknown field",
+			fields: []string{"name=backup", "command=/bin/true", "priority=high"},
+			want:   `unknown field "priority"`,
+		},
+		{
+			name:   "missing name",
+			fields: []string{"command=/bin/true"},
+			want:   `missing required field "name"`,
+		},
+		{
+			name:   "missing command",
+			fields: []string{"name=backup"},
+			want:   `missing required field "command"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			job := JobConfig{}
+			err := parseJobFields(&job, tt.fields)
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("expected error containing %q, got %v", tt.want, err)
+			}
+		})
 	}
 }
