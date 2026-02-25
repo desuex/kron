@@ -12,15 +12,17 @@ Correctness, determinism, and operational safety take priority over feature velo
 
 ---
 
-## Progress Snapshot (2026-02-24)
+## Progress Snapshot (2026-02-25)
 
 * Phase 0 (Repository Bootstrap): completed.
 * Phase 1 (kron-core): completed.
-* Phase 2 (krontab): in progress.
+* Phase 2 (krontab): completed.
+* MVP freeze track: in progress.
 * `core` deterministic engine MVP is implemented and validated with golden vectors (`v1`-`v7`).
 * `krontab` implements `lint`, `explain`, and `next`.
 * CI enforces format, vet, tests, docs build, and 90% combined coverage.
 * Release workflow builds tagged `krontab` binaries for Linux/macOS/Windows with checksums.
+* Freeze checklist and tag runbook are documented in `docs/RELEASE.md`.
 
 ---
 
@@ -136,7 +138,7 @@ Implement deterministic decision engine exactly as specified.
 
 ## Status
 
-In progress.
+Completed.
 Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, snapshot tests, expanded integration tests, and parity coverage across supported vector families.
 
 ## Goals

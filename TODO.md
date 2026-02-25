@@ -1,7 +1,7 @@
 # TODO
 
 MVP-only backlog for Milestone 3 (CLI MVP) and Milestone 4 (MVP freeze).
-Last updated: 2026-02-24.
+Last updated: 2026-02-25.
 
 ## Completed Recently
 
@@ -13,7 +13,7 @@ Last updated: 2026-02-24.
 - [x] Add strict runtime parsing for `@policy(...)` in `explain`/`next` config loading.
 - [x] Reconcile `docs/CLI-SPEC.md` with current MVP command flags and runtime behavior.
 - [x] Resolve distribution scope for MVP runtime: `normal`/`exponential` are lint-validated but not executed by `explain`/`next`.
-- [x] Add vector-parity CLI tests from selected `core/testdata/vectors` cases.
+- [x] Add vector-parity CLI tests across supported `core/testdata/vectors` families.
 - [x] Freeze canonical stderr text and exit-code expectations in tests and `docs/CLI-SPEC.md`.
 - [x] Add an explicit implemented-vs-planned matrix in `README.md`.
 - [x] Add release workflow that builds `krontab` binaries for Linux/macOS/Windows and publishes checksums on tags.
@@ -30,9 +30,9 @@ Last updated: 2026-02-24.
 
 ## Milestone 4 (MVP Freeze and Alpha Readiness)
 
-- [ ] Create a concrete freeze checklist document for `v0.1.0-alpha.1`.
+- [x] Create a concrete freeze checklist document for `v0.1.0-alpha.1`.
 - [ ] Publish `krontab` release binaries for Linux, macOS, and Windows (with checksums).
 - [ ] Define pre-1.0 CLI/API stability policy and publish it in docs.
-- [ ] Prepare changelog section for the first alpha release.
+- [x] Prepare changelog section for the first alpha release.
 - [ ] Verify "new contributor in under 5 minutes" path from `SETUP.md` and `USAGE.md`.
 - [ ] Prepare post-MVP backlog handoff for `daemon/` and `operator/` work.
