@@ -1,0 +1,609 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRD-SPEC.md &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CLI-SPEC.md" href="CLI-SPEC.html" />
+    <link rel="prev" title="TEST-VECTORS.md" href="TEST-VECTORS.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPEC.html">SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CORE-SPEC.html">CORE-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KRONTAB.html">KRONTAB File Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="EXECUTION.html">EXECUTION.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="COMPAT.html">COMPAT.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CRD-SPEC.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-group">API Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resource-structure">Resource Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spec">Spec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#schedule">schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timezone">timezone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#window">window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distribution">distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seed">seed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constraints">constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#policy">policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jobtemplate">jobTemplate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#status">Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lastoutcome">lastOutcome</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-fields">next* Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditions">Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defaulting-rules">Defaulting Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#immutability-rules">Immutability Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reconciliation-semantics">Reconciliation Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#idempotency-rules">Idempotency Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suspension">Suspension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deadline-handling">Deadline Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deletion-semantics">Deletion Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-rules">Upgrade Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-guarantees">Validation Guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-guarantees">Compatibility Guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#naming-of-jobs">Naming of Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#invariants">Invariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CRD-SPEC.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/CRD-SPEC.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="crd-spec-md">
+<h1>CRD-SPEC.md<a class="headerlink" href="#crd-spec-md" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document defines the Kubernetes Custom Resource Definition (CRD) contract for Kron.</p>
+<p>It specifies:</p>
+<ul class="simple">
+<li><p>API group and versions</p></li>
+<li><p>Resource schema</p></li>
+<li><p>Defaulting rules</p></li>
+<li><p>Validation rules</p></li>
+<li><p>Status contract</p></li>
+<li><p>Immutability rules</p></li>
+<li><p>Upgrade guarantees</p></li>
+</ul>
+<p>This specification applies to the Kubernetes adapter (<code class="docutils literal notranslate"><span class="pre">kron-operator</span></code>).</p>
+</section>
+<hr class="docutils" />
+<section id="api-group">
+<h2>API Group<a class="headerlink" href="#api-group" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Group: kron.io
+Version: v1alpha1
+Kind: KronJob
+Plural: kronjobs
+Scope: Namespaced
+</pre></div>
+</div>
+<p>Future versions must follow Kubernetes API versioning rules.</p>
+</section>
+<hr class="docutils" />
+<section id="resource-structure">
+<h2>Resource Structure<a class="headerlink" href="#resource-structure" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>apiVersion: kron.io/v1alpha1
+kind: KronJob
+metadata:
+  name: string
+  namespace: string
+spec: KronJobSpec
+status: KronJobStatus
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="spec">
+<h2>Spec<a class="headerlink" href="#spec" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>KronJobSpec {
+  schedule: string
+  timezone: string (optional)
+  window: WindowSpec
+  distribution: DistributionSpec
+  seed: SeedSpec
+  constraints: ConstraintSpec (optional)
+  policy: PolicySpec (optional)
+  jobTemplate: batchv1.JobTemplateSpec
+}
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="schedule">
+<h2>schedule<a class="headerlink" href="#schedule" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Required.</p></li>
+<li><p>Standard 5-field cron expression.</p></li>
+<li><p>Must pass validation at admission time.</p></li>
+<li><p>Interpreted in <code class="docutils literal notranslate"><span class="pre">timezone</span></code> if provided, otherwise <code class="docutils literal notranslate"><span class="pre">UTC</span></code>.</p></li>
+</ul>
+<p>Invalid schedule causes resource rejection.</p>
+</section>
+<hr class="docutils" />
+<section id="timezone">
+<h2>timezone<a class="headerlink" href="#timezone" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Optional.</p></li>
+<li><p>IANA timezone name.</p></li>
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">UTC</span></code>.</p></li>
+</ul>
+<p>Invalid timezone causes resource rejection.</p>
+</section>
+<hr class="docutils" />
+<section id="window">
+<h2>window<a class="headerlink" href="#window" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>WindowSpec {
+  mode: &quot;after&quot; | &quot;around&quot;
+  duration: string (Go duration format)
+}
+</pre></div>
+</div>
+<p>Default:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mode: &quot;after&quot;
+duration: &quot;0s&quot;
+</pre></div>
+</div>
+<p>Validation:</p>
+<ul class="simple">
+<li><p>duration must be ≥ 0.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">around</span></code>, duration may be zero but must not overflow when halved.</p></li>
+<li><p>Excessively large durations may be rejected by validation policy.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="distribution">
+<h2>distribution<a class="headerlink" href="#distribution" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DistributionSpec {
+  name: string
+  params: map[string]string (optional)
+}
+</pre></div>
+</div>
+<p>Default:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>name: &quot;uniform&quot;
+params: {}
+</pre></div>
+</div>
+<p>Allowed names:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">uniform</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normal</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skewEarly</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skewLate</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exponential</span></code></p></li>
+</ul>
+<p>Unknown names cause rejection.</p>
+<p>Parameter validation must match CORE-SPEC.md.</p>
+</section>
+<hr class="docutils" />
+<section id="seed">
+<h2>seed<a class="headerlink" href="#seed" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SeedSpec {
+  strategy: &quot;stable&quot; | &quot;daily&quot; | &quot;weekly&quot;
+  salt: string (optional)
+}
+</pre></div>
+</div>
+<p>Default:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>strategy: &quot;stable&quot;
+salt: &quot;&quot;
+</pre></div>
+</div>
+<p>Unknown strategy causes rejection.</p>
+</section>
+<hr class="docutils" />
+<section id="constraints">
+<h2>constraints<a class="headerlink" href="#constraints" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ConstraintSpec {
+  only: []ConstraintClause (optional)
+  avoid: []ConstraintClause (optional)
+}
+</pre></div>
+</div>
+<p>Each clause corresponds to SYNTAX.md semantics.</p>
+<p>Constraint schema must be validated structurally but deep semantic validation may occur in controller.</p>
+<p>If constraints are unsatisfiable at runtime, period becomes <code class="docutils literal notranslate"><span class="pre">unschedulable</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="policy">
+<h2>policy<a class="headerlink" href="#policy" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PolicySpec {
+  concurrency: &quot;allow&quot; | &quot;forbid&quot; | &quot;replace&quot;
+  deadline: string (Go duration format)
+  suspend: boolean
+}
+</pre></div>
+</div>
+<p>Defaults:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>concurrency: &quot;forbid&quot;
+deadline: &quot;0s&quot;
+suspend: false
+</pre></div>
+</div>
+<p>Validation:</p>
+<ul class="simple">
+<li><p>deadline ≥ 0.</p></li>
+<li><p>Unknown concurrency value rejected.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="jobtemplate">
+<h2>jobTemplate<a class="headerlink" href="#jobtemplate" title="Link to this heading"></a></h2>
+<p>Standard <code class="docutils literal notranslate"><span class="pre">batch/v1</span> <span class="pre">JobTemplateSpec</span></code>.</p>
+<p>Requirements:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">spec.template.spec.restartPolicy</span></code> must be valid for Job.</p></li>
+<li><p>No fields may be mutated by controller except labels and owner references.</p></li>
+</ul>
+<p>Controller must:</p>
+<ul class="simple">
+<li><p>Add owner reference to KronJob.</p></li>
+<li><p>Add deterministic labels:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">kron.io/name</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kron.io/period-id</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kron.io/chosen-time</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>KronJobStatus {
+  observedGeneration: int64
+  lastPeriodID: string
+  lastNominalTime: string
+  lastChosenTime: string
+  lastOutcome: string
+  nextPeriodID: string
+  nextNominalTime: string
+  nextChosenTime: string
+  conditions: []Condition
+}
+</pre></div>
+</div>
+<p>All timestamps are RFC3339 UTC.</p>
+</section>
+<hr class="docutils" />
+<section id="lastoutcome">
+<h2>lastOutcome<a class="headerlink" href="#lastoutcome" title="Link to this heading"></a></h2>
+<p>One of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">executed</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skipped</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missed</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unschedulable</span></code></p></li>
+</ul>
+<p>Empty if no period handled yet.</p>
+</section>
+<hr class="docutils" />
+<section id="next-fields">
+<h2>next* Fields<a class="headerlink" href="#next-fields" title="Link to this heading"></a></h2>
+<p>Represent the next scheduled period as of last reconciliation.</p>
+<p>Must reflect deterministic decision.</p>
+<p>These fields are informational and may change if spec changes.</p>
+</section>
+<hr class="docutils" />
+<section id="conditions">
+<h2>Conditions<a class="headerlink" href="#conditions" title="Link to this heading"></a></h2>
+<p>Standard Kubernetes Condition structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Condition {
+  type: string
+  status: &quot;True&quot; | &quot;False&quot; | &quot;Unknown&quot;
+  reason: string
+  message: string
+  lastTransitionTime: string
+}
+</pre></div>
+</div>
+<p>Defined condition types:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Ready</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InvalidSpec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SchedulingError</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Unschedulable</span></code></p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="defaulting-rules">
+<h2>Defaulting Rules<a class="headerlink" href="#defaulting-rules" title="Link to this heading"></a></h2>
+<p>Defaults must be applied at admission or reconciliation:</p>
+<ul class="simple">
+<li><p>timezone → <code class="docutils literal notranslate"><span class="pre">UTC</span></code></p></li>
+<li><p>window.mode → <code class="docutils literal notranslate"><span class="pre">after</span></code></p></li>
+<li><p>window.duration → <code class="docutils literal notranslate"><span class="pre">0s</span></code></p></li>
+<li><p>distribution.name → <code class="docutils literal notranslate"><span class="pre">uniform</span></code></p></li>
+<li><p>seed.strategy → <code class="docutils literal notranslate"><span class="pre">stable</span></code></p></li>
+<li><p>seed.salt → <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></li>
+<li><p>policy.concurrency → <code class="docutils literal notranslate"><span class="pre">forbid</span></code></p></li>
+<li><p>policy.deadline → <code class="docutils literal notranslate"><span class="pre">0s</span></code></p></li>
+<li><p>policy.suspend → <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+</ul>
+<p>Defaulting must be stable within version.</p>
+</section>
+<hr class="docutils" />
+<section id="immutability-rules">
+<h2>Immutability Rules<a class="headerlink" href="#immutability-rules" title="Link to this heading"></a></h2>
+<p>The following fields are immutable after creation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">spec.schedule</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spec.timezone</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spec.seed.strategy</span></code></p></li>
+</ul>
+<p>If changed:</p>
+<ul class="simple">
+<li><p>Controller must treat as new scheduling configuration.</p></li>
+<li><p>Future periods use new config.</p></li>
+<li><p>Already handled periods remain handled.</p></li>
+</ul>
+<p>Alternatively, strict mode may reject mutation via validation webhook.</p>
+<p>Immutability policy must be consistent within version.</p>
+</section>
+<hr class="docutils" />
+<section id="reconciliation-semantics">
+<h2>Reconciliation Semantics<a class="headerlink" href="#reconciliation-semantics" title="Link to this heading"></a></h2>
+<p>Controller must:</p>
+<ol class="arabic simple">
+<li><p>Observe current time.</p></li>
+<li><p>Compute decision for current period using kron-core.</p></li>
+<li><p>Compare with status.</p></li>
+<li><p>Enforce idempotency:</p>
+<ul class="simple">
+<li><p>Do not create duplicate Job for same <code class="docutils literal notranslate"><span class="pre">period-id</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Apply policy.</p></li>
+<li><p>Update status atomically.</p></li>
+</ol>
+<p>Reconciliation must be idempotent.</p>
+</section>
+<hr class="docutils" />
+<section id="idempotency-rules">
+<h2>Idempotency Rules<a class="headerlink" href="#idempotency-rules" title="Link to this heading"></a></h2>
+<p>Before creating a Job:</p>
+<ul class="simple">
+<li><p>Check for existing Job with:</p>
+<ul>
+<li><p>matching owner reference</p></li>
+<li><p>matching <code class="docutils literal notranslate"><span class="pre">kron.io/period-id</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p>If exists:</p>
+<ul class="simple">
+<li><p>Do not create another.</p></li>
+<li><p>Update status accordingly.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="suspension">
+<h2>Suspension<a class="headerlink" href="#suspension" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">policy.suspend=true</span></code>:</p>
+<ul class="simple">
+<li><p>No Jobs created.</p></li>
+<li><p>Periods are not marked handled.</p></li>
+<li><p>Status reflects suspended state.</p></li>
+</ul>
+<p>When suspension lifted:</p>
+<ul class="simple">
+<li><p>Only future periods are considered.</p></li>
+<li><p>Missed periods follow deadline semantics.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="deadline-handling">
+<h2>Deadline Handling<a class="headerlink" href="#deadline-handling" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">now</span> <span class="pre">&gt;</span> <span class="pre">chosenTime</span> <span class="pre">+</span> <span class="pre">deadline</span></code>:</p>
+<ul class="simple">
+<li><p>Mark period <code class="docutils literal notranslate"><span class="pre">missed</span></code>.</p></li>
+<li><p>Do not create Job.</p></li>
+<li><p>Update status.</p></li>
+</ul>
+<p>Deadline default <code class="docutils literal notranslate"><span class="pre">0s</span></code> means:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">now</span> <span class="pre">&gt;</span> <span class="pre">chosenTime</span></code>, period is <code class="docutils literal notranslate"><span class="pre">missed</span></code>.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="deletion-semantics">
+<h2>Deletion Semantics<a class="headerlink" href="#deletion-semantics" title="Link to this heading"></a></h2>
+<p>When KronJob is deleted:</p>
+<ul class="simple">
+<li><p>Owner reference ensures child Jobs are garbage collected.</p></li>
+<li><p>Controller must not create new Jobs.</p></li>
+</ul>
+<p>Finalizers are optional but must not block deletion unnecessarily.</p>
+</section>
+<hr class="docutils" />
+<section id="upgrade-rules">
+<h2>Upgrade Rules<a class="headerlink" href="#upgrade-rules" title="Link to this heading"></a></h2>
+<p>Within <code class="docutils literal notranslate"><span class="pre">v1alpha1</span></code>:</p>
+<ul class="simple">
+<li><p>Field names must not change.</p></li>
+<li><p>Status fields must not change meaning.</p></li>
+<li><p>Default values must remain stable.</p></li>
+</ul>
+<p>Breaking changes require new API version (e.g., <code class="docutils literal notranslate"><span class="pre">v1beta1</span></code>).</p>
+<p>Conversion webhook required if version upgrade introduces structural change.</p>
+</section>
+<hr class="docutils" />
+<section id="validation-guarantees">
+<h2>Validation Guarantees<a class="headerlink" href="#validation-guarantees" title="Link to this heading"></a></h2>
+<p>CRD schema must enforce:</p>
+<ul class="simple">
+<li><p>Required fields present.</p></li>
+<li><p>Enum values constrained.</p></li>
+<li><p>Duration strings valid.</p></li>
+<li><p>Basic structural validation.</p></li>
+</ul>
+<p>Deep semantic validation may occur in controller and reflected in <code class="docutils literal notranslate"><span class="pre">InvalidSpec</span></code> condition.</p>
+</section>
+<hr class="docutils" />
+<section id="compatibility-guarantees">
+<h2>Compatibility Guarantees<a class="headerlink" href="#compatibility-guarantees" title="Link to this heading"></a></h2>
+<p>For identical spec and same Kron version:</p>
+<ul class="simple">
+<li><p>Same decisions must be produced.</p></li>
+<li><p>Same period-id labeling must occur.</p></li>
+<li><p>Same Job naming strategy must be used.</p></li>
+</ul>
+<p>Behavioral changes require new API version.</p>
+</section>
+<hr class="docutils" />
+<section id="naming-of-jobs">
+<h2>Naming of Jobs<a class="headerlink" href="#naming-of-jobs" title="Link to this heading"></a></h2>
+<p>Controller must name Jobs deterministically:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;kronjob-name&gt;-&lt;period-hash&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">period-hash</span></code> derived from <code class="docutils literal notranslate"><span class="pre">period-id</span></code> truncated to safe length.</p>
+<p>Name must:</p>
+<ul class="simple">
+<li><p>Be DNS-1123 compliant.</p></li>
+<li><p>Avoid collisions.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="invariants">
+<h2>Invariants<a class="headerlink" href="#invariants" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>At most one Job per <code class="docutils literal notranslate"><span class="pre">(namespace,</span> <span class="pre">kronjob,</span> <span class="pre">period-id)</span></code>.</p></li>
+<li><p>chosenTime always within window.</p></li>
+<li><p>Status reflects last handled period.</p></li>
+<li><p>Reconciliation is idempotent.</p></li>
+<li><p>No duplicate Jobs on controller restart.</p></li>
+<li><p>Spec changes affect only future periods.</p></li>
+<li><p>Suspension prevents execution without losing configuration.</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="non-goals">
+<h2>Non-Goals<a class="headerlink" href="#non-goals" title="Link to this heading"></a></h2>
+<p>CRD does not:</p>
+<ul class="simple">
+<li><p>Provide workflow chaining.</p></li>
+<li><p>Provide retries.</p></li>
+<li><p>Provide backoff policies.</p></li>
+<li><p>Provide distributed locking beyond Job semantics.</p></li>
+</ul>
+<p>KronJob defines scheduling, not orchestration.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="TEST-VECTORS.html" class="btn btn-neutral float-left" title="TEST-VECTORS.md" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="CLI-SPEC.html" class="btn btn-neutral float-right" title="CLI-SPEC.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

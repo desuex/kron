@@ -1,0 +1,556 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EXECUTION.md &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="STATE.md" href="STATE.html" />
+    <link rel="prev" title="KRONTAB File Format Specification" href="KRONTAB.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPEC.html">SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CORE-SPEC.html">CORE-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KRONTAB.html">KRONTAB File Format Specification</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">EXECUTION.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#process-model-overview">Process Model Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#krond-lifecycle">krond Lifecycle</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#startup">Startup</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scheduler-loop">Scheduler Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#job-identity">Job Identity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fork-and-exec-model">Fork and Exec Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution-environment">Execution Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concurrency-handling">Concurrency Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#allow">allow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#forbid">forbid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#replace">replace</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#timeout-handling">Timeout Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#state-persistence">State Persistence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#missed-period-handling">Missed Period Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-handling">Output Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#signal-handling">Signal Handling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sigterm-sigint">SIGTERM / SIGINT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sighup">SIGHUP</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#locking-model">Locking Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#isolation-and-security">Isolation and Security</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resource-limits">Resource Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crash-recovery">Crash Recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#determinism-guarantee">Determinism Guarantee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-model">Performance Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#failure-guarantees">Failure Guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="COMPAT.html">COMPAT.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CRD-SPEC.html">CRD-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">EXECUTION.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/EXECUTION.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="execution-md">
+<h1>EXECUTION.md<a class="headerlink" href="#execution-md" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document defines how Kron executes scheduled work in non-Kubernetes mode (<code class="docutils literal notranslate"><span class="pre">krond</span></code>). It describes:</p>
+<ul class="simple">
+<li><p>Daemon lifecycle</p></li>
+<li><p>Job process model</p></li>
+<li><p>Forking and execution</p></li>
+<li><p>Concurrency handling</p></li>
+<li><p>State management</p></li>
+<li><p>Failure handling</p></li>
+</ul>
+<p>This specification applies to <code class="docutils literal notranslate"><span class="pre">krond</span></code>.
+Kubernetes execution is delegated to native <code class="docutils literal notranslate"><span class="pre">Job</span></code> resources and is not defined here.</p>
+</section>
+<hr class="docutils" />
+<section id="process-model-overview">
+<h2>Process Model Overview<a class="headerlink" href="#process-model-overview" title="Link to this heading"></a></h2>
+<p>Kron consists of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">krond</span></code> — long-running daemon</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">krontab</span></code> — configuration manager (writes config files)</p></li>
+<li><p>Child processes — spawned per scheduled execution</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> is the only persistent process.</p>
+<p>Each scheduled execution results in exactly one fork/exec cycle.</p>
+</section>
+<hr class="docutils" />
+<section id="krond-lifecycle">
+<h2>krond Lifecycle<a class="headerlink" href="#krond-lifecycle" title="Link to this heading"></a></h2>
+<section id="startup">
+<h3>Startup<a class="headerlink" href="#startup" title="Link to this heading"></a></h3>
+<p>On startup, <code class="docutils literal notranslate"><span class="pre">krond</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Loads configuration files.</p></li>
+<li><p>Validates all schedule syntax.</p></li>
+<li><p>Loads persisted state from disk.</p></li>
+<li><p>Computes the next period and chosen execution time for each entry.</p></li>
+<li><p>Starts the scheduler loop.</p></li>
+<li><p>Optionally writes PID file.</p></li>
+</ol>
+<p>If configuration is invalid, <code class="docutils literal notranslate"><span class="pre">krond</span></code> exits with non-zero status.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="scheduler-loop">
+<h2>Scheduler Loop<a class="headerlink" href="#scheduler-loop" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> maintains an in-memory priority queue ordered by next chosen execution time.</p>
+<p>Main loop:</p>
+<ol class="arabic simple">
+<li><p>Determine earliest scheduled execution.</p></li>
+<li><p>Sleep until that timestamp.</p></li>
+<li><p>Wake up.</p></li>
+<li><p>Recompute decision for that job to confirm it is still valid.</p></li>
+<li><p>Attempt execution.</p></li>
+<li><p>Compute next period and chosen time.</p></li>
+<li><p>Reinsert into queue.</p></li>
+</ol>
+<p>Time is always compared in UTC internally.</p>
+<p>If system clock jumps forward, missed-period logic is applied.
+If system clock jumps backward, the queue is recalculated.</p>
+</section>
+<hr class="docutils" />
+<section id="job-identity">
+<h2>Job Identity<a class="headerlink" href="#job-identity" title="Link to this heading"></a></h2>
+<p>Each schedule entry has a stable identity:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">config_path</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;config_path&gt;</span></code> is the absolute path to the configuration file and <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> is the <code class="docutils literal notranslate"><span class="pre">name</span></code> field defined in the entry. See KRONTAB.md for the file format specification.</p>
+<p>This identity is used for:</p>
+<ul class="simple">
+<li><p>Seed derivation</p></li>
+<li><p>Locking</p></li>
+<li><p>State files</p></li>
+<li><p>Logging</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="fork-and-exec-model">
+<h2>Fork and Exec Model<a class="headerlink" href="#fork-and-exec-model" title="Link to this heading"></a></h2>
+<p>When a job is triggered:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">krond</span></code> calls <code class="docutils literal notranslate"><span class="pre">fork()</span></code>.</p></li>
+<li><p>Child process calls <code class="docutils literal notranslate"><span class="pre">execve()</span></code> with configured command.</p></li>
+<li><p>Parent process:</p>
+<ul class="simple">
+<li><p>Records child PID</p></li>
+<li><p>Monitors exit status via <code class="docutils literal notranslate"><span class="pre">waitpid()</span></code></p></li>
+</ul>
+</li>
+</ol>
+<p>No shell wrapping is performed unless explicitly configured.</p>
+<p>Default behavior:</p>
+<ul class="simple">
+<li><p>Command is executed directly.</p></li>
+<li><p>Arguments are passed as defined.</p></li>
+<li><p>Environment is inherited from <code class="docutils literal notranslate"><span class="pre">krond</span></code> unless overridden.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="execution-environment">
+<h2>Execution Environment<a class="headerlink" href="#execution-environment" title="Link to this heading"></a></h2>
+<p>Each job may define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">user</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cwd</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">umask</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></li>
+</ul>
+<p>Before <code class="docutils literal notranslate"><span class="pre">execve()</span></code>:</p>
+<ol class="arabic simple">
+<li><p>If running as root and <code class="docutils literal notranslate"><span class="pre">user</span></code> specified:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">setgid()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">setuid()</span></code></p></li>
+</ul>
+</li>
+<li><p>Apply <code class="docutils literal notranslate"><span class="pre">chdir()</span></code> if <code class="docutils literal notranslate"><span class="pre">cwd</span></code> defined.</p></li>
+<li><p>Apply <code class="docutils literal notranslate"><span class="pre">umask()</span></code> if defined.</p></li>
+<li><p>Set environment variables.</p></li>
+</ol>
+<p>If privilege drop fails, execution is aborted.</p>
+</section>
+<hr class="docutils" />
+<section id="concurrency-handling">
+<h2>Concurrency Handling<a class="headerlink" href="#concurrency-handling" title="Link to this heading"></a></h2>
+<p>Each job has a concurrency policy:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">allow</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forbid</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replace</span></code></p></li>
+</ul>
+<section id="allow">
+<h3>allow<a class="headerlink" href="#allow" title="Link to this heading"></a></h3>
+<p>Multiple child processes may run simultaneously.</p>
+</section>
+<section id="forbid">
+<h3>forbid<a class="headerlink" href="#forbid" title="Link to this heading"></a></h3>
+<p>If a previous child process is still active:</p>
+<ul class="simple">
+<li><p>New execution is skipped.</p></li>
+<li><p>Event is logged.</p></li>
+<li><p>Period is marked as skipped.</p></li>
+</ul>
+</section>
+<section id="replace">
+<h3>replace<a class="headerlink" href="#replace" title="Link to this heading"></a></h3>
+<p>If a previous child process is active:</p>
+<ol class="arabic simple">
+<li><p>Send <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code> to active PID.</p></li>
+<li><p>Wait configurable grace period.</p></li>
+<li><p>If still running, send <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>.</p></li>
+<li><p>Start new process.</p></li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="timeout-handling">
+<h2>Timeout Handling<a class="headerlink" href="#timeout-handling" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">timeout</span></code> is defined:</p>
+<ol class="arabic simple">
+<li><p>Parent tracks execution duration.</p></li>
+<li><p>When timeout expires:</p>
+<ul class="simple">
+<li><p>Send <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code>.</p></li>
+<li><p>Wait grace period.</p></li>
+<li><p>Send <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code> if necessary.</p></li>
+</ul>
+</li>
+<li><p>Log timeout event.</p></li>
+</ol>
+<p>Timeout applies per execution instance.</p>
+</section>
+<hr class="docutils" />
+<section id="state-persistence">
+<h2>State Persistence<a class="headerlink" href="#state-persistence" title="Link to this heading"></a></h2>
+<p>State is stored in:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">krond</span><span class="o">/&lt;</span><span class="nb">hash</span><span class="o">&gt;.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>State file contains:</p>
+<ul class="simple">
+<li><p>Last handled period identifier</p></li>
+<li><p>Last chosen execution time</p></li>
+<li><p>Last run time</p></li>
+<li><p>Last exit code</p></li>
+<li><p>Active PID (if any)</p></li>
+<li><p>Concurrency state</p></li>
+<li><p>Seed metadata</p></li>
+</ul>
+<p>State is written:</p>
+<ul class="simple">
+<li><p>After scheduling decision</p></li>
+<li><p>After execution completes</p></li>
+<li><p>After skip due to concurrency</p></li>
+<li><p>After missed deadline</p></li>
+</ul>
+<p>Writes are atomic:</p>
+<ol class="arabic simple">
+<li><p>Write to temporary file.</p></li>
+<li><p>fsync().</p></li>
+<li><p>Rename.</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="missed-period-handling">
+<h2>Missed Period Handling<a class="headerlink" href="#missed-period-handling" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">krond</span></code> is down during a chosen execution time:</p>
+<p>On restart:</p>
+<ol class="arabic simple">
+<li><p>Compute period for current time.</p></li>
+<li><p>Determine whether chosen time is in the past.</p></li>
+<li><p>Apply deadline policy.</p></li>
+</ol>
+<p>If <code class="docutils literal notranslate"><span class="pre">deadline</span></code> is zero:</p>
+<ul class="simple">
+<li><p>Missed periods are skipped.</p></li>
+<li><p>Only future periods are scheduled.</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">deadline</span></code> is non-zero:</p>
+<ul class="simple">
+<li><p>If now &lt;= chosen + deadline:</p>
+<ul>
+<li><p>Execute immediately.</p></li>
+</ul>
+</li>
+<li><p>Otherwise:</p>
+<ul>
+<li><p>Skip period.</p></li>
+</ul>
+</li>
+</ul>
+<p>No historical backlog is ever replayed beyond one bounded period.</p>
+</section>
+<hr class="docutils" />
+<section id="output-handling">
+<h2>Output Handling<a class="headerlink" href="#output-handling" title="Link to this heading"></a></h2>
+<p>Child process STDOUT and STDERR are handled by:</p>
+<ul class="simple">
+<li><p>Inherit mode (default)</p></li>
+<li><p>Redirect to file</p></li>
+<li><p>Redirect to syslog</p></li>
+<li><p>Discard</p></li>
+</ul>
+<p>If redirected to file:</p>
+<ul class="simple">
+<li><p>File path may include time formatting tokens.</p></li>
+<li><p>Files are opened before fork.</p></li>
+<li><p>Parent ensures file descriptors are closed.</p></li>
+</ul>
+<p>Exit codes are logged.</p>
+</section>
+<hr class="docutils" />
+<section id="signal-handling">
+<h2>Signal Handling<a class="headerlink" href="#signal-handling" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> handles:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SIGINT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SIGHUP</span></code></p></li>
+</ul>
+<section id="sigterm-sigint">
+<h3>SIGTERM / SIGINT<a class="headerlink" href="#sigterm-sigint" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Stop accepting new triggers.</p></li>
+<li><p>Allow active child processes to complete.</p></li>
+<li><p>Optionally terminate active processes if configured.</p></li>
+<li><p>Persist state.</p></li>
+<li><p>Exit cleanly.</p></li>
+</ol>
+</section>
+<section id="sighup">
+<h3>SIGHUP<a class="headerlink" href="#sighup" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Reload configuration.</p></li>
+<li><p>Validate new schedules.</p></li>
+<li><p>Recompute queue.</p></li>
+<li><p>Preserve active child processes.</p></li>
+</ol>
+<p>Invalid new configuration does not replace old configuration.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="locking-model">
+<h2>Locking Model<a class="headerlink" href="#locking-model" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> enforces single-daemon per system using:</p>
+<ul class="simple">
+<li><p>PID file with file lock.</p></li>
+<li><p>Or advisory lock on state directory.</p></li>
+</ul>
+<p>If lock acquisition fails, daemon exits.</p>
+</section>
+<hr class="docutils" />
+<section id="isolation-and-security">
+<h2>Isolation and Security<a class="headerlink" href="#isolation-and-security" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>No command is executed through shell by default.</p></li>
+<li><p>No interpolation is performed unless explicitly configured.</p></li>
+<li><p>Environment variables must be explicitly defined to override inherited values.</p></li>
+<li><p>Privilege drop is required for user switching.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="resource-limits">
+<h2>Resource Limits<a class="headerlink" href="#resource-limits" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> may configure:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RLIMIT_NOFILE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RLIMIT_NPROC</span></code></p></li>
+<li><p>Optional per-job limits if supported</p></li>
+</ul>
+<p>System resource limits are not modified unless explicitly configured.</p>
+</section>
+<hr class="docutils" />
+<section id="crash-recovery">
+<h2>Crash Recovery<a class="headerlink" href="#crash-recovery" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">krond</span></code> crashes:</p>
+<ul class="simple">
+<li><p>State files remain intact.</p></li>
+<li><p>On restart:</p>
+<ul>
+<li><p>Active PID in state is verified.</p></li>
+<li><p>If PID exists and matches expected command, it is considered active.</p></li>
+<li><p>If PID does not exist, state is corrected.</p></li>
+</ul>
+</li>
+</ul>
+<p>No duplicate execution occurs for the same period.</p>
+</section>
+<hr class="docutils" />
+<section id="determinism-guarantee">
+<h2>Determinism Guarantee<a class="headerlink" href="#determinism-guarantee" title="Link to this heading"></a></h2>
+<p>For each job and period:</p>
+<ul class="simple">
+<li><p>The chosen execution time is stable across daemon restarts.</p></li>
+<li><p>Seed derivation is stable.</p></li>
+<li><p>Fork timing may vary slightly due to scheduler latency, but chosen timestamp is invariant.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="performance-model">
+<h2>Performance Model<a class="headerlink" href="#performance-model" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> must support:</p>
+<ul class="simple">
+<li><p>Thousands of schedule entries.</p></li>
+<li><p>Sub-second scheduling precision.</p></li>
+<li><p>O(log n) insertion/removal from scheduling queue.</p></li>
+<li><p>Minimal CPU usage when idle.</p></li>
+</ul>
+<p>Memory usage scales linearly with number of entries.</p>
+</section>
+<hr class="docutils" />
+<section id="failure-guarantees">
+<h2>Failure Guarantees<a class="headerlink" href="#failure-guarantees" title="Link to this heading"></a></h2>
+<p>Kron guarantees:</p>
+<ul class="simple">
+<li><p>At most one execution per period.</p></li>
+<li><p>No uncontrolled backfill.</p></li>
+<li><p>No duplicate execution due to restart.</p></li>
+<li><p>No hidden implicit retries.</p></li>
+</ul>
+<p>Execution failures are surfaced through logs and exit codes only.</p>
+<p>Kron does not retry failed commands unless explicitly configured in future versions.</p>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">krond</span></code> is:</p>
+<ul class="simple">
+<li><p>A single-process scheduler.</p></li>
+<li><p>Deterministic in decision-making.</p></li>
+<li><p>Fork/exec based.</p></li>
+<li><p>Policy-driven in concurrency.</p></li>
+<li><p>Bounded in catch-up behavior.</p></li>
+<li><p>Transparent in logging.</p></li>
+<li><p>Safe by default.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="KRONTAB.html" class="btn btn-neutral float-left" title="KRONTAB File Format Specification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="STATE.html" class="btn btn-neutral float-right" title="STATE.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

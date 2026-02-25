@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COMPAT.md &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="TEST-VECTORS.md" href="TEST-VECTORS.html" />
+    <link rel="prev" title="SECURITY.md" href="SECURITY.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPEC.html">SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CORE-SPEC.html">CORE-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KRONTAB.html">KRONTAB File Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="EXECUTION.html">EXECUTION.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">COMPAT.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cron-expression-compatibility">Cron Expression Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#day-of-month-and-day-of-week-semantics">Day-of-Month and Day-of-Week Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timezone-semantics">Timezone Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dst-handling">DST Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#anacron-comparison">anacron Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#systemd-timers-comparison">systemd Timers Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kubernetes-cronjob-comparison">Kubernetes CronJob Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#behavior-differences-from-cron">Behavior Differences from Cron</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backward-compatibility-rules">Backward Compatibility Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#forward-compatibility">Forward Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-cron">Migration from Cron</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-systemd-timers">Migration from systemd Timers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#migration-from-kubernetes-cronjob">Migration from Kubernetes CronJob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#precision-differences">Precision Differences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reproducibility-guarantee">Reproducibility Guarantee</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unsupported-cron-features">Unsupported Cron Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interoperability-expectations">Interoperability Expectations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-invariants">Compatibility Invariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CRD-SPEC.html">CRD-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">COMPAT.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/COMPAT.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="compat-md">
+<h1>COMPAT.md<a class="headerlink" href="#compat-md" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document defines compatibility and non-compatibility between Kron and existing scheduling systems.</p>
+<p>It covers:</p>
+<ul class="simple">
+<li><p>Cron compatibility</p></li>
+<li><p>anacron compatibility</p></li>
+<li><p>systemd timer comparison</p></li>
+<li><p>Kubernetes CronJob comparison</p></li>
+<li><p>Migration semantics</p></li>
+<li><p>Explicit differences</p></li>
+</ul>
+<p>Kron aims for predictable behavior, not bug-for-bug compatibility.</p>
+</section>
+<hr class="docutils" />
+<section id="cron-expression-compatibility">
+<h2>Cron Expression Compatibility<a class="headerlink" href="#cron-expression-compatibility" title="Link to this heading"></a></h2>
+<p>Kron supports standard 5-field cron syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">minute</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">hour</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">day</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">month</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">month</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">day</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">week</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Supported features:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">*</span></code></p></li>
+<li><p>numeric values</p></li>
+<li><p>ranges (<code class="docutils literal notranslate"><span class="pre">n-m</span></code>)</p></li>
+<li><p>lists (<code class="docutils literal notranslate"><span class="pre">a,b,c</span></code>)</p></li>
+<li><p>steps (<code class="docutils literal notranslate"><span class="pre">*/s</span></code>, <code class="docutils literal notranslate"><span class="pre">n-m/s</span></code>)</p></li>
+<li><p>month names (<code class="docutils literal notranslate"><span class="pre">JAN..DEC</span></code>)</p></li>
+<li><p>weekday names (<code class="docutils literal notranslate"><span class="pre">SUN..SAT</span></code>)</p></li>
+</ul>
+<p>Unsupported:</p>
+<ul class="simple">
+<li><p>seconds field (6-field cron)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;reboot</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;yearly</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;monthly</span></code>, etc. shortcuts</p></li>
+<li><p>nonstandard extensions from specific cron implementations</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="day-of-month-and-day-of-week-semantics">
+<h2>Day-of-Month and Day-of-Week Semantics<a class="headerlink" href="#day-of-month-and-day-of-week-semantics" title="Link to this heading"></a></h2>
+<p>Kron follows standard cron OR semantics:</p>
+<p>A schedule matches when:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">month</span> <span class="n">matches</span> <span class="n">AND</span>
+<span class="p">(</span>
+  <span class="n">day</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">month</span> <span class="n">matches</span> <span class="n">OR</span>
+  <span class="n">day</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">week</span> <span class="n">matches</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This behavior matches Vixie cron.</p>
+<p>This is stable and guaranteed.</p>
+</section>
+<hr class="docutils" />
+<section id="timezone-semantics">
+<h2>Timezone Semantics<a class="headerlink" href="#timezone-semantics" title="Link to this heading"></a></h2>
+<p>Unlike traditional cron:</p>
+<ul class="simple">
+<li><p>Kron supports per-job timezone specification.</p></li>
+<li><p>Cron typically uses system timezone only.</p></li>
+</ul>
+<p>Kron interprets:</p>
+<ul class="simple">
+<li><p>Schedule in specified timezone.</p></li>
+<li><p>Constraints in specified timezone.</p></li>
+<li><p>Internally stores UTC instants.</p></li>
+</ul>
+<p>This may produce different behavior than system cron in multi-timezone environments.</p>
+</section>
+<hr class="docutils" />
+<section id="dst-handling">
+<h2>DST Handling<a class="headerlink" href="#dst-handling" title="Link to this heading"></a></h2>
+<p>Kron defines deterministic DST behavior.</p>
+<p>When clocks move forward:</p>
+<ul class="simple">
+<li><p>Nominal times that do not exist are skipped.</p></li>
+<li><p>No synthetic time is created.</p></li>
+</ul>
+<p>When clocks move backward:</p>
+<ul class="simple">
+<li><p>Duplicate wall-clock times are resolved to distinct UTC instants.</p></li>
+<li><p>Each nominal UTC instant corresponds to one period.</p></li>
+</ul>
+<p>Kron does not attempt to “run twice” for repeated wall-clock times unless the cron schedule resolves to two distinct UTC instants.</p>
+<p>Behavior may differ from certain cron implementations.</p>
+</section>
+<hr class="docutils" />
+<section id="anacron-comparison">
+<h2>anacron Comparison<a class="headerlink" href="#anacron-comparison" title="Link to this heading"></a></h2>
+<p>anacron:</p>
+<ul class="simple">
+<li><p>Runs jobs that were missed while system was down.</p></li>
+<li><p>Guarantees eventual daily execution.</p></li>
+</ul>
+<p>Kron:</p>
+<ul class="simple">
+<li><p>Does not guarantee eventual execution by default.</p></li>
+<li><p>Uses explicit <code class="docutils literal notranslate"><span class="pre">deadline</span></code> policy.</p></li>
+<li><p>Never replays unlimited backlog.</p></li>
+</ul>
+<p>To approximate anacron behavior:</p>
+<ul class="simple">
+<li><p>Use daily schedule.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&#64;seed(daily)</span></code>.</p></li>
+<li><p>Set appropriate <code class="docutils literal notranslate"><span class="pre">deadline</span></code>.</p></li>
+</ul>
+<p>Kron prioritizes bounded execution over guaranteed replay.</p>
+</section>
+<hr class="docutils" />
+<section id="systemd-timers-comparison">
+<h2>systemd Timers Comparison<a class="headerlink" href="#systemd-timers-comparison" title="Link to this heading"></a></h2>
+<p>systemd timers support:</p>
+<ul class="simple">
+<li><p>OnCalendar scheduling</p></li>
+<li><p>RandomizedDelaySec (uniform jitter)</p></li>
+<li><p>Persistent=true (catch-up)</p></li>
+</ul>
+<p>Differences:</p>
+<ul class="simple">
+<li><p>Kron supports biased distributions.</p></li>
+<li><p>Kron provides deterministic seeding.</p></li>
+<li><p>Kron exposes explainable decision metadata.</p></li>
+<li><p>Kron enforces at most one execution per period.</p></li>
+</ul>
+<p>systemd randomization is typically uniform and non-deterministic across restarts.</p>
+<p>Kron is deterministic across restarts.</p>
+</section>
+<hr class="docutils" />
+<section id="kubernetes-cronjob-comparison">
+<h2>Kubernetes CronJob Comparison<a class="headerlink" href="#kubernetes-cronjob-comparison" title="Link to this heading"></a></h2>
+<p>Kubernetes CronJob:</p>
+<ul class="simple">
+<li><p>Exact schedule execution.</p></li>
+<li><p>Optional <code class="docutils literal notranslate"><span class="pre">startingDeadlineSeconds</span></code>.</p></li>
+<li><p>Concurrency policies.</p></li>
+<li><p>No distribution control.</p></li>
+<li><p>No deterministic jitter.</p></li>
+</ul>
+<p>Kron:</p>
+<ul class="simple">
+<li><p>Adds windowed scheduling.</p></li>
+<li><p>Adds biased distributions.</p></li>
+<li><p>Adds deterministic seed strategies.</p></li>
+<li><p>Adds constraint system.</p></li>
+<li><p>Adds explainable scheduling.</p></li>
+</ul>
+<p>Kron can replicate CronJob behavior with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@win</span><span class="p">(</span><span class="n">after</span><span class="p">,</span><span class="mi">0</span><span class="n">s</span><span class="p">)</span>
+<span class="nd">@dist</span><span class="p">(</span><span class="n">uniform</span><span class="p">)</span>
+<span class="nd">@seed</span><span class="p">(</span><span class="n">stable</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Behavior then matches exact schedule semantics.</p>
+</section>
+<hr class="docutils" />
+<section id="behavior-differences-from-cron">
+<h2>Behavior Differences from Cron<a class="headerlink" href="#behavior-differences-from-cron" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Deterministic randomness:</p>
+<ul class="simple">
+<li><p>Traditional cron has none.</p></li>
+<li><p>Kron introduces window and distribution.</p></li>
+</ul>
+</li>
+<li><p>No implicit shell:</p>
+<ul class="simple">
+<li><p>Cron uses <code class="docutils literal notranslate"><span class="pre">/bin/sh</span></code> by default.</p></li>
+<li><p>Kron executes directly unless explicitly configured.</p></li>
+</ul>
+</li>
+<li><p>No mail on failure:</p>
+<ul class="simple">
+<li><p>Cron may mail output.</p></li>
+<li><p>Kron logs explicitly.</p></li>
+</ul>
+</li>
+<li><p>No automatic retries:</p>
+<ul class="simple">
+<li><p>Cron does not retry.</p></li>
+<li><p>Kron does not retry.</p></li>
+</ul>
+</li>
+<li><p>Bounded catch-up:</p>
+<ul class="simple">
+<li><p>Cron may execute missed jobs on restart.</p></li>
+<li><p>Kron does not unless within deadline.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="backward-compatibility-rules">
+<h2>Backward Compatibility Rules<a class="headerlink" href="#backward-compatibility-rules" title="Link to this heading"></a></h2>
+<p>Within a major version:</p>
+<ul class="simple">
+<li><p>Cron parsing semantics must not change.</p></li>
+<li><p>Seed derivation must not change.</p></li>
+<li><p>Distribution math must not change.</p></li>
+<li><p>Window semantics must not change.</p></li>
+<li><p>Constraint semantics must not change.</p></li>
+</ul>
+<p>New distributions may be added.</p>
+<p>New constraint types may be added.</p>
+<p>Defaults must remain stable.</p>
+</section>
+<hr class="docutils" />
+<section id="forward-compatibility">
+<h2>Forward Compatibility<a class="headerlink" href="#forward-compatibility" title="Link to this heading"></a></h2>
+<p>If new syntax features are introduced:</p>
+<ul class="simple">
+<li><p>Older versions must reject unknown modifiers.</p></li>
+<li><p>Unknown modifiers must not be silently ignored.</p></li>
+</ul>
+<p>Config written for newer versions is not guaranteed to work on older versions.</p>
+</section>
+<hr class="docutils" />
+<section id="migration-from-cron">
+<h2>Migration from Cron<a class="headerlink" href="#migration-from-cron" title="Link to this heading"></a></h2>
+<p>To migrate from cron:</p>
+<ol class="arabic simple">
+<li><p>Copy cron expression.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">&#64;win(after,0s)</span></code> if explicitness desired.</p></li>
+<li><p>Ensure command does not rely on shell features.</p></li>
+<li><p>Configure logging as desired.</p></li>
+</ol>
+<p>Cron jobs using shell pipelines must:</p>
+<ul class="simple">
+<li><p>Be wrapped explicitly in shell invocation.</p></li>
+<li><p>Or rewritten as script files.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="migration-from-systemd-timers">
+<h2>Migration from systemd Timers<a class="headerlink" href="#migration-from-systemd-timers" title="Link to this heading"></a></h2>
+<p>Mapping:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OnCalendar</span></code> → cron expression</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RandomizedDelaySec</span></code> → <code class="docutils literal notranslate"><span class="pre">&#64;win(after,&lt;duration&gt;)</span> <span class="pre">&#64;dist(uniform)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Persistent=true</span></code> → set <code class="docutils literal notranslate"><span class="pre">&#64;policy(deadline=&lt;duration&gt;)</span></code></p></li>
+</ul>
+<p>systemd-specific features such as <code class="docutils literal notranslate"><span class="pre">OnBootSec</span></code> have no direct equivalent.</p>
+</section>
+<hr class="docutils" />
+<section id="migration-from-kubernetes-cronjob">
+<h2>Migration from Kubernetes CronJob<a class="headerlink" href="#migration-from-kubernetes-cronjob" title="Link to this heading"></a></h2>
+<p>Mapping:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">spec.schedule</span></code> → <code class="docutils literal notranslate"><span class="pre">schedule</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">startingDeadlineSeconds</span></code> → <code class="docutils literal notranslate"><span class="pre">&#64;policy(deadline=&lt;duration&gt;)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">concurrencyPolicy</span></code> → <code class="docutils literal notranslate"><span class="pre">&#64;policy(concurrency=...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">suspend</span></code> → <code class="docutils literal notranslate"><span class="pre">&#64;policy(suspend=true)</span></code></p></li>
+</ul>
+<p>To maintain identical behavior:</p>
+<ul class="simple">
+<li><p>Set window duration to <code class="docutils literal notranslate"><span class="pre">0s</span></code>.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="precision-differences">
+<h2>Precision Differences<a class="headerlink" href="#precision-differences" title="Link to this heading"></a></h2>
+<p>Cron typically has minute-level precision.</p>
+<p>Kron:</p>
+<ul class="simple">
+<li><p>Accepts minute-level cron.</p></li>
+<li><p>May choose second-level offsets within window.</p></li>
+<li><p>Execution trigger precision may exceed minute resolution.</p></li>
+</ul>
+<p>This is intentional.</p>
+</section>
+<hr class="docutils" />
+<section id="reproducibility-guarantee">
+<h2>Reproducibility Guarantee<a class="headerlink" href="#reproducibility-guarantee" title="Link to this heading"></a></h2>
+<p>Kron guarantees:</p>
+<ul class="simple">
+<li><p>Same config + same version + same inputs = same chosen time.</p></li>
+</ul>
+<p>Traditional cron makes no such guarantee when jitter or randomness involved.</p>
+</section>
+<hr class="docutils" />
+<section id="unsupported-cron-features">
+<h2>Unsupported Cron Features<a class="headerlink" href="#unsupported-cron-features" title="Link to this heading"></a></h2>
+<p>Kron does not support:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;reboot</span></code></p></li>
+<li><p>Environment variable declarations in schedule file</p></li>
+<li><p>Special macros like <code class="docutils literal notranslate"><span class="pre">&#64;hourly</span></code></p></li>
+<li><p>Year field</p></li>
+</ul>
+<p>If needed, adapters may translate such macros into canonical form before passing to core.</p>
+</section>
+<hr class="docutils" />
+<section id="interoperability-expectations">
+<h2>Interoperability Expectations<a class="headerlink" href="#interoperability-expectations" title="Link to this heading"></a></h2>
+<p>Kron does not attempt to:</p>
+<ul class="simple">
+<li><p>Replace system cron transparently.</p></li>
+<li><p>Interpret crontab files without explicit conversion.</p></li>
+<li><p>Emulate platform-specific cron quirks.</p></li>
+</ul>
+<p>Kron provides a well-defined, deterministic scheduling model.</p>
+</section>
+<hr class="docutils" />
+<section id="compatibility-invariants">
+<h2>Compatibility Invariants<a class="headerlink" href="#compatibility-invariants" title="Link to this heading"></a></h2>
+<p>Kron guarantees:</p>
+<ol class="arabic simple">
+<li><p>Standard cron expressions behave predictably.</p></li>
+<li><p>OR semantics for DOM/DOW.</p></li>
+<li><p>Per-job timezone support.</p></li>
+<li><p>Deterministic decision for same input.</p></li>
+<li><p>Window and distribution do not alter nominal period identity.</p></li>
+<li><p>Backward compatibility within major version.</p></li>
+</ol>
+<p>Behavioral changes require major version increment.</p>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>Kron is:</p>
+<ul class="simple">
+<li><p>Cron-compatible at baseline.</p></li>
+<li><p>Deterministic and distribution-aware.</p></li>
+<li><p>Not bug-for-bug compatible with any specific cron implementation.</p></li>
+<li><p>Explicit in semantics.</p></li>
+<li><p>Stable within major versions.</p></li>
+</ul>
+<p>Compatibility is intentional, not accidental.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="SECURITY.html" class="btn btn-neutral float-left" title="SECURITY.md" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="TEST-VECTORS.html" class="btn btn-neutral float-right" title="TEST-VECTORS.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

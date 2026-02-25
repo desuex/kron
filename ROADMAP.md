@@ -137,7 +137,7 @@ Implement deterministic decision engine exactly as specified.
 ## Status
 
 In progress.
-Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, snapshot tests, expanded integration tests, and selected vector-parity tests.
+Delivered so far: `krontab lint`, `krontab explain`, `krontab next`, text/json outputs, snapshot tests, expanded integration tests, and parity coverage across supported vector families.
 
 ## Goals
 

@@ -1,0 +1,595 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KRONTAB File Format Specification &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="EXECUTION.md" href="EXECUTION.html" />
+    <link rel="prev" title="SYNTAX.md" href="SYNTAX.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPEC.html">SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CORE-SPEC.html">CORE-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">KRONTAB File Format Specification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#file-location">File Location</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#encoding">Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comments">Comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#empty-lines">Empty Lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#job-entry-structure">Job Entry Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#schedule-and-modifiers">Schedule and Modifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fields">Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#required-fields">Required Fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#name">name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command">command</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-fields">Optional Fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#user">user</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#group">group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cwd">cwd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#env">env</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shell">shell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#umask">umask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timeout">timeout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stdout">stdout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stderr">stderr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#description">description</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-line-entries">Multi-Line Entries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quoting-rules">Quoting Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#duplicate-fields">Duplicate Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#job-identity">Job Identity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-rules">Validation Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#security-rules">Security Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#minimal-exact-schedule">Minimal exact schedule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#load-smoothing">Load smoothing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#human-like-timing">Human-like timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-environment-and-timeout">With environment and timeout</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-guarantees">Compatibility Guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#non-goals">Non-Goals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="EXECUTION.html">EXECUTION.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="COMPAT.html">COMPAT.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CRD-SPEC.html">CRD-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">KRONTAB File Format Specification</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/KRONTAB.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="krontab-file-format-specification">
+<h1>KRONTAB File Format Specification<a class="headerlink" href="#krontab-file-format-specification" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document defines the file format for <code class="docutils literal notranslate"><span class="pre">krond</span></code> configuration files.</p>
+<p>It specifies:</p>
+<ul class="simple">
+<li><p>File structure</p></li>
+<li><p>Job entry format</p></li>
+<li><p>Field syntax</p></li>
+<li><p>Parsing rules</p></li>
+<li><p>Validation rules</p></li>
+<li><p>Compatibility guarantees</p></li>
+</ul>
+<p>This document defines file format only.
+Scheduling semantics are defined in SYNTAX.md and SPEC.md.</p>
+</section>
+<hr class="docutils" />
+<section id="file-location">
+<h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading"></a></h2>
+<p>System directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/etc/krond.d/
+</pre></div>
+</div>
+<p>Per-user directory:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>~/.config/krond/
+</pre></div>
+</div>
+<p>Each file may contain one or more job entries.</p>
+<p>Files are processed independently.
+There is no guaranteed ordering between files.</p>
+</section>
+<hr class="docutils" />
+<section id="encoding">
+<h2>Encoding<a class="headerlink" href="#encoding" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>UTF-8</p></li>
+<li><p>Unix line endings (<code class="docutils literal notranslate"><span class="pre">\n</span></code>)</p></li>
+<li><p>No BOM</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="comments">
+<h2>Comments<a class="headerlink" href="#comments" title="Link to this heading"></a></h2>
+<p>Lines beginning with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#
+</pre></div>
+</div>
+<p>are comments and ignored.</p>
+<p>Inline comments are not supported.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># nightly backup
+0 0 * * * @win(after,2h) name=nightly-backup command=/usr/bin/backup
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="empty-lines">
+<h2>Empty Lines<a class="headerlink" href="#empty-lines" title="Link to this heading"></a></h2>
+<p>Empty lines are ignored.</p>
+</section>
+<hr class="docutils" />
+<section id="job-entry-structure">
+<h2>Job Entry Structure<a class="headerlink" href="#job-entry-structure" title="Link to this heading"></a></h2>
+<p>Each job entry consists of:</p>
+<ol class="arabic simple">
+<li><p>A schedule expression with optional modifiers</p></li>
+<li><p>One or more key=value fields</p></li>
+<li><p>All on a single logical line</p></li>
+</ol>
+<p>Canonical form:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;schedule-and-modifiers&gt; &lt;field&gt; &lt;field&gt; ...
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0 * * * @win(after,2h) @dist(uniform) name=db-backup command=/usr/bin/backup
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="schedule-and-modifiers">
+<h2>Schedule and Modifiers<a class="headerlink" href="#schedule-and-modifiers" title="Link to this heading"></a></h2>
+<p>The schedule and modifiers must conform exactly to SYNTAX.md.</p>
+<p>It must appear first on the line.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 10 * * * @tz(Europe/Paris) @win(around,45m)
+</pre></div>
+</div>
+<p>Invalid schedule causes configuration error.</p>
+</section>
+<hr class="docutils" />
+<section id="fields">
+<h2>Fields<a class="headerlink" href="#fields" title="Link to this heading"></a></h2>
+<p>Fields are key=value pairs separated by spaces.</p>
+<p>General form:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>key=value
+</pre></div>
+</div>
+<p>Keys are case-sensitive.</p>
+<p>Unknown keys cause validation error.</p>
+</section>
+<hr class="docutils" />
+<section id="required-fields">
+<h2>Required Fields<a class="headerlink" href="#required-fields" title="Link to this heading"></a></h2>
+<section id="name">
+<h3>name<a class="headerlink" href="#name" title="Link to this heading"></a></h3>
+<p>Stable identifier for the job entry.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>name=db-backup
+</pre></div>
+</div>
+<p>Must be unique within a file. Used for identity derivation (see Job Identity).</p>
+<p>Must be a non-empty string containing only lowercase alphanumeric characters, hyphens, and forward slashes.</p>
+</section>
+<hr class="docutils" />
+<section id="command">
+<h3>command<a class="headerlink" href="#command" title="Link to this heading"></a></h3>
+<p>Defines executable path and arguments.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>command=/usr/bin/backup
+</pre></div>
+</div>
+<p>OR with arguments:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>command=&quot;/usr/bin/backup --full&quot;
+</pre></div>
+</div>
+<p>Command parsing rules:</p>
+<ul class="simple">
+<li><p>If unquoted:</p>
+<ul>
+<li><p>Entire value until next space is used.</p></li>
+<li><p>No argument splitting performed.</p></li>
+</ul>
+</li>
+<li><p>If quoted:</p>
+<ul>
+<li><p>Double quotes required.</p></li>
+<li><p>Escaped quotes supported using “.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">shell=true</span></code>, value is passed to <code class="docutils literal notranslate"><span class="pre">/bin/sh</span> <span class="pre">-c</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">shell=false</span></code> or omitted, value is split into binary and arguments.</p></li>
+</ul>
+</li>
+</ul>
+<p>Shell execution is disabled by default. See <code class="docutils literal notranslate"><span class="pre">shell</span></code> field below.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="optional-fields">
+<h2>Optional Fields<a class="headerlink" href="#optional-fields" title="Link to this heading"></a></h2>
+<section id="user">
+<h3>user<a class="headerlink" href="#user" title="Link to this heading"></a></h3>
+<p>User to run command as.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>user=backup
+</pre></div>
+</div>
+<p>If omitted:</p>
+<ul class="simple">
+<li><p>Run as daemon user.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="group">
+<h3>group<a class="headerlink" href="#group" title="Link to this heading"></a></h3>
+<p>Primary group for execution.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>group=backup
+</pre></div>
+</div>
+<p>If omitted:</p>
+<ul class="simple">
+<li><p>Use user’s default group.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="cwd">
+<h3>cwd<a class="headerlink" href="#cwd" title="Link to this heading"></a></h3>
+<p>Working directory.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cwd=/var/backups
+</pre></div>
+</div>
+<p>If omitted:</p>
+<ul class="simple">
+<li><p>Inherit daemon working directory.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="env">
+<h3>env<a class="headerlink" href="#env" title="Link to this heading"></a></h3>
+<p>Environment variable.</p>
+<p>May appear multiple times on the same line.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>env=FOO=bar env=MODE=prod
+</pre></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">env</span></code> entry sets exactly one environment variable.</p>
+</section>
+<hr class="docutils" />
+<section id="shell">
+<h3>shell<a class="headerlink" href="#shell" title="Link to this heading"></a></h3>
+<p>Enable shell execution.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>shell=true
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">true</span></code>, command is passed to <code class="docutils literal notranslate"><span class="pre">/bin/sh</span> <span class="pre">-c</span></code>.</p>
+<p>If omitted or <code class="docutils literal notranslate"><span class="pre">false</span></code>, command is executed directly via <code class="docutils literal notranslate"><span class="pre">execve()</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="umask">
+<h3>umask<a class="headerlink" href="#umask" title="Link to this heading"></a></h3>
+<p>File creation mask for the child process.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>umask=0027
+</pre></div>
+</div>
+<p>Octal format required.</p>
+<p>If omitted:</p>
+<ul class="simple">
+<li><p>Inherit daemon umask.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="timeout">
+<h3>timeout<a class="headerlink" href="#timeout" title="Link to this heading"></a></h3>
+<p>Execution timeout.</p>
+<p>Go duration format.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>timeout=10m
+timeout=30s
+</pre></div>
+</div>
+<p>If omitted:</p>
+<ul class="simple">
+<li><p>No timeout.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="stdout">
+<h3>stdout<a class="headerlink" href="#stdout" title="Link to this heading"></a></h3>
+<p>STDOUT handling.</p>
+<p>Allowed values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inherit</span></code> — write to daemon stdout</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">discard</span></code> — suppress output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file:&lt;path&gt;</span></code> — write to file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">syslog</span></code> — write to system log</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>stdout=file:/var/log/backup.out
+</pre></div>
+</div>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">inherit</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="stderr">
+<h3>stderr<a class="headerlink" href="#stderr" title="Link to this heading"></a></h3>
+<p>STDERR handling.</p>
+<p>Allowed values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inherit</span></code> — write to daemon stderr</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">discard</span></code> — suppress output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file:&lt;path&gt;</span></code> — write to file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">syslog</span></code> — write to system log</p></li>
+</ul>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">inherit</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="description">
+<h3>description<a class="headerlink" href="#description" title="Link to this heading"></a></h3>
+<p>Optional human-readable description.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>description=&quot;Nightly full backup&quot;
+</pre></div>
+</div>
+<p>Does not affect scheduling.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="multi-line-entries">
+<h2>Multi-Line Entries<a class="headerlink" href="#multi-line-entries" title="Link to this heading"></a></h2>
+<p>Not supported.</p>
+<p>Each job must be fully defined on one line.</p>
+</section>
+<hr class="docutils" />
+<section id="quoting-rules">
+<h2>Quoting Rules<a class="headerlink" href="#quoting-rules" title="Link to this heading"></a></h2>
+<ul>
+<li><p>Double quotes required for values containing spaces.</p></li>
+<li><p>Escape sequence:</p>
+<p>“  → literal quote
+\  → literal backslash</p>
+</li>
+</ul>
+<p>No other escape sequences supported.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>command=&quot;/usr/bin/backup --target \&quot;primary cluster\&quot;&quot;
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="duplicate-fields">
+<h2>Duplicate Fields<a class="headerlink" href="#duplicate-fields" title="Link to this heading"></a></h2>
+<p>Rules:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> may appear only once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">command</span></code> may appear only once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">user</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cwd</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shell</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">umask</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stdout</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stderr</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code> may appear at most once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env</span></code> may appear multiple times.</p></li>
+</ul>
+<p>Duplicate forbidden fields cause validation error.</p>
+</section>
+<hr class="docutils" />
+<section id="job-identity">
+<h2>Job Identity<a class="headerlink" href="#job-identity" title="Link to this heading"></a></h2>
+<p>Identity is derived as:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;config_path&gt;:&lt;name&gt;
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">&lt;config_path&gt;</span></code> is the absolute path to the configuration file and <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> is the value of the <code class="docutils literal notranslate"><span class="pre">name</span></code> field.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">name</span></code> field is required. Each name must be unique within a file.</p>
+<p>Identity is used for seed derivation, state persistence, locking, and logging. Changing the name changes the identity, which changes all future scheduling decisions.</p>
+<p>Identity must be stable across daemon restarts and configuration reloads.</p>
+</section>
+<hr class="docutils" />
+<section id="validation-rules">
+<h2>Validation Rules<a class="headerlink" href="#validation-rules" title="Link to this heading"></a></h2>
+<p>Configuration must fail validation if:</p>
+<ul class="simple">
+<li><p>Schedule invalid.</p></li>
+<li><p>Required <code class="docutils literal notranslate"><span class="pre">name</span></code> missing.</p></li>
+<li><p>Required <code class="docutils literal notranslate"><span class="pre">command</span></code> missing.</p></li>
+<li><p>Duplicate <code class="docutils literal notranslate"><span class="pre">name</span></code> within a file.</p></li>
+<li><p>Unknown field present.</p></li>
+<li><p>Invalid duration format.</p></li>
+<li><p>Invalid quoting.</p></li>
+<li><p>Duplicate forbidden fields.</p></li>
+<li><p>Empty command.</p></li>
+<li><p>Relative command path when strict mode enabled.</p></li>
+</ul>
+<p>Validation occurs before daemon starts.</p>
+</section>
+<hr class="docutils" />
+<section id="security-rules">
+<h2>Security Rules<a class="headerlink" href="#security-rules" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Files must not be world-writable.</p></li>
+<li><p>If group-writable, group must match daemon group.</p></li>
+<li><p>Symlinks are not followed unless explicitly allowed.</p></li>
+<li><p>File ownership must be verified.</p></li>
+</ul>
+<p>If security validation fails:</p>
+<ul class="simple">
+<li><p>Configuration is rejected.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<section id="minimal-exact-schedule">
+<h3>Minimal exact schedule<a class="headerlink" href="#minimal-exact-schedule" title="Link to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0 * * * name=backup command=/usr/bin/backup
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="load-smoothing">
+<h3>Load smoothing<a class="headerlink" href="#load-smoothing" title="Link to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0 * * * @win(after,3h) @dist(uniform) name=db-backup command=/usr/bin/backup
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="human-like-timing">
+<h3>Human-like timing<a class="headerlink" href="#human-like-timing" title="Link to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 10 * * * @tz(Europe/Paris) @win(around,90m) @dist(skewLate,shape=2.5) name=batch-messages command=&quot;/usr/bin/send-messages --batch&quot;
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="with-environment-and-timeout">
+<h3>With environment and timeout<a class="headerlink" href="#with-environment-and-timeout" title="Link to this heading"></a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 2 * * * @win(after,1h) name=cleanup command=/usr/bin/cleanup env=MODE=prod timeout=20m
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="compatibility-guarantees">
+<h2>Compatibility Guarantees<a class="headerlink" href="#compatibility-guarantees" title="Link to this heading"></a></h2>
+<p>Within a major version:</p>
+<ul class="simple">
+<li><p>Field names will not change.</p></li>
+<li><p>Parsing rules will not change.</p></li>
+<li><p>Quoting rules will not change.</p></li>
+<li><p>Identity derivation will not change.</p></li>
+</ul>
+<p>New optional fields may be added.</p>
+<p>Unknown fields must always produce validation error.</p>
+</section>
+<hr class="docutils" />
+<section id="non-goals">
+<h2>Non-Goals<a class="headerlink" href="#non-goals" title="Link to this heading"></a></h2>
+<p>KRONTAB format does not:</p>
+<ul class="simple">
+<li><p>Support interactive editing.</p></li>
+<li><p>Support environment blocks.</p></li>
+<li><p>Support multi-line commands.</p></li>
+<li><p>Support implicit shell execution.</p></li>
+<li><p>Support file includes.</p></li>
+</ul>
+<p>It is intentionally minimal and explicit.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="SYNTAX.html" class="btn btn-neutral float-left" title="SYNTAX.md" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="EXECUTION.html" class="btn btn-neutral float-right" title="EXECUTION.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

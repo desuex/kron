@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CORE-SPEC.md &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SYNTAX.md" href="SYNTAX.html" />
+    <link rel="prev" title="SPEC.md" href="SPEC.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SPEC.html">SPEC.md</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CORE-SPEC.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#design-constraints">Design Constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#versioning">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-concepts">Core Concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#identity">Identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#period">Period</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#primary-interfaces">Primary Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#decisionrequest">DecisionRequest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decisionresult">DecisionResult</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#periodid">PeriodID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#window-computation">Window Computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seed-derivation">Seed Derivation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#seed-strategies">Seed Strategies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#stable">Stable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#daily">Daily</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#weekly">Weekly</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#seed-hash">Seed Hash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prng-requirements">PRNG Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distribution-specification">Distribution Specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distribution-contract">Distribution Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constraint-specification">Constraint Specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#candidate-selection-algorithm">Candidate Selection Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constraint-evaluation-rules">Constraint Evaluation Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timezone-handling">Timezone Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#precision-rules">Precision Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unschedulable-semantics">Unschedulable Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stability-guarantees">Stability Guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-requirements">Performance Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prohibited-behaviors">Prohibited Behaviors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conformance">Conformance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KRONTAB.html">KRONTAB File Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="EXECUTION.html">EXECUTION.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="COMPAT.html">COMPAT.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CRD-SPEC.html">CRD-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CORE-SPEC.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/CORE-SPEC.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="core-spec-md">
+<h1>CORE-SPEC.md<a class="headerlink" href="#core-spec-md" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document defines the formal contract of <code class="docutils literal notranslate"><span class="pre">kron-core</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> is a pure, deterministic scheduling engine.
+It contains no side effects, no I/O, no persistence, and no adapter-specific logic.</p>
+<p>All adapters (<code class="docutils literal notranslate"><span class="pre">krond</span></code>, <code class="docutils literal notranslate"><span class="pre">kron-operator</span></code>, future integrations) must treat this specification as authoritative for scheduling behavior.</p>
+</section>
+<hr class="docutils" />
+<section id="design-constraints">
+<h2>Design Constraints<a class="headerlink" href="#design-constraints" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> must be:</p>
+<ul class="simple">
+<li><p>Pure: no external state access.</p></li>
+<li><p>Deterministic: identical inputs produce identical outputs.</p></li>
+<li><p>Stateless: all required state is provided as input.</p></li>
+<li><p>Time-explicit: no internal clock access.</p></li>
+<li><p>Side-effect free.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="versioning">
+<h2>Versioning<a class="headerlink" href="#versioning" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> exposes a semantic version.</p>
+<p>A change that alters:</p>
+<ul class="simple">
+<li><p>window calculation</p></li>
+<li><p>seed derivation</p></li>
+<li><p>distribution math</p></li>
+<li><p>constraint evaluation</p></li>
+<li><p>determinism guarantees</p></li>
+</ul>
+<p>requires a major version increment.</p>
+</section>
+<hr class="docutils" />
+<section id="core-concepts">
+<h2>Core Concepts<a class="headerlink" href="#core-concepts" title="Link to this heading"></a></h2>
+<section id="identity">
+<h3>Identity<a class="headerlink" href="#identity" title="Link to this heading"></a></h3>
+<p>A stable string identifying the job:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Identity</span> <span class="n">string</span>
+</pre></div>
+</div>
+<p>Must be UTF-8 and non-empty.</p>
+</section>
+<hr class="docutils" />
+<section id="period">
+<h3>Period<a class="headerlink" href="#period" title="Link to this heading"></a></h3>
+<p>A period is defined solely by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NominalTime</span> <span class="p">(</span><span class="n">UTC</span> <span class="n">instant</span><span class="p">)</span>
+<span class="n">Timezone</span> <span class="p">(</span><span class="n">IANA</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> does not compute cron schedules unless explicitly provided a schedule resolver.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="primary-interfaces">
+<h2>Primary Interfaces<a class="headerlink" href="#primary-interfaces" title="Link to this heading"></a></h2>
+<section id="decisionrequest">
+<h3>DecisionRequest<a class="headerlink" href="#decisionrequest" title="Link to this heading"></a></h3>
+<p>The engine consumes a single request object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DecisionRequest</span> <span class="p">{</span>
+    <span class="n">Identity</span>        <span class="n">string</span>
+    <span class="n">NominalTime</span>     <span class="n">time</span><span class="o">.</span><span class="n">Time</span> <span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="n">Timezone</span>        <span class="n">string</span>
+    <span class="n">WindowMode</span>      <span class="n">enum</span> <span class="p">{</span><span class="n">After</span><span class="p">,</span> <span class="n">Around</span><span class="p">}</span>
+    <span class="n">WindowDuration</span>  <span class="n">time</span><span class="o">.</span><span class="n">Duration</span>
+    <span class="n">Distribution</span>    <span class="n">DistributionSpec</span>
+    <span class="n">SeedStrategy</span>    <span class="n">SeedSpec</span>
+    <span class="n">Salt</span>            <span class="n">string</span>
+    <span class="n">Constraints</span>     <span class="n">ConstraintSpec</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>All times are interpreted in UTC except where constraints require timezone interpretation.</p>
+</section>
+<hr class="docutils" />
+<section id="decisionresult">
+<h3>DecisionResult<a class="headerlink" href="#decisionresult" title="Link to this heading"></a></h3>
+<p>The engine produces:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DecisionResult</span> <span class="p">{</span>
+    <span class="n">PeriodID</span>        <span class="n">string</span>
+    <span class="n">NominalTime</span>     <span class="n">time</span><span class="o">.</span><span class="n">Time</span> <span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="n">WindowStart</span>     <span class="n">time</span><span class="o">.</span><span class="n">Time</span> <span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="n">WindowEnd</span>       <span class="n">time</span><span class="o">.</span><span class="n">Time</span> <span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="n">ChosenTime</span>      <span class="n">time</span><span class="o">.</span><span class="n">Time</span> <span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="n">SeedHash</span>        <span class="n">string</span>
+    <span class="n">Distribution</span>    <span class="n">DistributionSpec</span>
+    <span class="n">ConstraintMeta</span>  <span class="n">ConstraintMeta</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If unschedulable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DecisionResult</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="n">ChosenTime</span>      <span class="n">nil</span>
+    <span class="n">Unschedulable</span>   <span class="n">true</span>
+    <span class="n">Reason</span>          <span class="n">string</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="determinism-requirements">
+<h2>Determinism Requirements<a class="headerlink" href="#determinism-requirements" title="Link to this heading"></a></h2>
+<p>For identical <code class="docutils literal notranslate"><span class="pre">DecisionRequest</span></code> values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DecisionResult</span></code> must be byte-for-byte identical in:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ChosenTime</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SeedHash</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WindowStart</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WindowEnd</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p>Determinism must hold across:</p>
+<ul class="simple">
+<li><p>Process restarts</p></li>
+<li><p>Different machines</p></li>
+<li><p>Different architectures</p></li>
+<li><p>Supported Go versions within compatibility window</p></li>
+</ul>
+<p>Floating point calculations must not introduce nondeterministic rounding across architectures.</p>
+<p>If floating math is used internally, results must be quantized deterministically before producing <code class="docutils literal notranslate"><span class="pre">ChosenTime</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="periodid">
+<h2>PeriodID<a class="headerlink" href="#periodid" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PeriodID</span> <span class="o">=</span> <span class="n">NominalTime</span><span class="o">.</span><span class="n">UTC</span><span class="p">()</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="n">RFC3339</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Must not depend on timezone formatting differences.</p>
+</section>
+<hr class="docutils" />
+<section id="window-computation">
+<h2>Window Computation<a class="headerlink" href="#window-computation" title="Link to this heading"></a></h2>
+<p>Given:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">N</span> <span class="o">=</span> <span class="n">NominalTime</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">WindowDuration</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">WindowMode=After</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WindowStart</span> <span class="o">=</span> <span class="n">N</span>
+<span class="n">WindowEnd</span>   <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="n">D</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">WindowMode=Around</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Half</span> <span class="o">=</span> <span class="n">D</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">WindowStart</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="n">Half</span>
+<span class="n">WindowEnd</span>   <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="n">Half</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">D=0</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WindowStart</span> <span class="o">=</span> <span class="n">N</span>
+<span class="n">WindowEnd</span>   <span class="o">=</span> <span class="n">N</span>
+<span class="n">ChosenTime</span>  <span class="o">=</span> <span class="n">N</span>
+</pre></div>
+</div>
+<p>No distribution sampling occurs when <code class="docutils literal notranslate"><span class="pre">WindowStart</span> <span class="pre">==</span> <span class="pre">WindowEnd</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="seed-derivation">
+<h2>Seed Derivation<a class="headerlink" href="#seed-derivation" title="Link to this heading"></a></h2>
+<p>Seed input string is constructed as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SeedInput</span> <span class="o">=</span>
+    <span class="n">Identity</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+    <span class="n">PeriodKey</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+    <span class="n">Salt</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">PeriodKey</span></code> depends on seed strategy.</p>
+<section id="seed-strategies">
+<h3>Seed Strategies<a class="headerlink" href="#seed-strategies" title="Link to this heading"></a></h3>
+<section id="stable">
+<h4>Stable<a class="headerlink" href="#stable" title="Link to this heading"></a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PeriodKey</span> <span class="o">=</span> <span class="n">PeriodID</span>
+</pre></div>
+</div>
+</section>
+<section id="daily">
+<h4>Daily<a class="headerlink" href="#daily" title="Link to this heading"></a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PeriodKey</span> <span class="o">=</span> <span class="n">YYYY</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">DD</span> <span class="ow">in</span> <span class="n">Timezone</span> <span class="n">corresponding</span> <span class="n">to</span> <span class="n">NominalTime</span>
+</pre></div>
+</div>
+</section>
+<section id="weekly">
+<h4>Weekly<a class="headerlink" href="#weekly" title="Link to this heading"></a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PeriodKey</span> <span class="o">=</span> <span class="n">ISOWeek</span><span class="p">(</span><span class="n">YYYY</span><span class="o">-</span><span class="n">Www</span><span class="p">)</span> <span class="ow">in</span> <span class="n">Timezone</span> <span class="n">corresponding</span> <span class="n">to</span> <span class="n">NominalTime</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="seed-hash">
+<h2>Seed Hash<a class="headerlink" href="#seed-hash" title="Link to this heading"></a></h2>
+<p>A cryptographic hash function must be used.</p>
+<p>The hash function must:</p>
+<ul class="simple">
+<li><p>Be fixed for a major version.</p></li>
+<li><p>Produce identical results across platforms.</p></li>
+<li><p>Be documented in implementation.</p></li>
+</ul>
+<p>Output encoding:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SeedHash</span> <span class="o">=</span> <span class="n">lowercase</span> <span class="n">hexadecimal</span> <span class="n">string</span>
+</pre></div>
+</div>
+<p>The full hash output must be used for PRNG seeding.</p>
+</section>
+<hr class="docutils" />
+<section id="prng-requirements">
+<h2>PRNG Requirements<a class="headerlink" href="#prng-requirements" title="Link to this heading"></a></h2>
+<p>The pseudorandom generator:</p>
+<ul class="simple">
+<li><p>Must be deterministic for a given SeedHash.</p></li>
+<li><p>Must produce reproducible sequences.</p></li>
+<li><p>Must not depend on runtime-global randomness.</p></li>
+</ul>
+<p>Initialization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PRNG</span><span class="p">(</span><span class="n">seed</span> <span class="o">=</span> <span class="n">SeedHash</span> <span class="nb">bytes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Sequence generation order must be stable and documented.</p>
+</section>
+<hr class="docutils" />
+<section id="distribution-specification">
+<h2>Distribution Specification<a class="headerlink" href="#distribution-specification" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DistributionSpec</span> <span class="p">{</span>
+    <span class="n">Name</span> <span class="n">string</span>
+    <span class="n">Params</span> <span class="nb">map</span><span class="p">[</span><span class="n">string</span><span class="p">]</span><span class="n">string</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Parameter parsing must be deterministic.</p>
+<p>Unknown parameters must cause error.</p>
+</section>
+<hr class="docutils" />
+<section id="distribution-contract">
+<h2>Distribution Contract<a class="headerlink" href="#distribution-contract" title="Link to this heading"></a></h2>
+<p>Given:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">U</span> <span class="o">=</span> <span class="n">PRNG</span><span class="o">.</span><span class="n">NextFloat64</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">U</span></code> must satisfy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>0 ≤ U &lt; 1
+</pre></div>
+</div>
+<p>Distributions must transform <code class="docutils literal notranslate"><span class="pre">U</span></code> into an offset within:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">WindowDuration</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>or symmetrically around nominal in <code class="docutils literal notranslate"><span class="pre">Around</span></code> mode.</p>
+<p>The final offset must be clamped to window bounds.</p>
+</section>
+<hr class="docutils" />
+<section id="constraint-specification">
+<h2>Constraint Specification<a class="headerlink" href="#constraint-specification" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ConstraintSpec</span> <span class="p">{</span>
+    <span class="n">OnlyClauses</span>  <span class="p">[]</span><span class="n">Clause</span>
+    <span class="n">AvoidClauses</span> <span class="p">[]</span><span class="n">Clause</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Constraint evaluation must:</p>
+<ul class="simple">
+<li><p>Interpret time in specified Timezone.</p></li>
+<li><p>Be pure.</p></li>
+<li><p>Not modify state.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="candidate-selection-algorithm">
+<h2>Candidate Selection Algorithm<a class="headerlink" href="#candidate-selection-algorithm" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Initialize PRNG with SeedHash.</p></li>
+<li><p>For attempt in <code class="docutils literal notranslate"><span class="pre">0..MaxAttempts-1</span></code>:</p>
+<ul class="simple">
+<li><p>Generate <code class="docutils literal notranslate"><span class="pre">U</span></code>.</p></li>
+<li><p>Compute candidate offset via distribution.</p></li>
+<li><p>Compute candidate time.</p></li>
+<li><p>If candidate satisfies constraints:</p>
+<ul>
+<li><p>Return candidate.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>If no candidate accepted:</p>
+<ul class="simple">
+<li><p>Return Unschedulable.</p></li>
+</ul>
+</li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">MaxAttempts</span></code> must be fixed and documented.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MaxAttempts</span></code> must be deterministic and independent of runtime conditions.</p>
+</section>
+<hr class="docutils" />
+<section id="constraint-evaluation-rules">
+<h2>Constraint Evaluation Rules<a class="headerlink" href="#constraint-evaluation-rules" title="Link to this heading"></a></h2>
+<p>Given candidate time <code class="docutils literal notranslate"><span class="pre">T</span></code>:</p>
+<ul class="simple">
+<li><p>Convert <code class="docutils literal notranslate"><span class="pre">T</span></code> to schedule timezone.</p></li>
+<li><p>Evaluate <code class="docutils literal notranslate"><span class="pre">OnlyClauses</span></code>:</p>
+<ul>
+<li><p>If present, <code class="docutils literal notranslate"><span class="pre">T</span></code> must satisfy at least one clause set.</p></li>
+</ul>
+</li>
+<li><p>Evaluate <code class="docutils literal notranslate"><span class="pre">AvoidClauses</span></code>:</p>
+<ul>
+<li><p>If any clause matches, candidate rejected.</p></li>
+</ul>
+</li>
+</ul>
+<p>Clause types and evaluation logic are defined in SYNTAX.md.</p>
+<p>Constraint evaluation must not modify <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<p>The engine must return explicit errors for:</p>
+<ul class="simple">
+<li><p>Invalid timezone</p></li>
+<li><p>Invalid distribution name</p></li>
+<li><p>Invalid distribution parameters</p></li>
+<li><p>Invalid seed strategy</p></li>
+<li><p>Invalid constraint definitions</p></li>
+<li><p>Negative window duration</p></li>
+</ul>
+<p>Errors must not panic.</p>
+</section>
+<hr class="docutils" />
+<section id="timezone-handling">
+<h2>Timezone Handling<a class="headerlink" href="#timezone-handling" title="Link to this heading"></a></h2>
+<p>Timezone must be resolved via IANA database.</p>
+<p>If timezone is invalid:</p>
+<ul class="simple">
+<li><p>Return error.</p></li>
+</ul>
+<p>All conversions must be deterministic given identical timezone database.</p>
+<p>Implementations must document supported timezone database source.</p>
+</section>
+<hr class="docutils" />
+<section id="precision-rules">
+<h2>Precision Rules<a class="headerlink" href="#precision-rules" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Internal calculations may use nanoseconds.</p></li>
+<li><p>Final <code class="docutils literal notranslate"><span class="pre">ChosenTime</span></code> must be truncated or rounded in a deterministic manner.</p></li>
+<li><p>Rounding policy must be stable and documented.</p></li>
+</ul>
+<p>ChosenTime must never fall outside window bounds due to rounding.</p>
+</section>
+<hr class="docutils" />
+<section id="unschedulable-semantics">
+<h2>Unschedulable Semantics<a class="headerlink" href="#unschedulable-semantics" title="Link to this heading"></a></h2>
+<p>If no valid candidate found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DecisionResult</span><span class="o">.</span><span class="n">Unschedulable</span> <span class="o">=</span> <span class="n">true</span>
+<span class="n">DecisionResult</span><span class="o">.</span><span class="n">ChosenTime</span> <span class="o">=</span> <span class="n">zero</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SeedHash</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowStart</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowEnd</span></code>, and <code class="docutils literal notranslate"><span class="pre">PeriodID</span></code> must still be populated.</p>
+</section>
+<hr class="docutils" />
+<section id="stability-guarantees">
+<h2>Stability Guarantees<a class="headerlink" href="#stability-guarantees" title="Link to this heading"></a></h2>
+<p>For a fixed major version:</p>
+<ul class="simple">
+<li><p>Seed derivation format must not change.</p></li>
+<li><p>Hash algorithm must not change.</p></li>
+<li><p>PRNG algorithm must not change.</p></li>
+<li><p>Distribution math must not change.</p></li>
+<li><p>Window computation must not change.</p></li>
+</ul>
+<p>Any change affecting output for identical inputs requires major version increment.</p>
+</section>
+<hr class="docutils" />
+<section id="performance-requirements">
+<h2>Performance Requirements<a class="headerlink" href="#performance-requirements" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Decision()</span></code> must:</p>
+<ul class="simple">
+<li><p>Execute in bounded time.</p></li>
+<li><p>Be O(1) relative to window duration.</p></li>
+<li><p>Not allocate unbounded memory.</p></li>
+<li><p>Not depend on external services.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="prohibited-behaviors">
+<h2>Prohibited Behaviors<a class="headerlink" href="#prohibited-behaviors" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> must not:</p>
+<ul class="simple">
+<li><p>Access system clock.</p></li>
+<li><p>Perform I/O.</p></li>
+<li><p>Access filesystem.</p></li>
+<li><p>Access network.</p></li>
+<li><p>Read environment variables.</p></li>
+<li><p>Use global mutable state.</p></li>
+<li><p>Use non-deterministic randomness.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="conformance">
+<h2>Conformance<a class="headerlink" href="#conformance" title="Link to this heading"></a></h2>
+<p>A conforming implementation must:</p>
+<ul class="simple">
+<li><p>Pass all golden test vectors defined in TEST-VECTORS.md.</p></li>
+<li><p>Produce identical outputs across supported architectures.</p></li>
+<li><p>Preserve determinism guarantees.</p></li>
+</ul>
+<p>Adapters must not alter or reinterpret <code class="docutils literal notranslate"><span class="pre">DecisionResult</span></code> fields.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> is the authoritative source of scheduling truth.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="SPEC.html" class="btn btn-neutral float-left" title="SPEC.md" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SYNTAX.html" class="btn btn-neutral float-right" title="SYNTAX.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

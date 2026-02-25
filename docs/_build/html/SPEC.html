@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPEC.md &mdash; Kron  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CORE-SPEC.md" href="CORE-SPEC.html" />
+    <link rel="prev" title="HELLOKRON.md" href="HELLOKRON.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Kron
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SETUP.html">SETUP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="USAGE.html">USAGE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Specifications</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="HELLOKRON.html">HELLOKRON.md</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SPEC.md</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scope">Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#time-model">Time Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inputs">Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#periods">Periods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#period-definition">Period definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#period-id">Period ID</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#window-semantics">Window Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distribution-semantics">Distribution Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seed-semantics">Seed Semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#determinism-requirement">Determinism requirement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seed-inputs">Seed inputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seed-strategies">Seed strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seed-hash">Seed hash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#constraint-semantics">Constraint Semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#candidate-selection-with-constraints">Candidate selection with constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unschedulable-periods">Unschedulable periods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#decision-computation">Decision Computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-and-outcomes">Handling and Outcomes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution-trigger-semantics">Execution Trigger Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deadline-semantics">Deadline Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concurrency-semantics">Concurrency Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#idempotency-semantics">Idempotency Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#state-machine">State Machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spec-change-semantics">Spec Change Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clock-change-semantics">Clock Change Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observability-contract">Observability Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#invariants">Invariants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility">Compatibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CORE-SPEC.html">CORE-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SYNTAX.html">SYNTAX.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KRONTAB.html">KRONTAB File Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="EXECUTION.html">EXECUTION.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="STATE.html">STATE.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ERROR-MODEL.html">ERROR-MODEL.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LOGGING.html">LOGS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SECURITY.html">SECURITY.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="COMPAT.html">COMPAT.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEST-VECTORS.html">TEST-VECTORS.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CRD-SPEC.html">CRD-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html">CLI-SPEC.md</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krontab">krontab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#krond">krond</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#kronctl-kubernetes-helper">kronctl (Kubernetes helper)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#output-formats">Output Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#exit-codes">Exit Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#determinism-requirements">Determinism Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#logging-interaction">Logging Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#backward-compatibility">Backward Compatibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#security-rules">Security Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CLI-SPEC.html#non-goals">Non-Goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html">Kron manifesto (project principles)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#product-shape-what-kron-is-superseded-by-spec-md-and-hellokron-md">Product shape (what Kron <em>is</em>) — <em>superseded by SPEC.md and HELLOKRON.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#roadmap-superseded-by-top-level-roadmap-md">Roadmap — <em>superseded by top-level ROADMAP.md</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="MANIFESTO.html#repository-layout-suggestion-superseded-by-structure-md">Repository layout suggestion — <em>superseded by STRUCTURE.md</em></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kron</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SPEC.md</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/SPEC.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spec-md">
+<h1>SPEC.md<a class="headerlink" href="#spec-md" title="Link to this heading"></a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading"></a></h2>
+<p>This document specifies Kron’s scheduling and execution semantics as a stable contract.</p>
+<p>It applies to all Kron deployments and adapters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kron-core</span></code> (engine)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">krond</span></code> (host daemon)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kron-operator</span></code> (Kubernetes controller)</p></li>
+</ul>
+<p>Where an adapter cannot enforce a behavior directly, it must preserve the observable contract.</p>
+</section>
+<hr class="docutils" />
+<section id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Schedule</strong>: A cron expression interpreted in a timezone.</p></li>
+<li><p><strong>Timezone</strong>: IANA timezone used to interpret schedule and calendar constraints.</p></li>
+<li><p><strong>Nominal time</strong>: The scheduled timestamp produced by resolving a schedule for a period.</p></li>
+<li><p><strong>Period</strong>: The discrete scheduling opportunity anchored at one nominal time.</p></li>
+<li><p><strong>Period ID</strong>: Canonical identifier for a period.</p></li>
+<li><p><strong>Window</strong>: The allowed time interval in which an execution may be chosen.</p></li>
+<li><p><strong>Chosen time</strong>: The specific timestamp selected within the window for a period.</p></li>
+<li><p><strong>Decision</strong>: The computed record containing period, window, distribution, seed, and chosen time.</p></li>
+<li><p><strong>Constraint</strong>: A rule restricting which timestamps are allowed.</p></li>
+<li><p><strong>Candidate</strong>: A sampled timestamp within the window prior to constraint validation.</p></li>
+<li><p><strong>Deadline</strong>: Maximum allowed lateness relative to chosen time to still execute.</p></li>
+<li><p><strong>Execution</strong>: One realized run of a job (process spawn or Kubernetes <code class="docutils literal notranslate"><span class="pre">Job</span></code> creation).</p></li>
+<li><p><strong>Handled period</strong>: A period for which Kron has reached a terminal outcome.</p></li>
+<li><p><strong>Terminal outcome</strong>: <code class="docutils literal notranslate"><span class="pre">executed</span></code>, <code class="docutils literal notranslate"><span class="pre">skipped</span></code>, <code class="docutils literal notranslate"><span class="pre">missed</span></code>, or <code class="docutils literal notranslate"><span class="pre">unschedulable</span></code>.</p></li>
+<li><p><strong>Active execution</strong>: An execution that has started but not completed.</p></li>
+<li><p><strong>Identity</strong>: Stable identifier of a schedule entry.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="time-model">
+<h2>Time Model<a class="headerlink" href="#time-model" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>All internal comparisons use UTC instants.</p></li>
+<li><p>Input schedules and constraints are interpreted in the configured timezone.</p></li>
+<li><p>All persisted timestamps are stored as RFC3339 UTC.</p></li>
+<li><p>Kron’s decisions are defined at second-level granularity for chosen timestamps unless a platform supports higher precision; implementations may use higher precision but must not violate determinism for the same inputs.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading"></a></h2>
+<p>A job definition provides:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identity</span></code>: stable identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schedule</span></code>: cron expression</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code>: optional, default <code class="docutils literal notranslate"><span class="pre">UTC</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_mode</span></code>: <code class="docutils literal notranslate"><span class="pre">after</span></code> or <code class="docutils literal notranslate"><span class="pre">around</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_duration</span></code>: non-negative duration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distribution</span></code>: name + parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed_strategy</span></code>: name + optional parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">salt</span></code>: optional string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constraints</span></code>: optional <code class="docutils literal notranslate"><span class="pre">only</span></code> and/or <code class="docutils literal notranslate"><span class="pre">avoid</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">policy</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">concurrency</span></code>: <code class="docutils literal notranslate"><span class="pre">allow|forbid|replace</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deadline</span></code>: duration (default <code class="docutils literal notranslate"><span class="pre">0s</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">suspend</span></code>: boolean (default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p></li>
+</ul>
+</li>
+</ul>
+<p>Adapters also provide:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">now</span></code>: current time instant</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading"></a></h2>
+<p>For each job, Kron produces:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">Decision</span></code> for a specific <code class="docutils literal notranslate"><span class="pre">Period</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">period_id</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nominal_time</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_start</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_end</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chosen_time</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distribution</span></code> + parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed_strategy</span></code> + parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed_hash</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constraints_applied</span></code> summary</p></li>
+</ul>
+</li>
+<li><p>A terminal outcome per period:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">executed</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skipped</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missed</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unschedulable</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="periods">
+<h2>Periods<a class="headerlink" href="#periods" title="Link to this heading"></a></h2>
+<section id="period-definition">
+<h3>Period definition<a class="headerlink" href="#period-definition" title="Link to this heading"></a></h3>
+<p>A period is the interval of responsibility anchored at one resolved nominal time.</p>
+<p>For a schedule <code class="docutils literal notranslate"><span class="pre">S</span></code>, timezone <code class="docutils literal notranslate"><span class="pre">TZ</span></code>, and an evaluation time <code class="docutils literal notranslate"><span class="pre">t</span></code>, define:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prev_nominal(t)</span></code>: greatest nominal time ≤ <code class="docutils literal notranslate"><span class="pre">t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">next_nominal(t)</span></code>: smallest nominal time &gt; <code class="docutils literal notranslate"><span class="pre">t</span></code></p></li>
+</ul>
+<p>A period is identified by its nominal time.</p>
+</section>
+<section id="period-id">
+<h3>Period ID<a class="headerlink" href="#period-id" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">period_id</span></code> is the RFC3339 UTC representation of the nominal time.</p>
+<p>Canonical form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">period_id</span> <span class="o">=</span> <span class="n">nominal_time_utc_rfc3339</span>
+</pre></div>
+</div>
+<p>Implementations must treat the same nominal instant as the same period even if represented in different timezones.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="window-semantics">
+<h2>Window Semantics<a class="headerlink" href="#window-semantics" title="Link to this heading"></a></h2>
+<p>Given nominal time <code class="docutils literal notranslate"><span class="pre">N</span></code> and window duration <code class="docutils literal notranslate"><span class="pre">D</span></code>:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">window_mode=after</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_start</span> <span class="pre">=</span> <span class="pre">N</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_end</span> <span class="pre">=</span> <span class="pre">N</span> <span class="pre">+</span> <span class="pre">D</span></code></p></li>
+</ul>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">window_mode=around</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_start</span> <span class="pre">=</span> <span class="pre">N</span> <span class="pre">-</span> <span class="pre">(D</span> <span class="pre">/</span> <span class="pre">2)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window_end</span> <span class="pre">=</span> <span class="pre">N</span> <span class="pre">+</span> <span class="pre">(D</span> <span class="pre">/</span> <span class="pre">2)</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">window_start</span></code> and <code class="docutils literal notranslate"><span class="pre">window_end</span></code> are inclusive bounds for candidate generation, with the constraint that the chosen time must satisfy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>window_start ≤ chosen_time ≤ window_end
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">D=0</span></code>, then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chosen_time</span> <span class="o">=</span> <span class="n">N</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="distribution-semantics">
+<h2>Distribution Semantics<a class="headerlink" href="#distribution-semantics" title="Link to this heading"></a></h2>
+<p>A distribution maps a seeded pseudorandom stream to a time within the window.</p>
+<p>Distributions must be bounded: no value outside the window may be chosen.</p>
+<p>Distributions may require parameters; missing parameters imply deterministic defaults.</p>
+<p>Distribution evaluation must be deterministic for identical inputs.</p>
+<p>The chosen time must be stable for:</p>
+<ul class="simple">
+<li><p>the same <code class="docutils literal notranslate"><span class="pre">identity</span></code></p></li>
+<li><p>the same <code class="docutils literal notranslate"><span class="pre">period_id</span></code></p></li>
+<li><p>the same schedule configuration</p></li>
+<li><p>the same seed strategy and salt</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="seed-semantics">
+<h2>Seed Semantics<a class="headerlink" href="#seed-semantics" title="Link to this heading"></a></h2>
+<section id="determinism-requirement">
+<h3>Determinism requirement<a class="headerlink" href="#determinism-requirement" title="Link to this heading"></a></h3>
+<p>Kron must produce the same <code class="docutils literal notranslate"><span class="pre">chosen_time</span></code> for the same job definition and period, independent of:</p>
+<ul class="simple">
+<li><p>process restarts</p></li>
+<li><p>leader changes</p></li>
+<li><p>reconciliation frequency</p></li>
+</ul>
+</section>
+<section id="seed-inputs">
+<h3>Seed inputs<a class="headerlink" href="#seed-inputs" title="Link to this heading"></a></h3>
+<p>Seed derivation uses:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identity</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">period_key</span></code> (derived from <code class="docutils literal notranslate"><span class="pre">period_id</span></code> and seed strategy)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">salt</span></code> (string, possibly empty)</p></li>
+</ul>
+</section>
+<section id="seed-strategies">
+<h3>Seed strategies<a class="headerlink" href="#seed-strategies" title="Link to this heading"></a></h3>
+<p>Seed strategies define the <code class="docutils literal notranslate"><span class="pre">period_key</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stable</span></code>: <code class="docutils literal notranslate"><span class="pre">period_key</span> <span class="pre">=</span> <span class="pre">period_id</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">daily</span></code>: <code class="docutils literal notranslate"><span class="pre">period_key</span> <span class="pre">=</span> <span class="pre">YYYY-MM-DD</span> <span class="pre">in</span> <span class="pre">TZ</span> <span class="pre">corresponding</span> <span class="pre">to</span> <span class="pre">nominal</span> <span class="pre">time</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weekly</span></code>: <code class="docutils literal notranslate"><span class="pre">period_key</span> <span class="pre">=</span> <span class="pre">ISO</span> <span class="pre">week</span> <span class="pre">(YYYY-Www)</span> <span class="pre">in</span> <span class="pre">TZ</span> <span class="pre">corresponding</span> <span class="pre">to</span> <span class="pre">nominal</span> <span class="pre">time</span></code></p></li>
+</ul>
+</section>
+<section id="seed-hash">
+<h3>Seed hash<a class="headerlink" href="#seed-hash" title="Link to this heading"></a></h3>
+<p>Kron computes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seed_hash</span> <span class="o">=</span> <span class="n">HASH</span><span class="p">(</span><span class="n">identity</span> <span class="o">||</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">||</span> <span class="n">period_key</span> <span class="o">||</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">||</span> <span class="n">salt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">HASH</span></code> is a stable algorithm selected by Kron (cryptographic hash required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identity</span></code>, <code class="docutils literal notranslate"><span class="pre">period_key</span></code>, and <code class="docutils literal notranslate"><span class="pre">salt</span></code> are UTF-8 strings</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">||</span></code> indicates concatenation</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">seed_hash</span></code> is the canonical seed representation exposed in logs and status.</p>
+<p>The pseudorandom generator uses <code class="docutils literal notranslate"><span class="pre">seed_hash</span></code> as seed material in a stable, specified transformation.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="constraint-semantics">
+<h2>Constraint Semantics<a class="headerlink" href="#constraint-semantics" title="Link to this heading"></a></h2>
+<p>Constraints restrict allowable chosen times.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">only</span></code> defines the allowed set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">avoid</span></code> defines the disallowed set.</p></li>
+<li><p>If both are present, a time is valid only if it satisfies <code class="docutils literal notranslate"><span class="pre">only</span></code> and does not satisfy <code class="docutils literal notranslate"><span class="pre">avoid</span></code>.</p></li>
+</ul>
+<p>Constraints are evaluated in the schedule timezone.</p>
+<p>Constraints apply to candidate timestamps during decision computation.</p>
+<section id="candidate-selection-with-constraints">
+<h3>Candidate selection with constraints<a class="headerlink" href="#candidate-selection-with-constraints" title="Link to this heading"></a></h3>
+<p>To compute <code class="docutils literal notranslate"><span class="pre">chosen_time</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Sample a candidate within the window using the distribution.</p></li>
+<li><p>If candidate violates constraints, reject and sample a new candidate.</p></li>
+<li><p>Continue until a valid candidate is found or the sampling budget is exhausted.</p></li>
+</ol>
+<p>Sampling budget is deterministic and fixed by Kron.</p>
+</section>
+<section id="unschedulable-periods">
+<h3>Unschedulable periods<a class="headerlink" href="#unschedulable-periods" title="Link to this heading"></a></h3>
+<p>If no valid candidate is found within the sampling budget, the period outcome is <code class="docutils literal notranslate"><span class="pre">unschedulable</span></code> and no execution occurs.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="decision-computation">
+<h2>Decision Computation<a class="headerlink" href="#decision-computation" title="Link to this heading"></a></h2>
+<p>For each job and period:</p>
+<ol class="arabic simple">
+<li><p>Resolve <code class="docutils literal notranslate"><span class="pre">nominal_time</span></code> for the period based on schedule and timezone.</p></li>
+<li><p>Compute window bounds.</p></li>
+<li><p>Compute <code class="docutils literal notranslate"><span class="pre">period_key</span></code> based on seed strategy.</p></li>
+<li><p>Compute <code class="docutils literal notranslate"><span class="pre">seed_hash</span></code>.</p></li>
+<li><p>Initialize deterministic pseudorandom generator from <code class="docutils literal notranslate"><span class="pre">seed_hash</span></code>.</p></li>
+<li><p>Sample candidate(s) according to distribution within window.</p></li>
+<li><p>Apply constraints.</p></li>
+<li><p>Produce <code class="docutils literal notranslate"><span class="pre">Decision</span></code> including chosen time and metadata.</p></li>
+</ol>
+<p>A <code class="docutils literal notranslate"><span class="pre">Decision</span></code> is specific to one period.</p>
+<p>If the job definition changes, decisions for future periods may change. Decisions for already-handled periods must not cause additional execution.</p>
+</section>
+<hr class="docutils" />
+<section id="handling-and-outcomes">
+<h2>Handling and Outcomes<a class="headerlink" href="#handling-and-outcomes" title="Link to this heading"></a></h2>
+<p>A period is handled exactly once by reaching one terminal outcome.</p>
+<p>Terminal outcomes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">executed</span></code>: an execution was started for the period</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skipped</span></code>: execution was intentionally not started due to policy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">missed</span></code>: execution was not started because the deadline expired</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unschedulable</span></code>: no valid time could be selected within the window and constraints</p></li>
+</ul>
+<p>Once a period is handled, Kron must not start another execution for that period.</p>
+</section>
+<hr class="docutils" />
+<section id="execution-trigger-semantics">
+<h2>Execution Trigger Semantics<a class="headerlink" href="#execution-trigger-semantics" title="Link to this heading"></a></h2>
+<p>A period becomes eligible for trigger when:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>now ≥ chosen_time
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">policy.suspend=true</span></code>, no trigger occurs and no period is handled while suspended.</p>
+<p>When eligible, Kron attempts to reach a terminal outcome by evaluating policies and system state.</p>
+</section>
+<hr class="docutils" />
+<section id="deadline-semantics">
+<h2>Deadline Semantics<a class="headerlink" href="#deadline-semantics" title="Link to this heading"></a></h2>
+<p>Let:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">C</span></code> be <code class="docutils literal notranslate"><span class="pre">chosen_time</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DL</span></code> be <code class="docutils literal notranslate"><span class="pre">policy.deadline</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">now</span></code> current time at trigger evaluation</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">DL=0s</span></code>, then the period is handled as <code class="docutils literal notranslate"><span class="pre">missed</span></code> if <code class="docutils literal notranslate"><span class="pre">now</span> <span class="pre">&gt;</span> <span class="pre">C</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">DL&gt;0s</span></code>, then:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">now</span> <span class="pre">≤</span> <span class="pre">C</span> <span class="pre">+</span> <span class="pre">DL</span></code>, execution may proceed</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">now</span> <span class="pre">&gt;</span> <span class="pre">C</span> <span class="pre">+</span> <span class="pre">DL</span></code>, the period is handled as <code class="docutils literal notranslate"><span class="pre">missed</span></code></p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="concurrency-semantics">
+<h2>Concurrency Semantics<a class="headerlink" href="#concurrency-semantics" title="Link to this heading"></a></h2>
+<p>Concurrency policy is evaluated at trigger time.</p>
+<p>Let <code class="docutils literal notranslate"><span class="pre">active</span></code> indicate whether there is an active execution for the job identity.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">allow</span></code>: proceed to execute regardless of <code class="docutils literal notranslate"><span class="pre">active</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forbid</span></code>: if <code class="docutils literal notranslate"><span class="pre">active=true</span></code>, handle period as <code class="docutils literal notranslate"><span class="pre">skipped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replace</span></code>: if <code class="docutils literal notranslate"><span class="pre">active=true</span></code>, terminate the active execution and proceed to execute.</p></li>
+</ul>
+<p>Termination semantics for <code class="docutils literal notranslate"><span class="pre">replace</span></code> are adapter-defined but must be best-effort and observable.</p>
+</section>
+<hr class="docutils" />
+<section id="idempotency-semantics">
+<h2>Idempotency Semantics<a class="headerlink" href="#idempotency-semantics" title="Link to this heading"></a></h2>
+<p>Kron must guarantee at most one execution per <code class="docutils literal notranslate"><span class="pre">(identity,</span> <span class="pre">period_id)</span></code>.</p>
+<p>Adapters must implement an idempotency check before starting execution.</p>
+<ul class="simple">
+<li><p>In Kubernetes mode: by checking for an existing owned Job with the period identifier.</p></li>
+<li><p>In daemon mode: by consulting persisted state and verifying active/existing executions.</p></li>
+</ul>
+<p>If an execution for the period is already recorded as started or completed, the period is handled and must not be executed again.</p>
+</section>
+<hr class="docutils" />
+<section id="state-machine">
+<h2>State Machine<a class="headerlink" href="#state-machine" title="Link to this heading"></a></h2>
+<p>Per job identity, each period transitions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Planned</span></code>: decision computed, chosen time known</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Eligible</span></code>: now ≥ chosen_time</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Terminal</span></code>: one of <code class="docutils literal notranslate"><span class="pre">executed|skipped|missed|unschedulable</span></code></p></li>
+</ul>
+<p>Execution sub-states for <code class="docutils literal notranslate"><span class="pre">executed</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Running</span></code>: started, not yet completed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Completed</span></code>: finished with an exit result (adapter-specific)</p></li>
+</ul>
+<p>State transitions are monotonic.</p>
+<p>A period cannot transition from a terminal outcome to a different terminal outcome.</p>
+</section>
+<hr class="docutils" />
+<section id="spec-change-semantics">
+<h2>Spec Change Semantics<a class="headerlink" href="#spec-change-semantics" title="Link to this heading"></a></h2>
+<p>A job definition change is any change to:</p>
+<ul class="simple">
+<li><p>schedule</p></li>
+<li><p>timezone</p></li>
+<li><p>window mode/duration</p></li>
+<li><p>distribution or parameters</p></li>
+<li><p>constraints</p></li>
+<li><p>seed strategy or salt</p></li>
+<li><p>policy settings</p></li>
+</ul>
+<p>Effects:</p>
+<ul class="simple">
+<li><p>Future decisions may change starting from the first unhandled period.</p></li>
+<li><p>Already-handled periods must remain handled and must not execute again.</p></li>
+<li><p>Active executions are governed by concurrency policy and adapter behavior.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="clock-change-semantics">
+<h2>Clock Change Semantics<a class="headerlink" href="#clock-change-semantics" title="Link to this heading"></a></h2>
+<p>Kron treats <code class="docutils literal notranslate"><span class="pre">now</span></code> as authoritative input.</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">now</span></code> jumps forward, some periods may become immediately eligible and will be handled subject to deadline and idempotency.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">now</span></code> jumps backward, Kron must not re-handle already handled periods.</p></li>
+</ul>
+<p>Adapters must persist handled period outcomes to preserve idempotency across clock changes.</p>
+</section>
+<hr class="docutils" />
+<section id="observability-contract">
+<h2>Observability Contract<a class="headerlink" href="#observability-contract" title="Link to this heading"></a></h2>
+<p>For each period and identity, Kron must expose:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">period_id</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nominal_time</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chosen_time</span></code></p></li>
+<li><p>terminal outcome</p></li>
+<li><p>reason for non-execution (<code class="docutils literal notranslate"><span class="pre">skipped</span></code>, <code class="docutils literal notranslate"><span class="pre">missed</span></code>, <code class="docutils literal notranslate"><span class="pre">unschedulable</span></code>) when applicable</p></li>
+<li><p>seed hash and distribution metadata sufficient to reproduce the decision</p></li>
+</ul>
+<p>Logs must contain enough information to reproduce the decision off-line.</p>
+</section>
+<hr class="docutils" />
+<section id="invariants">
+<h2>Invariants<a class="headerlink" href="#invariants" title="Link to this heading"></a></h2>
+<p>Kron guarantees:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">chosen_time</span></code> is within <code class="docutils literal notranslate"><span class="pre">[window_start,</span> <span class="pre">window_end]</span></code>.</p></li>
+<li><p>At most one execution per <code class="docutils literal notranslate"><span class="pre">(identity,</span> <span class="pre">period_id)</span></code>.</p></li>
+<li><p>Deterministic <code class="docutils literal notranslate"><span class="pre">chosen_time</span></code> for the same inputs and period.</p></li>
+<li><p>No unbounded historical replay.</p></li>
+<li><p>Terminal outcomes are monotonic and permanent for a period.</p></li>
+<li><p>Suspension prevents executions without advancing handled periods.</p></li>
+<li><p>If constraints make selection impossible, the period becomes <code class="docutils literal notranslate"><span class="pre">unschedulable</span></code> and no execution occurs.</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="compatibility">
+<h2>Compatibility<a class="headerlink" href="#compatibility" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The meaning of <code class="docutils literal notranslate"><span class="pre">period_id</span></code>, window computation, seed hashing inputs, and determinism rules are stable contracts.</p></li>
+<li><p>New distributions, parameters, and constraint types may be added.</p></li>
+<li><p>Any behavior change that affects decisions for the same inputs requires a major version bump of the relevant API surface.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="HELLOKRON.html" class="btn btn-neutral float-left" title="HELLOKRON.md" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="CORE-SPEC.html" class="btn btn-neutral float-right" title="CORE-SPEC.md" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
