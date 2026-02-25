@@ -14,6 +14,8 @@ import (
 
 var errJobNotFound = errors.New("job not found")
 
+const errLineWrap = "line %d: %w"
+
 type explainSettings struct {
 	Window       time.Duration
 	Mode         core.WindowMode
@@ -46,7 +48,7 @@ func loadJobSettings(path, job string, fallback explainSettings) (explainSetting
 	return def.Settings, nil
 }
 
-func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinition, error) {
+func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinition, error) { // NOSONAR
 	f, err := os.Open(path)
 	if err != nil {
 		return jobDefinition{}, fmt.Errorf("open file: %w", err)
@@ -67,7 +69,7 @@ func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinitio
 
 		tokens, err := splitTokens(line)
 		if err != nil {
-			return jobDefinition{}, fmt.Errorf("line %d: %w", lineNo, err)
+			return jobDefinition{}, fmt.Errorf(errLineWrap, lineNo, err)
 		}
 		if _, errs := validateEntry(tokens); len(errs) > 0 {
 			return jobDefinition{}, fmt.Errorf("line %d: %s", lineNo, errs[0])
@@ -75,7 +77,7 @@ func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinitio
 
 		fieldStart, err := findFieldStart(tokens)
 		if err != nil {
-			return jobDefinition{}, fmt.Errorf("line %d: %w", lineNo, err)
+			return jobDefinition{}, fmt.Errorf(errLineWrap, lineNo, err)
 		}
 
 		name := extractName(tokens[fieldStart:])
@@ -91,13 +93,13 @@ func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinitio
 		modifiers := tokens[5:fieldStart]
 		parsed, err := parseExplainModifiers(modifiers, fallback)
 		if err != nil {
-			return jobDefinition{}, fmt.Errorf("line %d: %w", lineNo, err)
+			return jobDefinition{}, fmt.Errorf(errLineWrap, lineNo, err)
 		}
 
 		cronFields := [5]string{tokens[0], tokens[1], tokens[2], tokens[3], tokens[4]}
 		sched, err := parseCronSpec(cronFields, parsed.Timezone)
 		if err != nil {
-			return jobDefinition{}, fmt.Errorf("line %d: %w", lineNo, err)
+			return jobDefinition{}, fmt.Errorf(errLineWrap, lineNo, err)
 		}
 
 		def = jobDefinition{
@@ -142,7 +144,7 @@ func extractName(fieldTokens []string) string {
 	return ""
 }
 
-func parseExplainModifiers(modifiers []string, fallback explainSettings) (explainSettings, error) {
+func parseExplainModifiers(modifiers []string, fallback explainSettings) (explainSettings, error) { // NOSONAR
 	settings := fallback
 
 	for _, tok := range modifiers {
@@ -210,7 +212,7 @@ func parseExplainModifiers(modifiers []string, fallback explainSettings) (explai
 	return settings, nil
 }
 
-func parseDistModifier(body string) (core.Distribution, float64, error) {
+func parseDistModifier(body string) (core.Distribution, float64, error) { // NOSONAR
 	parts := strings.Split(body, ",")
 	if len(parts) == 0 || strings.TrimSpace(parts[0]) == "" {
 		return "", 0, errors.New("invalid @dist arguments")
@@ -302,7 +304,7 @@ func splitModifier(tok string) (string, string, error) {
 	return name, body, nil
 }
 
-func parsePolicyModifier(body string) (policySettings, error) {
+func parsePolicyModifier(body string) (policySettings, error) { // NOSONAR
 	policy := policySettings{
 		Concurrency: "forbid",
 		Deadline:    0,

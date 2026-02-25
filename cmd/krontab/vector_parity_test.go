@@ -50,7 +50,7 @@ type coreVectorExpected struct {
 	Reason        string `json:"reason"`
 }
 
-func TestExplainMatchesSelectedCoreVectors(t *testing.T) {
+func TestExplainMatchesSelectedCoreVectors(t *testing.T) { // NOSONAR
 	tests := []struct {
 		file string
 		name string
@@ -152,7 +152,7 @@ func coreVectorPath(t *testing.T, file string) string {
 	return filepath.Join(base, "..", "..", "core", "testdata", "vectors", file)
 }
 
-func buildKrontabLineFromVector(t *testing.T, c coreVectorCase) string {
+func buildKrontabLineFromVector(t *testing.T, c coreVectorCase) string { // NOSONAR
 	t.Helper()
 
 	job := strings.TrimSpace(c.Input.Job)

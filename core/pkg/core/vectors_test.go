@@ -67,7 +67,7 @@ type vectorOut struct {
 	Reason        string `json:"reason,omitempty"`
 }
 
-func TestGoldenVectors(t *testing.T) {
+func TestGoldenVectors(t *testing.T) { // NOSONAR
 	matches, err := filepath.Glob("../../testdata/vectors/*.json")
 	if err != nil {
 		t.Fatalf("glob vectors: %v", err)

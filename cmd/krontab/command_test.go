@@ -10,13 +10,27 @@ import (
 	"time"
 )
 
+const (
+	argFile                = "--file"
+	argFormat              = "--format"
+	argCount               = "--count"
+	at20260224T1000        = "2026-02-24T10:00:00Z"
+	at20260224T1007        = "2026-02-24T10:07:00Z"
+	errExitCodeMismatch    = "exit code mismatch: got %d want %d"
+	errExitCodeMismatchErr = "exit code mismatch: got %d want %d stderr=%q"
+	errJSONParse           = "json parse error: %v"
+	errRunExplain          = "runExplain error: %v"
+	errRunNext             = "runNext error: %v"
+	errStderrMismatch      = "stderr mismatch: got %q"
+)
+
 func TestRunDispatchBasic(t *testing.T) {
 	var code int
 	stdout, _ := captureOutput(t, func() {
 		code = run([]string{"krontab"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d", code, 2)
+		t.Fatalf(errExitCodeMismatch, code, 2)
 	}
 	if !strings.Contains(stdout, "Usage:") {
 		t.Fatalf("expected usage output, got %q", stdout)
@@ -26,7 +40,7 @@ func TestRunDispatchBasic(t *testing.T) {
 		code = run([]string{"krontab", "help"})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d", code, 0)
+		t.Fatalf(errExitCodeMismatch, code, 0)
 	}
 	if !strings.Contains(stdout, "krontab next") {
 		t.Fatalf("expected next command in usage, got %q", stdout)
@@ -36,21 +50,21 @@ func TestRunDispatchBasic(t *testing.T) {
 		code = run([]string{"krontab", "--help"})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d", code, 0)
+		t.Fatalf(errExitCodeMismatch, code, 0)
 	}
 
 	stdout, _ = captureOutput(t, func() {
 		code = run([]string{"krontab", "-h"})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d", code, 0)
+		t.Fatalf(errExitCodeMismatch, code, 0)
 	}
 
 	stdout, _ = captureOutput(t, func() {
 		code = run([]string{"krontab", "unknown"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d", code, 2)
+		t.Fatalf(errExitCodeMismatch, code, 2)
 	}
 	if !strings.Contains(stdout, "Usage:") {
 		t.Fatalf("expected usage output, got %q", stdout)
@@ -63,34 +77,34 @@ func TestRunLintEndToEnd(t *testing.T) {
 
 	var code int
 	stdout, stderr := captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", valid, "--format", "text"})
+		code = run([]string{"krontab", "lint", argFile, valid, argFormat, "text"})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 0, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 0, stderr)
 	}
 	if !strings.Contains(stdout, "OK:") {
 		t.Fatalf("expected OK output, got %q", stdout)
 	}
 
 	stdout, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", invalid, "--format", "text"})
+		code = run([]string{"krontab", "lint", argFile, invalid, argFormat, "text"})
 	})
 	if code != 1 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 1, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 1, stderr)
 	}
 	if !strings.Contains(stdout, "INVALID:") {
 		t.Fatalf("expected INVALID output, got %q", stdout)
 	}
 
 	stdout, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", valid, "--format", "json"})
+		code = run([]string{"krontab", "lint", argFile, valid, argFormat, "json"})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 0, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 0, stderr)
 	}
 	var parsed lintResult
 	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-		t.Fatalf("json parse error: %v", err)
+		t.Fatalf(errJSONParse, err)
 	}
 	if !parsed.Valid {
 		t.Fatalf("expected valid lint result: %+v", parsed)
@@ -100,47 +114,47 @@ func TestRunLintEndToEnd(t *testing.T) {
 		code = run([]string{"krontab", "lint"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", valid, "--format", "bad"})
+		code = run([]string{"krontab", "lint", argFile, valid, argFormat, "bad"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", "/tmp/does-not-exist.kron"})
+		code = run([]string{"krontab", "lint", argFile, "/tmp/does-not-exist.kron"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", valid, "extra"})
+		code = run([]string{"krontab", "lint", argFile, valid, "extra"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
 		code = run([]string{"krontab", "lint", "--bad-flag"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 }
 
-func TestRunExplainPaths(t *testing.T) {
+func TestRunExplainPaths(t *testing.T) { // NOSONAR
 	cfg := writeTempKrontab(t, `
 0 0 * * * @win(around,30m) @dist(uniform) name=backup command=/usr/bin/backup
 `)
 
 	stdout, _ := captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "text"})
+		err := runExplain([]string{"backup", argFile, cfg, "--at", at20260224T1000, argFormat, "text"})
 		if err != nil {
-			t.Fatalf("runExplain error: %v", err)
+			t.Fatalf(errRunExplain, err)
 		}
 	})
 	if !strings.Contains(stdout, "chosen_time:") {
@@ -148,20 +162,20 @@ func TestRunExplainPaths(t *testing.T) {
 	}
 
 	stdout, _ = captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "json"})
+		err := runExplain([]string{"backup", argFile, cfg, "--at", at20260224T1000, argFormat, "json"})
 		if err != nil {
-			t.Fatalf("runExplain error: %v", err)
+			t.Fatalf(errRunExplain, err)
 		}
 	})
 	var parsed map[string]any
 	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-		t.Fatalf("json parse error: %v", err)
+		t.Fatalf(errJSONParse, err)
 	}
 	if parsed["job"] != "backup" {
 		t.Fatalf("unexpected job in json: %#v", parsed["job"])
 	}
 
-	err := runExplain([]string{"backup", "--file", cfg})
+	err := runExplain([]string{"backup", argFile, cfg})
 	if err == nil || !strings.Contains(err.Error(), "--at is required") {
 		t.Fatalf("expected required-at error, got %v", err)
 	}
@@ -171,27 +185,27 @@ func TestRunExplainPaths(t *testing.T) {
 		t.Fatalf("expected invalid-at error, got %v", err)
 	}
 
-	err = runExplain([]string{"backup", "--at", "2026-02-24T10:00:00Z", "--mode", "bad"})
+	err = runExplain([]string{"backup", "--at", at20260224T1000, "--mode", "bad"})
 	if err == nil || !strings.Contains(err.Error(), "invalid window mode") {
 		t.Fatalf("expected invalid mode error, got %v", err)
 	}
 
 	stdout, _ = captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--at", "2026-02-24T10:00:00Z", "--window", "30m", "--dist", "skewLate"})
+		err := runExplain([]string{"backup", "--at", at20260224T1000, "--window", "30m", "--dist", "skewLate"})
 		if err != nil {
-			t.Fatalf("runExplain error: %v", err)
+			t.Fatalf(errRunExplain, err)
 		}
 	})
 	if !strings.Contains(stdout, "distribution: skewLate") {
 		t.Fatalf("expected skewLate in output, got %q", stdout)
 	}
 
-	err = runExplain([]string{"missing", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+	err = runExplain([]string{"missing", argFile, cfg, "--at", at20260224T1000})
 	if !errors.Is(err, errJobNotFound) {
 		t.Fatalf("expected errJobNotFound, got %v", err)
 	}
 
-	err = runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "bad"})
+	err = runExplain([]string{"backup", argFile, cfg, "--at", at20260224T1000, argFormat, "bad"})
 	if err == nil || !strings.Contains(err.Error(), "invalid --format value") {
 		t.Fatalf("expected invalid format error, got %v", err)
 	}
@@ -203,15 +217,15 @@ func TestRunExplainAppliesTimezoneAndSeedFromConfig(t *testing.T) {
 `)
 
 	stdout, _ := captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T14:00:00Z", "--format", "json"})
+		err := runExplain([]string{"backup", argFile, cfg, "--at", "2026-02-24T14:00:00Z", argFormat, "json"})
 		if err != nil {
-			t.Fatalf("runExplain error: %v", err)
+			t.Fatalf(errRunExplain, err)
 		}
 	})
 
 	var parsed map[string]any
 	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-		t.Fatalf("json parse error: %v", err)
+		t.Fatalf(errJSONParse, err)
 	}
 	if parsed["chosenTime"] != "2026-02-24T14:00:00Z" {
 		t.Fatalf("chosenTime mismatch: got %#v", parsed["chosenTime"])
@@ -234,15 +248,15 @@ func TestRunExplainAppliesSkewShapeFromConfig(t *testing.T) {
 
 	parseChosen := func(cfg string) time.Time {
 		stdout, _ := captureOutput(t, func() {
-			err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-03-01T09:00:00Z", "--format", "json"})
+			err := runExplain([]string{"backup", argFile, cfg, "--at", "2026-03-01T09:00:00Z", argFormat, "json"})
 			if err != nil {
-				t.Fatalf("runExplain error: %v", err)
+				t.Fatalf(errRunExplain, err)
 			}
 		})
 
 		var parsed map[string]any
 		if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-			t.Fatalf("json parse error: %v", err)
+			t.Fatalf(errJSONParse, err)
 		}
 		chosenRaw, ok := parsed["chosenTime"].(string)
 		if !ok || chosenRaw == "" {
@@ -263,15 +277,15 @@ func TestRunExplainAppliesSkewShapeFromConfig(t *testing.T) {
 	}
 }
 
-func TestRunNextPaths(t *testing.T) {
+func TestRunNextPaths(t *testing.T) { // NOSONAR
 	cfg := writeTempKrontab(t, `
 */30 * * * * @win(after,0s) @dist(uniform) name=backup command=/usr/bin/backup
 `)
 
 	stdout, _ := captureOutput(t, func() {
-		err := runNext([]string{"backup", "--file", cfg, "--count", "2", "--at", "2026-02-24T10:07:00Z", "--format", "text"})
+		err := runNext([]string{"backup", argFile, cfg, argCount, "2", "--at", at20260224T1007, argFormat, "text"})
 		if err != nil {
-			t.Fatalf("runNext error: %v", err)
+			t.Fatalf(errRunNext, err)
 		}
 	})
 	if !strings.Contains(stdout, "1. period_start=") {
@@ -279,40 +293,40 @@ func TestRunNextPaths(t *testing.T) {
 	}
 
 	stdout, _ = captureOutput(t, func() {
-		err := runNext([]string{"backup", "--file", cfg, "--count", "2", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+		err := runNext([]string{"backup", argFile, cfg, argCount, "2", "--at", at20260224T1007, argFormat, "json"})
 		if err != nil {
-			t.Fatalf("runNext error: %v", err)
+			t.Fatalf(errRunNext, err)
 		}
 	})
 	var parsed nextResult
 	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-		t.Fatalf("json parse error: %v", err)
+		t.Fatalf(errJSONParse, err)
 	}
 	if parsed.Count != 2 || len(parsed.Decisions) != 2 {
 		t.Fatalf("unexpected next result: %+v", parsed)
 	}
 
-	err := runNext([]string{"backup", "--count", "1"})
+	err := runNext([]string{"backup", argCount, "1"})
 	if err == nil || !strings.Contains(err.Error(), "--file is required") {
 		t.Fatalf("expected required-file error, got %v", err)
 	}
 
-	err = runNext([]string{"backup", "--file", cfg, "--count", "0"})
+	err = runNext([]string{"backup", argFile, cfg, argCount, "0"})
 	if err == nil || !strings.Contains(err.Error(), "--count must be > 0") {
 		t.Fatalf("expected invalid count error, got %v", err)
 	}
 
-	err = runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "bad"})
+	err = runNext([]string{"backup", argFile, cfg, argCount, "1", "--at", "bad"})
 	if err == nil || !strings.Contains(err.Error(), "invalid --at value") {
 		t.Fatalf("expected invalid at error, got %v", err)
 	}
 
-	err = runNext([]string{"missing", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z"})
+	err = runNext([]string{"missing", argFile, cfg, argCount, "1", "--at", at20260224T1007})
 	if !errors.Is(err, errJobNotFound) {
 		t.Fatalf("expected errJobNotFound, got %v", err)
 	}
 
-	err = runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z", "--format", "bad"})
+	err = runNext([]string{"backup", argFile, cfg, argCount, "1", "--at", at20260224T1007, argFormat, "bad"})
 	if err == nil || !strings.Contains(err.Error(), "invalid --format value") {
 		t.Fatalf("expected invalid format error, got %v", err)
 	}
@@ -324,15 +338,15 @@ func TestRunNextUnschedulableDecision(t *testing.T) {
 `)
 
 	stdout, _ := captureOutput(t, func() {
-		err := runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+		err := runNext([]string{"backup", argFile, cfg, argCount, "1", "--at", at20260224T1007, argFormat, "json"})
 		if err != nil {
-			t.Fatalf("runNext error: %v", err)
+			t.Fatalf(errRunNext, err)
 		}
 	})
 
 	var parsed nextResult
 	if err := json.Unmarshal([]byte(stdout), &parsed); err != nil {
-		t.Fatalf("json parse error: %v", err)
+		t.Fatalf(errJSONParse, err)
 	}
 	if len(parsed.Decisions) != 1 {
 		t.Fatalf("expected one decision, got %d", len(parsed.Decisions))
@@ -350,7 +364,7 @@ func TestRunExplainConfigLoadError(t *testing.T) {
 0 0 * * * @win(after,bad) name=backup command=/usr/bin/backup
 `)
 
-	err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+	err := runExplain([]string{"backup", argFile, cfg, "--at", at20260224T1000})
 	if err == nil {
 		t.Fatalf("expected config load error")
 	}
@@ -364,7 +378,7 @@ func TestRunNextNoMatchingFuturePeriod(t *testing.T) {
 0 0 31 2 * name=backup command=/usr/bin/backup
 `)
 
-	err := runNext([]string{"backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+	err := runNext([]string{"backup", argFile, cfg, argCount, "1", "--at", at20260224T1007, argFormat, "json"})
 	if err == nil {
 		t.Fatalf("expected no matching future period error")
 	}
@@ -378,38 +392,38 @@ func TestRunDispatchExitMapping(t *testing.T) {
 
 	var code int
 	_, stderr := captureOutput(t, func() {
-		code = run([]string{"krontab", "explain", "backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+		code = run([]string{"krontab", "explain", "backup", argFile, cfg, "--at", at20260224T1000})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 0, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 0, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "next", "backup", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:00:00Z"})
+		code = run([]string{"krontab", "next", "backup", argFile, cfg, argCount, "1", "--at", at20260224T1000})
 	})
 	if code != 0 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 0, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 0, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "explain", "missing", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+		code = run([]string{"krontab", "explain", "missing", argFile, cfg, "--at", at20260224T1000})
 	})
 	if code != 1 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 1, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 1, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
 		code = run([]string{"krontab", "explain", "backup"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "next", "missing", "--file", cfg, "--count", "1", "--at", "2026-02-24T10:00:00Z"})
+		code = run([]string{"krontab", "next", "missing", argFile, cfg, argCount, "1", "--at", at20260224T1000})
 	})
 	if code != 1 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 1, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 1, stderr)
 	}
 }
 
@@ -418,33 +432,33 @@ func TestRunCanonicalErrorText(t *testing.T) {
 
 	var code int
 	_, stderr := captureOutput(t, func() {
-		code = run([]string{"krontab", "explain", "missing", "--file", cfg, "--at", "2026-02-24T10:00:00Z"})
+		code = run([]string{"krontab", "explain", "missing", argFile, cfg, "--at", at20260224T1000})
 	})
 	if code != 1 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 1, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 1, stderr)
 	}
 	if stderr != "error: job not found: missing\n" {
-		t.Fatalf("stderr mismatch: got %q", stderr)
+		t.Fatalf(errStderrMismatch, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
 		code = run([]string{"krontab", "next", "backup"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 	if stderr != "error: --file is required for MVP\n" {
-		t.Fatalf("stderr mismatch: got %q", stderr)
+		t.Fatalf(errStderrMismatch, stderr)
 	}
 
 	_, stderr = captureOutput(t, func() {
-		code = run([]string{"krontab", "lint", "--file", cfg, "extra"})
+		code = run([]string{"krontab", "lint", argFile, cfg, "extra"})
 	})
 	if code != 2 {
-		t.Fatalf("exit code mismatch: got %d want %d stderr=%q", code, 2, stderr)
+		t.Fatalf(errExitCodeMismatchErr, code, 2, stderr)
 	}
 	if stderr != "error: lint does not accept positional arguments\n" {
-		t.Fatalf("stderr mismatch: got %q", stderr)
+		t.Fatalf(errStderrMismatch, stderr)
 	}
 }
 

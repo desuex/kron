@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	errDecide              = "Decide error: %v"
+	errExpectedSchedulable = "expected schedulable decision"
+)
+
 func TestDecideDeterministic(t *testing.T) {
 	input := DecideInput{
 		Identity:    "backup",
@@ -18,11 +23,11 @@ func TestDecideDeterministic(t *testing.T) {
 
 	a, err := Decide(input)
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	b, err := Decide(input)
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 
 	if a.SeedHash != b.SeedHash || !a.ChosenTime.Equal(b.ChosenTime) {
@@ -101,7 +106,7 @@ func TestDecideAllowsZeroWindow(t *testing.T) {
 		Dist:        DistributionUniform,
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if !d.WindowStart.Equal(period) {
 		t.Fatalf("window start mismatch: got %s want %s", d.WindowStart, period)
@@ -211,10 +216,10 @@ func TestDecideConstraintsAndUnschedulable(t *testing.T) {
 		Constraints: ConstraintSpec{OnlyHours: []int{10}},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if okDecision.Unschedulable {
-		t.Fatalf("expected schedulable decision")
+		t.Fatalf(errExpectedSchedulable)
 	}
 	if !okDecision.ChosenTime.Equal(period) {
 		t.Fatalf("chosen mismatch: got %s want %s", okDecision.ChosenTime, period)
@@ -230,7 +235,7 @@ func TestDecideConstraintsAndUnschedulable(t *testing.T) {
 		Constraints: ConstraintSpec{OnlyHours: []int{11}},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if !unsched.Unschedulable {
 		t.Fatalf("expected unschedulable decision")
@@ -448,10 +453,10 @@ func TestDecideConstraintsDOWAndBetween(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if ok.Unschedulable {
-		t.Fatalf("expected schedulable decision")
+		t.Fatalf(errExpectedSchedulable)
 	}
 
 	blocked, err := Decide(DecideInput{
@@ -467,7 +472,7 @@ func TestDecideConstraintsDOWAndBetween(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if !blocked.Unschedulable {
 		t.Fatalf("expected unschedulable due to avoid-between")
@@ -491,10 +496,10 @@ func TestDecideConstraintsDOMMonthsAndDates(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if ok.Unschedulable {
-		t.Fatalf("expected schedulable decision")
+		t.Fatalf(errExpectedSchedulable)
 	}
 
 	blocked, err := Decide(DecideInput{
@@ -511,7 +516,7 @@ func TestDecideConstraintsDOMMonthsAndDates(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("Decide error: %v", err)
+		t.Fatalf(errDecide, err)
 	}
 	if !blocked.Unschedulable {
 		t.Fatalf("expected unschedulable due to avoid-dates")

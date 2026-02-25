@@ -8,13 +8,18 @@ import (
 
 const updateSnapshotsEnv = "UPDATE_SNAPSHOTS"
 
+const (
+	snapArgFile   = "--file"
+	snapArgFormat = "--format"
+)
+
 func TestExplainOutputSnapshots(t *testing.T) {
 	cfg := writeTempKrontab(t, `
 0 10 * * * @tz(UTC) @win(around,30m) @dist(skewLate,shape=2.5) @seed(daily,salt=msgs) @only(hours=10;dow=TUE) name=backup command=/usr/bin/backup
 `)
 
 	textOut, _ := captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "text"})
+		err := runExplain([]string{"backup", snapArgFile, cfg, "--at", "2026-02-24T10:00:00Z", snapArgFormat, "text"})
 		if err != nil {
 			t.Fatalf("runExplain text error: %v", err)
 		}
@@ -22,7 +27,7 @@ func TestExplainOutputSnapshots(t *testing.T) {
 	assertSnapshot(t, "explain_text.txt", textOut)
 
 	jsonOut, _ := captureOutput(t, func() {
-		err := runExplain([]string{"backup", "--file", cfg, "--at", "2026-02-24T10:00:00Z", "--format", "json"})
+		err := runExplain([]string{"backup", snapArgFile, cfg, "--at", "2026-02-24T10:00:00Z", snapArgFormat, "json"})
 		if err != nil {
 			t.Fatalf("runExplain json error: %v", err)
 		}
@@ -36,7 +41,7 @@ func TestNextOutputSnapshots(t *testing.T) {
 `)
 
 	textOut, _ := captureOutput(t, func() {
-		err := runNext([]string{"backup", "--file", cfg, "--count", "3", "--at", "2026-02-24T10:07:00Z", "--format", "text"})
+		err := runNext([]string{"backup", snapArgFile, cfg, "--count", "3", "--at", "2026-02-24T10:07:00Z", snapArgFormat, "text"})
 		if err != nil {
 			t.Fatalf("runNext text error: %v", err)
 		}
@@ -44,7 +49,7 @@ func TestNextOutputSnapshots(t *testing.T) {
 	assertSnapshot(t, "next_text.txt", textOut)
 
 	jsonOut, _ := captureOutput(t, func() {
-		err := runNext([]string{"backup", "--file", cfg, "--count", "3", "--at", "2026-02-24T10:07:00Z", "--format", "json"})
+		err := runNext([]string{"backup", snapArgFile, cfg, "--count", "3", "--at", "2026-02-24T10:07:00Z", snapArgFormat, "json"})
 		if err != nil {
 			t.Fatalf("runNext json error: %v", err)
 		}
