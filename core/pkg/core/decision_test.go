@@ -530,7 +530,7 @@ func TestClampUnitBoundaries(t *testing.T) {
 	if got := clampUnit(0.5); got != 0.5 {
 		t.Fatalf("expected clamp in-range unchanged, got %f", got)
 	}
-	if got := clampUnit(1.0); !(got < 1.0) {
+	if got := clampUnit(1.0); got >= 1.0 {
 		t.Fatalf("expected clamp at/above one to be <1, got %f", got)
 	}
 }

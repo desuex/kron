@@ -243,7 +243,7 @@ func parseHHMM(raw string) (int, error) {
 	return t.Hour()*60 + t.Minute(), nil
 }
 
-func mergeInts(existing []int, incoming []int) []int {
+func mergeInts(existing, incoming []int) []int {
 	seen := map[int]bool{}
 	for _, v := range existing {
 		seen[v] = true
