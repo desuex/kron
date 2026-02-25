@@ -13,7 +13,7 @@ import (
 func TestLoadJobsFromFile(t *testing.T) {
 	path := writeTempConfig(t, `
 # backup
-0 0 * * * @tz(UTC) @win(after,30m) @dist(skewEarly,shape=2) @seed(daily,salt=team-a) @only(hours=0;dow=THU) @policy(concurrency=forbid,deadline=10m) name=backup command="/usr/bin/backup --full" shell=false timeout=1m env=MODE=prod
+0 0 * * * @tz(UTC) @win(after,30m) @dist(skewEarly,shape=2) @seed(daily,salt=team-a) @only(hours=0;dow=THU) @policy(concurrency=forbid,deadline=10m) name=backup command="/usr/bin/backup --full" shell=false user=svc group=ops timeout=1m env=MODE=prod
 `)
 
 	jobs, err := LoadJobs(path)
@@ -57,6 +57,9 @@ func TestLoadJobsFromFile(t *testing.T) {
 	}
 	if job.Command.Timeout != time.Minute {
 		t.Fatalf("timeout mismatch: %s", job.Command.Timeout)
+	}
+	if job.Command.User != "svc" || job.Command.Group != "ops" {
+		t.Fatalf("identity fields mismatch: user=%q group=%q", job.Command.User, job.Command.Group)
 	}
 	if len(job.Command.Env) != 1 || job.Command.Env[0] != "MODE=prod" {
 		t.Fatalf("env mismatch: %+v", job.Command.Env)

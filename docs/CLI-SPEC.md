@@ -231,12 +231,15 @@ Current implementation includes an early `start` command slice for local executi
 ## Command: `krond start`
 
 ```
-krond start --config <file|dir> [--state-dir <path>] [--tick <duration>] [--once]
+krond start --config <file|dir> [--source kron|cron] [--state-dir <path>] [--tick <duration>] [--once]
 ```
 
 Behavior:
 
 * Loads configuration from a file or directory.
+* Selects parser via `--source`:
+  * `kron`: Kron key-value job format.
+  * `cron`: system cron source format (`/etc/crontab` and `/etc/cron.d/*` style).
 * Loads per-job persistent state from `--state-dir`.
 * Computes deterministic decisions via `kron-core`.
 * Executes due jobs.
@@ -249,6 +252,7 @@ Current limitations of this slice:
 * No hot reload command.
 * No daemon status API.
 * Compatibility-focused cron ecosystem features are still staged in roadmap.
+* `cron` source executes with the parsed user/group only when `krond` runs with root privileges; non-root user/group switching requests return runtime errors.
 
 Exit codes:
 

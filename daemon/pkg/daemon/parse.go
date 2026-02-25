@@ -398,13 +398,23 @@ func parseJobFields(job *JobConfig, fields []string) error {
 			job.Command.Env = append(job.Command.Env, val)
 		case "cwd":
 			job.Command.Cwd = val
+		case "user":
+			if strings.TrimSpace(val) == "" {
+				return fmt.Errorf("user cannot be empty")
+			}
+			job.Command.User = val
+		case "group":
+			if strings.TrimSpace(val) == "" {
+				return fmt.Errorf("group cannot be empty")
+			}
+			job.Command.Group = val
 		case "timeout":
 			d, err := time.ParseDuration(val)
 			if err != nil {
 				return fmt.Errorf("invalid timeout %q", val)
 			}
 			job.Command.Timeout = d
-		case "user", "group", "umask", "stdout", "stderr", "description":
+		case "umask", "stdout", "stderr", "description":
 			// Parsed for format compatibility; runtime handling is added incrementally.
 			continue
 		default:

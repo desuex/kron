@@ -43,6 +43,7 @@ func runStart(args []string) error {
 	fs.SetOutput(os.Stderr)
 
 	configPath := fs.String("config", "", "path to krond config file or directory")
+	source := fs.String("source", "kron", "config source type: kron|cron")
 	stateDir := fs.String("state-dir", ".krond-state", "directory for persistent krond state")
 	tick := fs.Duration("tick", time.Second, "scheduler tick interval")
 	once := fs.Bool("once", false, "run one scheduling step and exit")
@@ -66,6 +67,7 @@ func runStart(args []string) error {
 
 	return daemon.Start(ctx, daemon.StartOptions{
 		ConfigPath: *configPath,
+		Source:     *source,
 		StateDir:   *stateDir,
 		Tick:       *tick,
 		Once:       *once,
@@ -74,5 +76,5 @@ func runStart(args []string) error {
 
 func printUsage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  krond start --config <path> [--state-dir <path>] [--tick <duration>] [--once]")
+	fmt.Fprintln(os.Stderr, "  krond start --config <path> [--source kron|cron] [--state-dir <path>] [--tick <duration>] [--once]")
 }

@@ -29,6 +29,8 @@ type CommandSpec struct {
 	Shell   bool
 	Env     []string
 	Cwd     string
+	User    string
+	Group   string
 	Timeout time.Duration
 }
 

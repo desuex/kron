@@ -16,6 +16,7 @@ type StartOptions struct {
 	StateDir   string
 	Tick       time.Duration
 	Once       bool
+	Source     string
 }
 
 type runtime struct {
@@ -36,6 +37,9 @@ func Start(ctx context.Context, opts StartOptions) error {
 	if opts.ConfigPath == "" {
 		return fmt.Errorf("config path is required")
 	}
+	if opts.Source == "" {
+		opts.Source = "kron"
+	}
 	if opts.StateDir == "" {
 		opts.StateDir = ".krond-state"
 	}
@@ -43,7 +47,7 @@ func Start(ctx context.Context, opts StartOptions) error {
 		opts.Tick = time.Second
 	}
 
-	jobs, err := LoadJobs(opts.ConfigPath)
+	jobs, err := loadJobsBySource(opts.Source, opts.ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -70,6 +74,17 @@ func Start(ctx context.Context, opts StartOptions) error {
 			return nil
 		case <-ticker.C:
 		}
+	}
+}
+
+func loadJobsBySource(source, configPath string) ([]JobConfig, error) {
+	switch source {
+	case "kron":
+		return LoadJobs(configPath)
+	case "cron":
+		return LoadSystemCron(configPath)
+	default:
+		return nil, fmt.Errorf("unsupported source %q", source)
 	}
 }
 

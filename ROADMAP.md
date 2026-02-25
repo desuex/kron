@@ -21,6 +21,9 @@ Correctness, determinism, and operational safety take priority over feature velo
 * `core` deterministic engine MVP is implemented and validated with golden vectors (`v1`-`v7`).
 * `krontab` implements `lint`, `explain`, and `next`.
 * `krond` initial `start` runtime slice is implemented (config load, deterministic scheduling, execution, state persistence).
+* `krond` cron-source adapters are implemented for `/etc/crontab` and `/etc/cron.d/*` style inputs.
+* Tier 1 cron compatibility corpus tests are added under daemon testdata and run in CI.
+* Migration guide from system cron files to `krond` runtime is published (`docs/CRON-MIGRATION.md`).
 * CI enforces format, vet, tests, docs build, and 90% combined coverage.
 * Release workflow builds tagged `krontab` binaries for Linux/macOS/Windows with checksums.
 * Freeze checklist and tag runbook are documented in `docs/RELEASE.md`.
