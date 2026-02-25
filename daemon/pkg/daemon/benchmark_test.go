@@ -46,6 +46,50 @@ func BenchmarkRuntimeStepDue(b *testing.B) {
 	benchmarkRuntimeStep(b, true)
 }
 
+func BenchmarkRuntimeStepForbidBusy(b *testing.B) {
+	cases := []struct {
+		name string
+		jobs int
+	}{
+		{name: "S100", jobs: 100},
+		{name: "M1000", jobs: 1000},
+		{name: "L5000", jobs: 5000},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		b.Run(fmt.Sprintf("%s_ForbidBusy", tc.name), func(b *testing.B) {
+			spec, err := parseCronSpec([5]string{"*", "*", "*", "*", "*"}, "UTC")
+			if err != nil {
+				b.Fatalf("parse cron spec: %v", err)
+			}
+
+			jobs := makeBenchmarkJobs(spec, tc.jobs)
+			for i := range jobs {
+				jobs[i].Policy.Concurrency = "forbid"
+			}
+			now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				store := newBenchmarkStateStore()
+				rt, err := newRuntime(jobs, store, noopExecutor{}, now)
+				if err != nil {
+					b.Fatalf("newRuntime: %v", err)
+				}
+				for _, job := range rt.jobs {
+					job.running = 1
+				}
+				b.StartTimer()
+				if err := rt.Step(context.Background(), now); err != nil {
+					b.Fatalf("Step: %v", err)
+				}
+			}
+		})
+	}
+}
+
 func benchmarkRuntimeStep(b *testing.B, due bool) {
 	b.Helper()
 

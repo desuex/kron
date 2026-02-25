@@ -20,9 +20,11 @@ type StartOptions struct {
 }
 
 type runtime struct {
-	jobs     []*runtimeJob
-	store    StateStore
-	executor Executor
+	jobs        []*runtimeJob
+	store       StateStore
+	executor    Executor
+	completions chan runCompletion
+	running     int
 }
 
 type runtimeJob struct {
@@ -31,6 +33,14 @@ type runtimeJob struct {
 	nextPeriod    time.Time
 	decision      core.Decision
 	decisionReady bool
+	running       int
+}
+
+type runCompletion struct {
+	job      *runtimeJob
+	decision core.Decision
+	outcome  string
+	err      error
 }
 
 func Start(ctx context.Context, opts StartOptions) error {
@@ -58,7 +68,10 @@ func Start(ctx context.Context, opts StartOptions) error {
 	}
 
 	if opts.Once {
-		return rt.Step(ctx, time.Now().UTC())
+		if err := rt.Step(ctx, time.Now().UTC()); err != nil {
+			return err
+		}
+		return rt.waitInFlight(ctx)
 	}
 
 	ticker := time.NewTicker(opts.Tick)
@@ -89,10 +102,16 @@ func loadJobsBySource(source, configPath string) ([]JobConfig, error) {
 }
 
 func newRuntime(jobs []JobConfig, store StateStore, executor Executor, now time.Time) (*runtime, error) {
+	completionCap := len(jobs) * maxJobCatchupPerStep
+	if completionCap < 64 {
+		completionCap = 64
+	}
+
 	rt := &runtime{
-		jobs:     make([]*runtimeJob, 0, len(jobs)),
-		store:    store,
-		executor: executor,
+		jobs:        make([]*runtimeJob, 0, len(jobs)),
+		store:       store,
+		executor:    executor,
+		completions: make(chan runCompletion, completionCap),
 	}
 
 	for _, cfg := range jobs {
@@ -125,6 +144,10 @@ func nextPeriodFromState(schedule CronSpec, st JobState, now time.Time) (time.Ti
 }
 
 func (r *runtime) Step(ctx context.Context, now time.Time) error {
+	if err := r.drainCompletionsNonBlocking(); err != nil {
+		return err
+	}
+
 	for _, job := range r.jobs {
 		if job.cfg.Policy.Suspend {
 			continue
@@ -133,7 +156,8 @@ func (r *runtime) Step(ctx context.Context, now time.Time) error {
 			return fmt.Errorf("job %s: %w", job.cfg.Identity, err)
 		}
 	}
-	return nil
+
+	return r.drainCompletionsNonBlocking()
 }
 
 func (r *runtime) stepJob(ctx context.Context, job *runtimeJob, now time.Time) error {
@@ -191,9 +215,17 @@ func (r *runtime) stepJob(ctx context.Context, job *runtimeJob, now time.Time) e
 			continue
 		}
 
-		if err := r.execute(ctx, job, decision); err != nil {
-			return err
+		if job.cfg.Policy.Concurrency == "forbid" && job.running > 0 {
+			if err := r.recordOutcome(job, decision, OutcomeSkipped); err != nil {
+				return err
+			}
+			if err := r.advancePeriod(job); err != nil {
+				return err
+			}
+			continue
 		}
+
+		r.dispatchRun(ctx, job, decision)
 		if err := r.advancePeriod(job); err != nil {
 			return err
 		}
@@ -202,6 +234,14 @@ func (r *runtime) stepJob(ctx context.Context, job *runtimeJob, now time.Time) e
 }
 
 func (r *runtime) execute(ctx context.Context, job *runtimeJob, decision core.Decision) error {
+	outcome, runErr := r.runCommand(ctx, job, decision)
+	if saveErr := r.recordOutcome(job, decision, outcome); saveErr != nil {
+		return wrapRecordOutcomeError(outcome, saveErr)
+	}
+	return runErr
+}
+
+func (r *runtime) runCommand(ctx context.Context, job *runtimeJob, decision core.Decision) (string, error) {
 	runCtx := ctx
 	cancel := func() {}
 	if job.cfg.Command.Timeout > 0 {
@@ -211,19 +251,15 @@ func (r *runtime) execute(ctx context.Context, job *runtimeJob, decision core.De
 
 	exitCode, err := r.executor.Run(runCtx, job.cfg.Command)
 	if err != nil {
-		if saveErr := r.recordOutcome(job, decision, OutcomeSkipped); saveErr != nil {
-			return fmt.Errorf("record skipped outcome: %w", saveErr)
-		}
-		return fmt.Errorf("execute command: %w", err)
+		return OutcomeSkipped, fmt.Errorf("execute command: %w", err)
 	}
-
+	if runCtx.Err() == context.Canceled {
+		return OutcomeSkipped, nil
+	}
 	if runCtx.Err() == context.DeadlineExceeded {
 		fmt.Fprintf(os.Stderr, "krond: timeout for job=%s period=%s exit=%d\n", job.cfg.Identity, decision.PeriodID, exitCode)
 	}
-	if saveErr := r.recordOutcome(job, decision, OutcomeExecuted); saveErr != nil {
-		return fmt.Errorf("record executed outcome: %w", saveErr)
-	}
-	return nil
+	return OutcomeExecuted, nil
 }
 
 func (r *runtime) recordOutcome(job *runtimeJob, decision core.Decision, outcome string) error {
@@ -238,6 +274,83 @@ func (r *runtime) recordOutcome(job *runtimeJob, decision core.Decision, outcome
 		job.state.LastChosenTime = decision.ChosenTime.UTC().Format(time.RFC3339)
 	}
 	return r.store.Save(job.state)
+}
+
+func wrapRecordOutcomeError(outcome string, err error) error {
+	switch outcome {
+	case OutcomeSkipped:
+		return fmt.Errorf("record skipped outcome: %w", err)
+	case OutcomeMissed:
+		return fmt.Errorf("record missed outcome: %w", err)
+	case OutcomeUnsched:
+		return fmt.Errorf("record unsched outcome: %w", err)
+	default:
+		return fmt.Errorf("record executed outcome: %w", err)
+	}
+}
+
+func (r *runtime) dispatchRun(ctx context.Context, job *runtimeJob, decision core.Decision) {
+	job.running++
+	r.running++
+
+	go func(job *runtimeJob, decision core.Decision) {
+		outcome, err := r.runCommand(ctx, job, decision)
+		r.completions <- runCompletion{
+			job:      job,
+			decision: decision,
+			outcome:  outcome,
+			err:      err,
+		}
+	}(job, decision)
+}
+
+func (r *runtime) handleCompletion(completion runCompletion) error {
+	if completion.job.running > 0 {
+		completion.job.running--
+	}
+	if r.running > 0 {
+		r.running--
+	}
+
+	// Ignore stale completions that arrive after a newer handled period.
+	if completion.job.state.LastHandledPeriodID != "" && completion.decision.PeriodID < completion.job.state.LastHandledPeriodID {
+		return nil
+	}
+
+	if err := r.recordOutcome(completion.job, completion.decision, completion.outcome); err != nil {
+		return fmt.Errorf("job %s: %w", completion.job.cfg.Identity, wrapRecordOutcomeError(completion.outcome, err))
+	}
+	if completion.err != nil {
+		return fmt.Errorf("job %s: %w", completion.job.cfg.Identity, completion.err)
+	}
+	return nil
+}
+
+func (r *runtime) drainCompletionsNonBlocking() error {
+	for {
+		select {
+		case completion := <-r.completions:
+			if err := r.handleCompletion(completion); err != nil {
+				return err
+			}
+		default:
+			return nil
+		}
+	}
+}
+
+func (r *runtime) waitInFlight(ctx context.Context) error {
+	for r.running > 0 {
+		select {
+		case completion := <-r.completions:
+			if err := r.handleCompletion(completion); err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	return r.drainCompletionsNonBlocking()
 }
 
 func (r *runtime) advancePeriod(job *runtimeJob) error {

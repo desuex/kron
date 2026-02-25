@@ -56,6 +56,7 @@ func TestParseSeedDistPolicyErrors(t *testing.T) {
 
 	policyErrors := []string{
 		"concurrency=bad",
+		"concurrency=replace",
 		"deadline=bad",
 		"suspend=bad",
 		"foo=bar",

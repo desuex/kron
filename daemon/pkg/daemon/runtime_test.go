@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -91,6 +92,33 @@ func (r *recordingExecutor) Run(ctx context.Context, spec CommandSpec) (int, err
 	return 0, nil
 }
 
+type blockingExecutor struct {
+	started chan struct{}
+	release chan struct{}
+	runs    atomic.Int32
+}
+
+func newBlockingExecutor(buffer int) *blockingExecutor {
+	return &blockingExecutor{
+		started: make(chan struct{}, buffer),
+		release: make(chan struct{}, buffer),
+	}
+}
+
+func (b *blockingExecutor) Run(ctx context.Context, _ CommandSpec) (int, error) {
+	b.runs.Add(1)
+	select {
+	case b.started <- struct{}{}:
+	default:
+	}
+	select {
+	case <-b.release:
+		return 0, nil
+	case <-ctx.Done():
+		return 0, nil
+	}
+}
+
 type deadlineExecutor struct{}
 
 func (deadlineExecutor) Run(ctx context.Context, _ CommandSpec) (int, error) {
@@ -112,6 +140,7 @@ func TestRuntimeExecutesDuePeriodAndPersistsState(t *testing.T) {
 	if err := rt.Step(context.Background(), now); err != nil {
 		t.Fatalf("Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 1 {
 		t.Fatalf("run count mismatch: got %d want 1", exec.runs)
 	}
@@ -124,6 +153,7 @@ func TestRuntimeExecutesDuePeriodAndPersistsState(t *testing.T) {
 	if err := rt.Step(context.Background(), now); err != nil {
 		t.Fatalf("second Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 1 {
 		t.Fatalf("expected no duplicate execution, got %d runs", exec.runs)
 	}
@@ -195,6 +225,7 @@ func TestRuntimeStartsFromSavedNominalTime(t *testing.T) {
 	if err := rt.Step(context.Background(), now); err != nil {
 		t.Fatalf("Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 1 {
 		t.Fatalf("expected one execution for next nominal period, got %d", exec.runs)
 	}
@@ -236,7 +267,10 @@ func TestRuntimeRecordsSkippedOnExecutorError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newRuntime error: %v", err)
 	}
-	if err := rt.Step(context.Background(), now); err == nil {
+	if err := rt.Step(context.Background(), now); err != nil {
+		t.Fatalf("unexpected Step error before completion: %v", err)
+	}
+	if err := rt.waitInFlight(context.Background()); err == nil {
 		t.Fatalf("expected execution error")
 	}
 	st := store.states[cfg.Identity]
@@ -268,6 +302,7 @@ func TestRuntimePassesCommandIdentityToExecutor(t *testing.T) {
 	if err := rt.Step(context.Background(), now); err != nil {
 		t.Fatalf("Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 1 {
 		t.Fatalf("run count mismatch: got %d want 1", exec.runs)
 	}
@@ -305,6 +340,7 @@ func TestRuntimeWithoutCommandTimeoutHasNoDeadline(t *testing.T) {
 	if err := rt.Step(context.Background(), now); err != nil {
 		t.Fatalf("Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 1 {
 		t.Fatalf("run count mismatch: got %d want 1", exec.runs)
 	}
@@ -393,6 +429,7 @@ func TestRuntimeStepRespectsCatchupLimitPerStep(t *testing.T) {
 	if err := rt.Step(context.Background(), stepNow); err != nil {
 		t.Fatalf("first Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != maxJobCatchupPerStep {
 		t.Fatalf("first Step run count mismatch: got %d want %d", exec.runs, maxJobCatchupPerStep)
 	}
@@ -400,6 +437,7 @@ func TestRuntimeStepRespectsCatchupLimitPerStep(t *testing.T) {
 	if err := rt.Step(context.Background(), stepNow); err != nil {
 		t.Fatalf("second Step error: %v", err)
 	}
+	waitRuntimeIdle(t, rt)
 	if exec.runs != 41 {
 		t.Fatalf("expected remaining backlog on second Step, got total runs %d", exec.runs)
 	}
@@ -440,6 +478,10 @@ func TestRuntimeReturnsRecordExecutedOutcomeErrorOnSaveFailure(t *testing.T) {
 		t.Fatalf("newRuntime error: %v", err)
 	}
 	err = rt.Step(context.Background(), now)
+	if err != nil {
+		t.Fatalf("unexpected Step error before completion: %v", err)
+	}
+	err = rt.waitInFlight(context.Background())
 	if err == nil {
 		t.Fatalf("expected save error")
 	}
@@ -466,6 +508,10 @@ func TestRuntimeReturnsRecordSkippedOutcomeErrorOnSaveFailure(t *testing.T) {
 		t.Fatalf("newRuntime error: %v", err)
 	}
 	err = rt.Step(context.Background(), now)
+	if err != nil {
+		t.Fatalf("unexpected Step error before completion: %v", err)
+	}
+	err = rt.waitInFlight(context.Background())
 	if err == nil {
 		t.Fatalf("expected save error")
 	}
@@ -716,6 +762,108 @@ func TestExecuteHandlesDeadlineExceededAsExecuted(t *testing.T) {
 	st := store.states[cfg.Identity]
 	if st.LastOutcome != OutcomeExecuted {
 		t.Fatalf("expected executed outcome for timeout-handled run, got %+v", st)
+	}
+}
+
+func TestRuntimeConcurrencyAllowOverlaps(t *testing.T) {
+	cfg := mustJobConfig(t)
+	cfg.Policy.Concurrency = "allow"
+
+	initNow := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	stepNow := initNow.Add(time.Minute)
+	store := newMemStateStore()
+	exec := newBlockingExecutor(4)
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, initNow)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if err := rt.Step(context.Background(), stepNow); err != nil {
+		t.Fatalf("Step error: %v", err)
+	}
+
+	waitStartedRuns(t, exec, 2)
+	if rt.running != 2 {
+		t.Fatalf("expected two in-flight runs for allow mode, got %d", rt.running)
+	}
+	releaseRuns(exec, 2)
+	if err := rt.waitInFlight(context.Background()); err != nil {
+		t.Fatalf("waitInFlight error: %v", err)
+	}
+
+	st := store.states[cfg.Identity]
+	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeExecuted {
+		t.Fatalf("unexpected final state: %+v", st)
+	}
+	if got := int(exec.runs.Load()); got != 2 {
+		t.Fatalf("expected two executions, got %d", got)
+	}
+}
+
+func TestRuntimeConcurrencyForbidSkipsWhenRunning(t *testing.T) {
+	cfg := mustJobConfig(t)
+	cfg.Policy.Concurrency = "forbid"
+
+	initNow := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	stepNow := initNow.Add(time.Minute)
+	store := newMemStateStore()
+	exec := newBlockingExecutor(2)
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, initNow)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if err := rt.Step(context.Background(), stepNow); err != nil {
+		t.Fatalf("Step error: %v", err)
+	}
+
+	waitStartedRuns(t, exec, 1)
+	if rt.running != 1 {
+		t.Fatalf("expected one in-flight run for forbid mode, got %d", rt.running)
+	}
+	st := store.states[cfg.Identity]
+	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeSkipped {
+		t.Fatalf("expected second period skipped while first is in-flight, got %+v", st)
+	}
+
+	releaseRuns(exec, 1)
+	if err := rt.waitInFlight(context.Background()); err != nil {
+		t.Fatalf("waitInFlight error: %v", err)
+	}
+
+	st = store.states[cfg.Identity]
+	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeSkipped {
+		t.Fatalf("expected stale completion to not rewind state, got %+v", st)
+	}
+	if got := int(exec.runs.Load()); got != 1 {
+		t.Fatalf("expected one execution in forbid mode, got %d", got)
+	}
+}
+
+func waitStartedRuns(t *testing.T, exec *blockingExecutor, want int) {
+	t.Helper()
+	timeout := time.After(2 * time.Second)
+	for i := 0; i < want; i++ {
+		select {
+		case <-exec.started:
+		case <-timeout:
+			t.Fatalf("timed out waiting for started run %d/%d", i+1, want)
+		}
+	}
+}
+
+func releaseRuns(exec *blockingExecutor, n int) {
+	for i := 0; i < n; i++ {
+		exec.release <- struct{}{}
+	}
+}
+
+func waitRuntimeIdle(t *testing.T, rt *runtime) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := rt.waitInFlight(ctx); err != nil {
+		t.Fatalf("waitInFlight error: %v", err)
 	}
 }
 

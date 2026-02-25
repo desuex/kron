@@ -325,7 +325,7 @@ func parsePolicyModifier(body string) (PolicySpec, error) {
 
 		switch key {
 		case "concurrency":
-			if val != "allow" && val != "forbid" && val != "replace" {
+			if val != "allow" && val != "forbid" {
 				return PolicySpec{}, fmt.Errorf("invalid concurrency %q", val)
 			}
 			policy.Concurrency = val
