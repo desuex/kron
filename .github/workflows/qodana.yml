@@ -1,0 +1,29 @@
+name: qodana
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  security-events: write
+
+concurrency:
+  group: qodana-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Qodana Scan
+        uses: JetBrains/qodana-action@b65b8d3f9068e0406e0b35d0454fb6b0a7dbb6c4 # v2025.3.1
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}

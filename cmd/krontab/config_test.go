@@ -450,6 +450,40 @@ func TestLoadJobDefinitionInvalidLine(t *testing.T) {
 	}
 }
 
+func TestLoadJobDefinitionReportsTokenizeErrorWithLineNumber(t *testing.T) {
+	path := writeTempKrontab(t, `0 0 * * * name=backup command="unterminated`)
+	_, err := loadJobDefinition(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err == nil {
+		t.Fatalf("expected tokenize error")
+	}
+	if !strings.Contains(err.Error(), "line 1:") || !strings.Contains(err.Error(), "unterminated quote") {
+		t.Fatalf("unexpected tokenize error: %v", err)
+	}
+}
+
+func TestLoadJobDefinitionReportsCronParseErrorWithLineNumber(t *testing.T) {
+	path := writeTempKrontab(t, `0 0 * FOO * name=backup command=/bin/echo`)
+	_, err := loadJobDefinition(path, "backup", explainSettings{
+		Window:       time.Hour,
+		Mode:         core.WindowModeAfter,
+		Dist:         core.DistributionUniform,
+		Timezone:     "UTC",
+		SeedStrategy: core.SeedStrategyStable,
+	})
+	if err == nil {
+		t.Fatalf("expected cron parse error")
+	}
+	if !strings.Contains(err.Error(), "line 1:") {
+		t.Fatalf("expected line-wrapped cron parse error, got: %v", err)
+	}
+}
+
 func writeTempKrontab(t *testing.T, content string) string {
 	t.Helper()
 

@@ -75,9 +75,13 @@ func loadJobDefinition(path, job string, fallback explainSettings) (jobDefinitio
 			return jobDefinition{}, fmt.Errorf("line %d: %s", lineNo, errs[0])
 		}
 
-		fieldStart, err := findFieldStart(tokens)
-		if err != nil {
-			return jobDefinition{}, fmt.Errorf(errLineWrap, lineNo, err)
+		// validateEntry already guarantees key=value fields exist after cron fields.
+		fieldStart := 5
+		for i, tok := range tokens {
+			if isFieldToken(tok) {
+				fieldStart = i
+				break
+			}
 		}
 
 		name := extractName(tokens[fieldStart:])
