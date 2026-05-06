@@ -52,9 +52,9 @@ Use this checklist to decide release readiness for the next daemon-oriented alph
 
 Release blockers (`must`):
 
-- [ ] Freeze `krond` compatibility contract across `docs/CRON-DROPIN.md`, `docs/COMPAT.md`, and `docs/CRON-MIGRATION.md`.
-- [ ] Resolve policy mismatch in docs/specs: runtime currently supports `concurrency=allow|forbid`; `replace` stays deferred until implemented.
-- [ ] Implement exported user-crontab input adapter (or explicitly remove it from near-term roadmap/scope docs).
+- [ ] Freeze `krond` compatibility contract across `docs/CRON-DROPIN.md`, `docs/COMPAT.md`, and `docs/CRON-MIGRATION.md` so alpha-facing docs agree on supported cron-source inputs.
+- [ ] Resolve policy mismatch in docs/specs: runtime currently supports `concurrency=allow|forbid`; `replace` stays explicitly deferred in daemon-alpha docs until implemented.
+- [ ] Explicitly defer exported user-crontab input support for alpha and remove it from near-term daemon scope docs.
 - [ ] Add structured runtime events for key outcomes: `executed`, `skipped`, `missed`, `unschedulable`, and execution error.
 - [ ] Add restart idempotency integration coverage (no duplicate execution across restart boundary).
 - [ ] Add crash/state integrity integration coverage (invalid/corrupt state behavior and recovery path).

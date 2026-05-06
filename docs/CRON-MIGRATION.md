@@ -33,6 +33,7 @@ This staged approach reduces operational risk and preserves rollback options.
 
 ### Unsupported or Deferred
 
+- exported user crontab inputs (post-alpha scope)
 - `@reboot`
 - 6-field cron (seconds field)
 - `run-parts` directory conventions
@@ -82,7 +83,7 @@ Use Kron modifiers where needed:
 - `@dist(...)` for controlled spread (`uniform`, `skewEarly`, `skewLate`)
 - `@seed(...)` for reproducible rotation behavior
 - `@only(...)` / `@avoid(...)` for explicit execution constraints
-- `@policy(...)` for deadline/concurrency semantics
+- `@policy(...)` for deadline semantics and currently supported daemon concurrency modes (`allow|forbid`)
 
 ---
 

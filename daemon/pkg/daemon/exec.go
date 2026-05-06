@@ -14,31 +14,50 @@ import (
 )
 
 type Executor interface {
-	Run(ctx context.Context, spec CommandSpec) (int, error)
+	Start(ctx context.Context, spec CommandSpec) (ExecutionHandle, error)
 }
 
 type OSExecutor struct{}
 
 const processStopGrace = 500 * time.Millisecond
 
+type ExecutionHandle interface {
+	PID() int
+	Wait() (int, error)
+}
+
+type osExecutionHandle struct {
+	ctx    context.Context
+	cmd    *exec.Cmd
+	waitCh chan error
+}
+
 type userLookupFunc func(raw string) (int, int, error)
 type groupLookupFunc func(raw string) (int, error)
 
 func (OSExecutor) Run(ctx context.Context, spec CommandSpec) (int, error) {
-	cmd, err := buildExecCommand(spec)
+	handle, err := (OSExecutor{}).Start(ctx, spec)
 	if err != nil {
 		return -1, err
+	}
+	return handle.Wait()
+}
+
+func (OSExecutor) Start(ctx context.Context, spec CommandSpec) (ExecutionHandle, error) {
+	cmd, err := buildExecCommand(spec)
+	if err != nil {
+		return nil, err
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = nil
 
 	if err := applyExecSecurity(cmd, spec); err != nil {
-		return -1, err
+		return nil, err
 	}
 
 	if err := cmd.Start(); err != nil {
-		return -1, fmt.Errorf("execute command: %w", err)
+		return nil, fmt.Errorf("execute command: %w", err)
 	}
 
 	waitCh := make(chan error, 1)
@@ -46,17 +65,36 @@ func (OSExecutor) Run(ctx context.Context, spec CommandSpec) (int, error) {
 		waitCh <- cmd.Wait()
 	}()
 
+	return &osExecutionHandle{
+		ctx:    ctx,
+		cmd:    cmd,
+		waitCh: waitCh,
+	}, nil
+}
+
+func (h *osExecutionHandle) PID() int {
+	if h == nil || h.cmd == nil || h.cmd.Process == nil {
+		return 0
+	}
+	return h.cmd.Process.Pid
+}
+
+func (h *osExecutionHandle) Wait() (int, error) {
+	if h == nil {
+		return -1, fmt.Errorf("execution handle is nil")
+	}
+
 	select {
-	case err := <-waitCh:
+	case err := <-h.waitCh:
 		return exitCodeFromWait(err), nil
-	case <-ctx.Done():
-		terminateProcessGroup(cmd)
+	case <-h.ctx.Done():
+		terminateProcessGroup(h.cmd)
 		select {
-		case err := <-waitCh:
+		case err := <-h.waitCh:
 			return exitCodeFromWait(err), nil
 		case <-time.After(processStopGrace):
-			killProcessGroup(cmd)
-			err := <-waitCh
+			killProcessGroup(h.cmd)
+			err := <-h.waitCh
 			return exitCodeFromWait(err), nil
 		}
 	}

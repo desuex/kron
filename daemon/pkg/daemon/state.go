@@ -8,9 +8,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const stateVersion = "1"
+
+var (
+	stateRenameFile         = os.Rename
+	stateCorruptSuffixNanos = func() int64 { return time.Now().UnixNano() }
+)
 
 type StateStore interface {
 	Load(identity string) (JobState, error)
@@ -43,7 +49,13 @@ func (s FileStateStore) Load(identity string) (JobState, error) {
 
 	var out JobState
 	if err := json.Unmarshal(raw, &out); err != nil {
-		return JobState{}, fmt.Errorf("decode state: %w", err)
+		if err := quarantineCorruptStateFile(path); err != nil {
+			return JobState{}, err
+		}
+		return JobState{
+			Version:  stateVersion,
+			Identity: identity,
+		}, nil
 	}
 	if out.Identity == "" {
 		out.Identity = identity
@@ -90,7 +102,7 @@ func (s FileStateStore) Save(state JobState) error {
 		return fmt.Errorf("close temp state: %w", err)
 	}
 
-	if err := os.Rename(tmpPath, path); err != nil {
+	if err := stateRenameFile(tmpPath, path); err != nil {
 		return fmt.Errorf("rename state file: %w", err)
 	}
 	return nil
@@ -99,4 +111,12 @@ func (s FileStateStore) Save(state JobState) error {
 func (s FileStateStore) statePath(identity string) string {
 	sum := sha256.Sum256([]byte(identity))
 	return filepath.Join(s.Dir, hex.EncodeToString(sum[:])+".json")
+}
+
+func quarantineCorruptStateFile(path string) error {
+	corruptPath := fmt.Sprintf("%s.corrupt.%d", path, stateCorruptSuffixNanos())
+	if err := stateRenameFile(path, corruptPath); err != nil {
+		return fmt.Errorf("quarantine corrupt state: %w", err)
+	}
+	return nil
 }

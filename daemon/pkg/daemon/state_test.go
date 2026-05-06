@@ -23,6 +23,13 @@ func TestFileStateStoreLoadDefaultAndSaveRoundTrip(t *testing.T) {
 	initial.LastOutcome = OutcomeExecuted
 	initial.LastChosenTime = "2026-03-01T00:10:00Z"
 	initial.LastNominalTime = "2026-03-01T00:00:00Z"
+	initial.ActiveExecution = &ActiveExecutionState{
+		PeriodID:    "2026-03-01T00:01:00Z",
+		PID:         4242,
+		StartedAt:   "2026-03-01T00:01:05Z",
+		ChosenTime:  "2026-03-01T00:01:00Z",
+		NominalTime: "2026-03-01T00:01:00Z",
+	}
 
 	if err := store.Save(initial); err != nil {
 		t.Fatalf("Save error: %v", err)
@@ -37,6 +44,9 @@ func TestFileStateStoreLoadDefaultAndSaveRoundTrip(t *testing.T) {
 		loaded.LastChosenTime != initial.LastChosenTime ||
 		loaded.LastNominalTime != initial.LastNominalTime {
 		t.Fatalf("roundtrip mismatch: got %+v want %+v", loaded, initial)
+	}
+	if loaded.ActiveExecution == nil || loaded.ActiveExecution.PeriodID != initial.ActiveExecution.PeriodID {
+		t.Fatalf("active execution mismatch: got %+v want %+v", loaded.ActiveExecution, initial.ActiveExecution)
 	}
 }
 
@@ -61,9 +71,47 @@ func TestFileStateStoreLoadDecodeError(t *testing.T) {
 		t.Fatalf("write invalid state: %v", err)
 	}
 
+	got, err := store.Load(identity)
+	if err != nil {
+		t.Fatalf("expected corrupt state recovery, got %v", err)
+	}
+	if got.Identity != identity || got.Version != stateVersion {
+		t.Fatalf("expected default state after corrupt load, got %+v", got)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("expected corrupt state file to move aside, stat err=%v", err)
+	}
+	matches, err := filepath.Glob(path + ".corrupt.*")
+	if err != nil {
+		t.Fatalf("glob corrupt files: %v", err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one quarantined state file, got %v", matches)
+	}
+}
+
+func TestFileStateStoreLoadCorruptStateRenameFailure(t *testing.T) {
+	store := FileStateStore{Dir: t.TempDir()}
+	const identity = "/etc/krond.d/jobs.kron:broken-rename"
+
+	path := store.statePath(identity)
+	if err := os.WriteFile(path, []byte("{not-json"), 0o644); err != nil {
+		t.Fatalf("write invalid state: %v", err)
+	}
+
+	oldRename := stateRenameFile
+	oldNow := stateCorruptSuffixNanos
+	t.Cleanup(func() {
+		stateRenameFile = oldRename
+		stateCorruptSuffixNanos = oldNow
+	})
+
+	stateCorruptSuffixNanos = func() int64 { return 123 }
+	stateRenameFile = func(_, _ string) error { return os.ErrPermission }
+
 	_, err := store.Load(identity)
-	if err == nil || !strings.Contains(err.Error(), "decode state") {
-		t.Fatalf("expected decode state error, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "quarantine corrupt state") {
+		t.Fatalf("expected corrupt quarantine error, got %v", err)
 	}
 }
 

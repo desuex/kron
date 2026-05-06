@@ -1,9 +1,12 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	goruntime "runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -60,13 +63,48 @@ func (f *failingSaveStore) Save(JobState) error {
 	return f.saveErr
 }
 
+type nthSaveFailStore struct {
+	states    map[string]JobState
+	saveErr   error
+	failAfter int
+	saveCalls int
+}
+
+func (n *nthSaveFailStore) Load(identity string) (JobState, error) {
+	if st, ok := n.states[identity]; ok {
+		return st, nil
+	}
+	return JobState{Version: stateVersion, Identity: identity}, nil
+}
+
+func (n *nthSaveFailStore) Save(state JobState) error {
+	n.saveCalls++
+	if n.saveCalls > n.failAfter {
+		return n.saveErr
+	}
+	n.states[state.Identity] = state
+	return nil
+}
+
 type fakeExecutor struct {
 	runs int
 	err  error
 }
 
-func (f *fakeExecutor) Run(context.Context, CommandSpec) (int, error) {
+func (f *fakeExecutor) Start(context.Context, CommandSpec) (ExecutionHandle, error) {
 	f.runs++
+	return fakeHandle{err: f.err}, nil
+}
+
+type fakeHandle struct {
+	err error
+}
+
+func (f fakeHandle) PID() int {
+	return 1234
+}
+
+func (f fakeHandle) Wait() (int, error) {
 	if f.err != nil {
 		return -1, f.err
 	}
@@ -80,16 +118,13 @@ type recordingExecutor struct {
 	sawDeadline bool
 }
 
-func (r *recordingExecutor) Run(ctx context.Context, spec CommandSpec) (int, error) {
+func (r *recordingExecutor) Start(ctx context.Context, spec CommandSpec) (ExecutionHandle, error) {
 	r.runs++
 	r.specs = append(r.specs, spec)
 	if _, ok := ctx.Deadline(); ok {
 		r.sawDeadline = true
 	}
-	if r.err != nil {
-		return -1, r.err
-	}
-	return 0, nil
+	return fakeHandle{err: r.err}, nil
 }
 
 type blockingExecutor struct {
@@ -105,25 +140,102 @@ func newBlockingExecutor(buffer int) *blockingExecutor {
 	}
 }
 
-func (b *blockingExecutor) Run(ctx context.Context, _ CommandSpec) (int, error) {
+func (b *blockingExecutor) Start(ctx context.Context, _ CommandSpec) (ExecutionHandle, error) {
 	b.runs.Add(1)
 	select {
 	case b.started <- struct{}{}:
 	default:
 	}
+	return &blockingHandle{
+		ctx:     ctx,
+		release: b.release,
+	}, nil
+}
+
+type blockingHandle struct {
+	ctx     context.Context
+	release chan struct{}
+}
+
+func (b *blockingHandle) PID() int {
+	return 4321
+}
+
+func (b *blockingHandle) Wait() (int, error) {
 	select {
 	case <-b.release:
 		return 0, nil
-	case <-ctx.Done():
+	case <-b.ctx.Done():
 		return 0, nil
 	}
 }
 
 type deadlineExecutor struct{}
 
-func (deadlineExecutor) Run(ctx context.Context, _ CommandSpec) (int, error) {
-	<-ctx.Done()
+func (deadlineExecutor) Start(ctx context.Context, _ CommandSpec) (ExecutionHandle, error) {
+	return deadlineHandle{ctx: ctx}, nil
+}
+
+type deadlineHandle struct {
+	ctx context.Context
+}
+
+func (d deadlineHandle) PID() int {
+	return 2468
+}
+
+func (d deadlineHandle) Wait() (int, error) {
+	<-d.ctx.Done()
 	return 0, nil
+}
+
+type cancelAwareExecutor struct {
+	waitReturned chan struct{}
+}
+
+func (c *cancelAwareExecutor) Start(ctx context.Context, _ CommandSpec) (ExecutionHandle, error) {
+	return &cancelAwareHandle{
+		ctx:          ctx,
+		waitReturned: c.waitReturned,
+	}, nil
+}
+
+type cancelAwareHandle struct {
+	ctx          context.Context
+	waitReturned chan struct{}
+}
+
+func (c *cancelAwareHandle) PID() int {
+	return 9876
+}
+
+func (c *cancelAwareHandle) Wait() (int, error) {
+	<-c.ctx.Done()
+	close(c.waitReturned)
+	return 0, nil
+}
+
+type startFailExecutor struct {
+	err error
+}
+
+func (s startFailExecutor) Start(context.Context, CommandSpec) (ExecutionHandle, error) {
+	return nil, s.err
+}
+
+func TestFormatLogEventEscapesValues(t *testing.T) {
+	got := formatLogEvent(
+		time.Date(2026, 3, 1, 0, 0, 0, 123, time.UTC),
+		"INFO",
+		"executor",
+		"executed",
+		logField{key: "job", value: "nightly backup"},
+		logField{key: "detail", value: `say "hello"`},
+	)
+	want := "2026-03-01T00:00:00.000000123Z level=INFO component=executor event=executed job=\"nightly backup\" detail=\"say \\\"hello\\\"\"\n"
+	if got != want {
+		t.Fatalf("format mismatch:\n got: %q\nwant: %q", got, want)
+	}
 }
 
 func TestRuntimeExecutesDuePeriodAndPersistsState(t *testing.T) {
@@ -159,14 +271,96 @@ func TestRuntimeExecutesDuePeriodAndPersistsState(t *testing.T) {
 	}
 }
 
+func TestRuntimeLogsExecutedEvent(t *testing.T) {
+	cfg := mustJobConfig(t)
+	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	store := newMemStateStore()
+	exec := &fakeExecutor{}
+	var logs bytes.Buffer
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now, &logs)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if err := rt.Step(context.Background(), now); err != nil {
+		t.Fatalf("Step error: %v", err)
+	}
+	waitRuntimeIdle(t, rt)
+
+	text := logs.String()
+	if !strings.Contains(text, "event=executed") || !strings.Contains(text, "job=backup") || !strings.Contains(text, "identity="+cfg.Identity) {
+		t.Fatalf("expected structured executed event, got %q", text)
+	}
+}
+
+func TestRuntimePersistsActiveExecutionUntilCompletion(t *testing.T) {
+	cfg := mustJobConfig(t)
+	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	store := newMemStateStore()
+	exec := newBlockingExecutor(1)
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if err := rt.Step(context.Background(), now); err != nil {
+		t.Fatalf("Step error: %v", err)
+	}
+
+	waitStartedRuns(t, exec, 1)
+	st := store.states[cfg.Identity]
+	if st.ActiveExecution == nil || st.ActiveExecution.PeriodID != "2026-03-01T00:00:00Z" {
+		t.Fatalf("expected active execution to be persisted, got %+v", st)
+	}
+
+	releaseRuns(exec, 1)
+	waitRuntimeIdle(t, rt)
+
+	st = store.states[cfg.Identity]
+	if st.ActiveExecution != nil {
+		t.Fatalf("expected active execution to clear after completion, got %+v", st.ActiveExecution)
+	}
+}
+
+func TestRuntimeCancelsRunWhenPersistingActiveExecutionFails(t *testing.T) {
+	cfg := mustJobConfig(t)
+	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	store := &failingSaveStore{
+		states:  map[string]JobState{},
+		saveErr: errors.New("save active failed"),
+	}
+	exec := &cancelAwareExecutor{waitReturned: make(chan struct{})}
+	var logs bytes.Buffer
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now, &logs)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+
+	err = rt.Step(context.Background(), now)
+	if err == nil || !strings.Contains(err.Error(), "record active execution") {
+		t.Fatalf("expected active execution save error, got %v", err)
+	}
+
+	select {
+	case <-exec.waitReturned:
+	case <-time.After(time.Second):
+		t.Fatalf("timed out waiting for canceled execution to return")
+	}
+	if !strings.Contains(logs.String(), "event=error") || !strings.Contains(logs.String(), "operation=record_active_execution") {
+		t.Fatalf("expected active-execution error log, got %q", logs.String())
+	}
+}
+
 func TestRuntimeMarksMissedWhenPastDeadline(t *testing.T) {
 	cfg := mustJobConfig(t)
 	cfg.Policy.Deadline = 10 * time.Second
 	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
 	store := newMemStateStore()
 	exec := &fakeExecutor{}
+	var logs bytes.Buffer
 
-	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now)
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now, &logs)
 	if err != nil {
 		t.Fatalf("newRuntime error: %v", err)
 	}
@@ -180,6 +374,9 @@ func TestRuntimeMarksMissedWhenPastDeadline(t *testing.T) {
 	if st.LastOutcome != OutcomeMissed {
 		t.Fatalf("expected missed outcome, got %+v", st)
 	}
+	if !strings.Contains(logs.String(), "event=missed") {
+		t.Fatalf("expected missed event, got %q", logs.String())
+	}
 }
 
 func TestRuntimeMarksUnschedulable(t *testing.T) {
@@ -188,8 +385,9 @@ func TestRuntimeMarksUnschedulable(t *testing.T) {
 	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
 	store := newMemStateStore()
 	exec := &fakeExecutor{}
+	var logs bytes.Buffer
 
-	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now)
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, now, &logs)
 	if err != nil {
 		t.Fatalf("newRuntime error: %v", err)
 	}
@@ -202,6 +400,9 @@ func TestRuntimeMarksUnschedulable(t *testing.T) {
 	st := store.states[cfg.Identity]
 	if st.LastOutcome != OutcomeUnsched {
 		t.Fatalf("expected unsched outcome, got %+v", st)
+	}
+	if !strings.Contains(logs.String(), "event=unschedulable") {
+		t.Fatalf("expected unschedulable event, got %q", logs.String())
 	}
 }
 
@@ -232,6 +433,79 @@ func TestRuntimeStartsFromSavedNominalTime(t *testing.T) {
 	st := store.states[cfg.Identity]
 	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" {
 		t.Fatalf("expected handled period 00:01, got %+v", st)
+	}
+}
+
+func TestNewRuntimeRecoversStaleActiveExecutionAsSkipped(t *testing.T) {
+	cfg := mustJobConfig(t)
+	now := time.Date(2026, 3, 1, 0, 1, 30, 0, time.UTC)
+	store := newMemStateStore()
+	var logs bytes.Buffer
+	store.states[cfg.Identity] = JobState{
+		Version:  stateVersion,
+		Identity: cfg.Identity,
+		ActiveExecution: &ActiveExecutionState{
+			PeriodID:    "2026-03-01T00:00:00Z",
+			PID:         999999,
+			StartedAt:   "2026-03-01T00:00:01Z",
+			ChosenTime:  "2026-03-01T00:00:00Z",
+			NominalTime: "2026-03-01T00:00:00Z",
+		},
+	}
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, &fakeExecutor{}, now, &logs)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if rt.jobs[0].recoveredActive {
+		t.Fatalf("expected stale active execution to be cleared")
+	}
+
+	st := store.states[cfg.Identity]
+	if st.ActiveExecution != nil || st.LastHandledPeriodID != "2026-03-01T00:00:00Z" || st.LastOutcome != OutcomeSkipped {
+		t.Fatalf("unexpected recovered state: %+v", st)
+	}
+	if !strings.Contains(logs.String(), "event=skipped") || !strings.Contains(logs.String(), "reason=recovered_stale_active") {
+		t.Fatalf("expected recovered skip event, got %q", logs.String())
+	}
+}
+
+func TestRuntimeRecoveredActiveForbidSkipsLaterPeriods(t *testing.T) {
+	if goruntime.GOOS == "windows" {
+		t.Skip("recovered pid liveness checks are unix-first in this pass")
+	}
+
+	cfg := mustJobConfig(t)
+	cfg.Policy.Concurrency = "forbid"
+	now := time.Date(2026, 3, 1, 0, 1, 30, 0, time.UTC)
+	store := newMemStateStore()
+	store.states[cfg.Identity] = JobState{
+		Version:  stateVersion,
+		Identity: cfg.Identity,
+		ActiveExecution: &ActiveExecutionState{
+			PeriodID:    "2026-03-01T00:00:00Z",
+			PID:         os.Getpid(),
+			StartedAt:   "2026-03-01T00:00:01Z",
+			ChosenTime:  "2026-03-01T00:00:00Z",
+			NominalTime: "2026-03-01T00:00:00Z",
+		},
+	}
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, &fakeExecutor{}, now)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	if !rt.jobs[0].recoveredActive {
+		t.Fatalf("expected live recovered execution to be tracked")
+	}
+
+	if err := rt.Step(context.Background(), now); err != nil {
+		t.Fatalf("Step error: %v", err)
+	}
+
+	st := store.states[cfg.Identity]
+	if st.ActiveExecution == nil || st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeSkipped {
+		t.Fatalf("expected later period skip while recovered execution is live, got %+v", st)
 	}
 }
 
@@ -463,13 +737,33 @@ func TestRuntimeStepReturnsDecisionError(t *testing.T) {
 	}
 }
 
+func TestRuntimeLogsErrorOnExecutionStartFailure(t *testing.T) {
+	cfg := mustJobConfig(t)
+	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
+	store := newMemStateStore()
+	var logs bytes.Buffer
+
+	rt, err := newRuntime([]JobConfig{cfg}, store, startFailExecutor{err: errors.New("boom")}, now, &logs)
+	if err != nil {
+		t.Fatalf("newRuntime error: %v", err)
+	}
+	err = rt.Step(context.Background(), now)
+	if err == nil || !strings.Contains(err.Error(), "boom") {
+		t.Fatalf("expected start failure, got %v", err)
+	}
+	if !strings.Contains(logs.String(), "event=error") || !strings.Contains(logs.String(), "operation=start_execution") {
+		t.Fatalf("expected start error event, got %q", logs.String())
+	}
+}
+
 func TestRuntimeReturnsRecordExecutedOutcomeErrorOnSaveFailure(t *testing.T) {
 	cfg := mustJobConfig(t)
 	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
 	sentinel := errors.New("save failed")
-	store := &failingSaveStore{
-		states:  map[string]JobState{},
-		saveErr: sentinel,
+	store := &nthSaveFailStore{
+		states:    map[string]JobState{},
+		saveErr:   sentinel,
+		failAfter: 1,
 	}
 	exec := &fakeExecutor{}
 
@@ -497,9 +791,10 @@ func TestRuntimeReturnsRecordSkippedOutcomeErrorOnSaveFailure(t *testing.T) {
 	cfg := mustJobConfig(t)
 	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
 	sentinel := errors.New("save failed")
-	store := &failingSaveStore{
-		states:  map[string]JobState{},
-		saveErr: sentinel,
+	store := &nthSaveFailStore{
+		states:    map[string]JobState{},
+		saveErr:   sentinel,
+		failAfter: 1,
 	}
 	exec := &fakeExecutor{err: errors.New("run failed")}
 
@@ -751,7 +1046,8 @@ func TestExecuteHandlesDeadlineExceededAsExecuted(t *testing.T) {
 	cfg.Command.Timeout = 5 * time.Millisecond
 	now := time.Date(2026, 3, 1, 0, 0, 30, 0, time.UTC)
 	store := newMemStateStore()
-	rt := &runtime{store: store, executor: deadlineExecutor{}}
+	var logs bytes.Buffer
+	rt := &runtime{store: store, executor: deadlineExecutor{}, logWriter: &logs}
 
 	job := &runtimeJob{cfg: cfg, state: JobState{Version: stateVersion, Identity: cfg.Identity}}
 	decision := core.Decision{PeriodID: "period-timeout", PeriodStart: now, ChosenTime: now}
@@ -762,6 +1058,9 @@ func TestExecuteHandlesDeadlineExceededAsExecuted(t *testing.T) {
 	st := store.states[cfg.Identity]
 	if st.LastOutcome != OutcomeExecuted {
 		t.Fatalf("expected executed outcome for timeout-handled run, got %+v", st)
+	}
+	if !strings.Contains(logs.String(), "event=executed") || !strings.Contains(logs.String(), "timed_out=true") {
+		t.Fatalf("expected timed out executed event, got %q", logs.String())
 	}
 }
 
@@ -795,6 +1094,9 @@ func TestRuntimeConcurrencyAllowOverlaps(t *testing.T) {
 	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeExecuted {
 		t.Fatalf("unexpected final state: %+v", st)
 	}
+	if st.ActiveExecution != nil {
+		t.Fatalf("expected no active execution after completions, got %+v", st.ActiveExecution)
+	}
 	if got := int(exec.runs.Load()); got != 2 {
 		t.Fatalf("expected two executions, got %d", got)
 	}
@@ -808,8 +1110,9 @@ func TestRuntimeConcurrencyForbidSkipsWhenRunning(t *testing.T) {
 	stepNow := initNow.Add(time.Minute)
 	store := newMemStateStore()
 	exec := newBlockingExecutor(2)
+	var logs bytes.Buffer
 
-	rt, err := newRuntime([]JobConfig{cfg}, store, exec, initNow)
+	rt, err := newRuntime([]JobConfig{cfg}, store, exec, initNow, &logs)
 	if err != nil {
 		t.Fatalf("newRuntime error: %v", err)
 	}
@@ -835,8 +1138,14 @@ func TestRuntimeConcurrencyForbidSkipsWhenRunning(t *testing.T) {
 	if st.LastHandledPeriodID != "2026-03-01T00:01:00Z" || st.LastOutcome != OutcomeSkipped {
 		t.Fatalf("expected stale completion to not rewind state, got %+v", st)
 	}
+	if st.ActiveExecution != nil {
+		t.Fatalf("expected stale completion to clear active execution, got %+v", st.ActiveExecution)
+	}
 	if got := int(exec.runs.Load()); got != 1 {
 		t.Fatalf("expected one execution in forbid mode, got %d", got)
+	}
+	if !strings.Contains(logs.String(), "event=skipped") || !strings.Contains(logs.String(), "reason=concurrency_forbid") {
+		t.Fatalf("expected concurrency skip event, got %q", logs.String())
 	}
 }
 

@@ -34,7 +34,17 @@ func (s *benchmarkStateStore) Save(state JobState) error {
 
 type noopExecutor struct{}
 
-func (noopExecutor) Run(context.Context, CommandSpec) (int, error) {
+func (noopExecutor) Start(context.Context, CommandSpec) (ExecutionHandle, error) {
+	return noopHandle{}, nil
+}
+
+type noopHandle struct{}
+
+func (noopHandle) PID() int {
+	return 1
+}
+
+func (noopHandle) Wait() (int, error) {
 	return 0, nil
 }
 

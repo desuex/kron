@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -11,9 +12,11 @@ import (
 )
 
 func TestStartOnce(t *testing.T) {
-	cfg := writeTempDaemonConfig(t, "0 0 * * * name=backup command=true\n")
+	cfg := writeTempDaemonConfig(t, "* * * * * name=backup command=true\n")
+	var logs bytes.Buffer
 	err := Start(context.Background(), StartOptions{
 		ConfigPath: cfg,
+		LogWriter:  &logs,
 		Source:     "kron",
 		StateDir:   t.TempDir(),
 		Tick:       5 * time.Millisecond,
@@ -21,6 +24,9 @@ func TestStartOnce(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("Start once error: %v", err)
+	}
+	if !strings.Contains(logs.String(), "event=executed") {
+		t.Fatalf("expected executed log event, got %q", logs.String())
 	}
 }
 
@@ -142,6 +148,44 @@ func TestStartForegroundReturnsStepError(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("expected start loop to return step error")
+	}
+}
+
+func TestStartOnceRecoversCorruptStateFile(t *testing.T) {
+	cfg := writeTempDaemonConfig(t, "* * * * * name=backup command=true\n")
+	stateDir := t.TempDir()
+	store := FileStateStore{Dir: stateDir}
+	var logs bytes.Buffer
+	identity := cfg + ":backup"
+	statePath := store.statePath(identity)
+	if err := os.WriteFile(statePath, []byte("{not-json"), 0o644); err != nil {
+		t.Fatalf("write corrupt state: %v", err)
+	}
+
+	err := Start(context.Background(), StartOptions{
+		ConfigPath: cfg,
+		LogWriter:  &logs,
+		Source:     "kron",
+		StateDir:   stateDir,
+		Tick:       time.Millisecond,
+		Once:       true,
+	})
+	if err != nil {
+		t.Fatalf("Start once error: %v", err)
+	}
+
+	matches, err := filepath.Glob(statePath + ".corrupt.*")
+	if err != nil {
+		t.Fatalf("glob corrupt state: %v", err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one quarantined state file, got %v", matches)
+	}
+	if strings.Contains(logs.String(), "krond: timeout") {
+		t.Fatalf("expected structured logs only, got %q", logs.String())
+	}
+	if !strings.Contains(logs.String(), "event=executed") {
+		t.Fatalf("expected terminal event after corrupt-state recovery, got %q", logs.String())
 	}
 }
 

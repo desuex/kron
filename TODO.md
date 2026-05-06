@@ -56,9 +56,9 @@ Last updated: 2026-02-25.
 
 Release blockers (`must`):
 
-- [ ] Freeze compatibility contract across `docs/CRON-DROPIN.md`, `docs/COMPAT.md`, and `docs/CRON-MIGRATION.md`.
-- [ ] Resolve docs/spec mismatch for `concurrency=replace` (implement or explicitly defer in all runtime-facing docs).
-- [ ] Implement exported user crontab adapter support (or remove from near-term roadmap/scope commitments).
+- [ ] Freeze compatibility contract across `docs/CRON-DROPIN.md`, `docs/COMPAT.md`, and `docs/CRON-MIGRATION.md` so all alpha-facing docs agree on supported cron-source inputs.
+- [ ] Resolve docs/spec mismatch for `concurrency=replace` by explicitly deferring it in all daemon runtime-facing alpha docs until implemented.
+- [ ] Explicitly defer exported user crontab support for alpha and remove it from near-term daemon scope commitments.
 - [ ] Add structured runtime event logging for `executed|skipped|missed|unschedulable|error`.
 - [ ] Add integration test for restart idempotency (no duplicate execution after daemon restart).
 - [ ] Add integration test for crash/state recovery behavior with invalid or stale state files.

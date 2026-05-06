@@ -273,10 +273,8 @@ If:
 
 * `replace` and termination fails:
 
-  * Log `ERROR`.
-  * Do not start new execution.
-  * Period remains unhandled.
-  * Retry permitted until deadline exceeded.
+  * Deferred for the current `krond` alpha daemon adapter because `replace` is not yet implemented there.
+  * This behavior remains part of the broader Kron design, not the current daemon-alpha contract.
 
 ---
 

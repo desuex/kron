@@ -96,6 +96,7 @@ When a job is triggered:
 3. Parent process:
 
    * Records child PID
+   * Persists active execution state before considering the run tracked
    * Monitors exit status via `waitpid()`
 
 No shell wrapping is performed unless explicitly configured.
@@ -139,7 +140,8 @@ Each job has a concurrency policy:
 
 * `allow`
 * `forbid`
-* `replace`
+
+For the current `krond` alpha, implemented runtime support is limited to `allow` and `forbid`. `replace` remains a broader Kron policy value but is deferred in the daemon adapter until implemented.
 
 ### allow
 
@@ -155,12 +157,9 @@ If a previous child process is still active:
 
 ### replace
 
-If a previous child process is active:
+Deferred for the current `krond` alpha.
 
-1. Send `SIGTERM` to active PID.
-2. Wait configurable grace period.
-3. If still running, send `SIGKILL`.
-4. Start new process.
+The broader Kron policy model reserves `replace`, but the daemon runtime does not yet implement terminate-and-restart behavior for active executions.
 
 ---
 
@@ -194,7 +193,7 @@ State file contains:
 * Last chosen execution time
 * Last run time
 * Last exit code
-* Active PID (if any)
+* Active execution metadata (if any), including PID and nominal/chosen timestamps
 * Concurrency state
 * Seed metadata
 
@@ -327,8 +326,13 @@ If `krond` crashes:
 * On restart:
 
   * Active PID in state is verified.
-  * If PID exists and matches expected command, it is considered active.
-  * If PID does not exist, state is corrected.
+  * If PID exists, it is considered active and the same period is not re-run.
+  * If PID does not exist, the orphaned execution is finalized conservatively as `skipped` and state is corrected.
+
+If a state file contains unreadable JSON:
+
+* The corrupted file is renamed to `<filename>.corrupt.<timestamp>`.
+* `krond` starts from fresh state for that job.
 
 No duplicate execution occurs for the same period.
 

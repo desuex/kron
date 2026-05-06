@@ -41,6 +41,15 @@ type PolicySpec struct {
 	Suspend     bool
 }
 
+// ActiveExecutionState captures the single persisted execution currently tracked for restart safety.
+type ActiveExecutionState struct {
+	PeriodID    string `json:"periodId"`
+	PID         int    `json:"pid"`
+	StartedAt   string `json:"startedAt"`
+	ChosenTime  string `json:"chosenTime"`
+	NominalTime string `json:"nominalTime"`
+}
+
 const (
 	DefaultConcurrency = "allow"
 	OutcomeExecuted    = "executed"
@@ -51,10 +60,11 @@ const (
 
 // JobState is persisted per identity to keep at-most-once guarantees.
 type JobState struct {
-	Version             string `json:"version"`
-	Identity            string `json:"identity"`
-	LastHandledPeriodID string `json:"lastHandledPeriodId"`
-	LastOutcome         string `json:"lastOutcome"`
-	LastChosenTime      string `json:"lastChosenTime"`
-	LastNominalTime     string `json:"lastNominalTime"`
+	Version             string                `json:"version"`
+	Identity            string                `json:"identity"`
+	LastHandledPeriodID string                `json:"lastHandledPeriodId"`
+	LastOutcome         string                `json:"lastOutcome"`
+	LastChosenTime      string                `json:"lastChosenTime"`
+	LastNominalTime     string                `json:"lastNominalTime"`
+	ActiveExecution     *ActiveExecutionState `json:"activeExecution,omitempty"`
 }
