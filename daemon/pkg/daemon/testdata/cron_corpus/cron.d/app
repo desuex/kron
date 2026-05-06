@@ -1,0 +1,4 @@
+MAILTO=ops@example.com
+TZ=America/New_York
+
+15,45 * * * * app /opt/app/job --mode=batch

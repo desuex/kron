@@ -136,6 +136,7 @@ ActiveState {
   PID          int
   StartedAt    string
   ChosenTime   string
+  NominalTime  string
 }
 ```
 
@@ -240,7 +241,8 @@ On startup:
      * Treat as active.
    * If PID does not exist:
 
-     * Mark as completed with unknown exit code.
+     * Mark as conservatively handled with outcome `skipped`.
+     * Copy `PeriodID`, `ChosenTime`, and `NominalTime` into the last-handled fields unless a newer handled period is already recorded.
      * Clear `ActiveExecution`.
      * Persist correction.
 
@@ -305,9 +307,8 @@ If `concurrency=forbid` and active execution exists:
 
 If `concurrency=replace`:
 
-* Replace active process.
-* Update `ActiveExecution`
-* Persist
+* Deferred for the current `krond` alpha daemon adapter.
+* No terminate-and-replace state transition is implemented yet.
 
 ---
 

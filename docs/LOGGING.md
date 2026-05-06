@@ -4,6 +4,12 @@
 
 This document defines the human-readable log format for Kron.
 
+For `krond` alpha, the implemented subset is narrower than the long-term cross-adapter vision in this document:
+
+* text mode only
+* single-line runtime outcome events only
+* daemon-specific fields (`job`, `identity`, `period`) instead of Kubernetes `namespace`
+
 The log format must:
 
 * Be readable without external tooling.
@@ -47,6 +53,36 @@ Fields are:
 * key=value
 * values containing spaces are quoted with double quotes
 * quotes escaped with `\"`
+
+## krond Alpha Subset
+
+The current `krond` alpha implementation emits a daemon-local subset of events:
+
+* `executed`
+* `skipped`
+* `missed`
+* `unschedulable`
+* `error`
+
+These lines use daemon-specific fields:
+
+* `job`
+* `identity`
+* `period`
+* `nominal`
+* `chosen`
+* `pid`
+* `reason`
+* `operation`
+* `error`
+
+Example:
+
+```
+2026-03-01T00:00:00Z level=INFO component=executor event=executed job=backup identity=/etc/krond.d/jobs.kron:backup period=2026-03-01T00:00:00Z nominal=2026-03-01T00:00:00Z chosen=2026-03-01T00:00:00Z pid=1234
+```
+
+Kubernetes-style `namespace` and controller examples below describe the broader logging design and do not apply to this `krond` alpha subset.
 
 ---
 

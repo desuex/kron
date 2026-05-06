@@ -13,6 +13,13 @@ Target practical compatibility for common Linux cron workloads:
 - expected coverage band: `~70-80%` of real-world cron usage
 - full parity with every cron implementation variant is explicitly out of scope for this stage
 
+For the current `krond` alpha, the supported cron-source inputs are limited to:
+
+- `/etc/crontab`
+- `/etc/cron.d/*`
+
+Exported user crontab inputs remain post-alpha work and are not part of the current compatibility promise.
+
 ## Compatibility Tiers
 
 - `Tier 1 (Supported)`: expected to work and covered by integration tests
@@ -26,7 +33,7 @@ Target practical compatibility for common Linux cron workloads:
 | 5-field cron syntax (`*`, ranges, lists, steps, names) | yes | Tier 1 | Matches current parser baseline |
 | DOM/DOW OR matching semantics | yes | Tier 1 | Keep Vixie-compatible semantics |
 | `/etc/crontab` and `/etc/cron.d/*` style entries | yes | Tier 1 | Includes system crontab user field |
-| Import/export of user crontab entries | yes | Tier 2 | Migration tooling required |
+| Import/export of user crontab entries | no (alpha) | Tier 3 | Explicitly deferred for `krond` alpha; future migration tooling work |
 | Environment assignment lines (`PATH=...`) | yes | Tier 1 | Parsed and applied per job |
 | Command execution through shell-compatible mode | yes | Tier 1 | Required for common cron command patterns |
 | Explicit user execution (system crontab user column) | yes | Tier 2 | Host and permission model dependent |
@@ -53,8 +60,9 @@ Target practical compatibility for common Linux cron workloads:
 
 ## Execution Plan
 
-1. Build cron-source adapters (`/etc/crontab`, `/etc/cron.d`, exported user crontabs).
+1. Build cron-source adapters for the current alpha scope (`/etc/crontab`, `/etc/cron.d`).
 2. Normalize parsed entries into Kron internal job spec.
 3. Implement host execution loop in `krond` with locking, deadline handling, and deterministic decision flow.
 4. Add compatibility tests and pessimistic edge-case tests for cron parsing and runtime behavior.
 5. Publish compatibility status updates in `docs/COMPAT.md` and release notes.
+6. Revisit exported user crontab support after alpha scope is frozen.

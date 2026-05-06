@@ -47,6 +47,7 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 
 - `core/`: deterministic seed hashing, SplitMix64 PRNG, window computation, bounded candidate sampling, constraint handling, and golden vectors (`v1`-`v7`)
 - `cmd/krontab`: `lint`, `explain`, and `next` commands
+- `daemon/cmd/krond`: early `start` command slice (config load, deterministic scheduling, execution, state persistence)
 - Runtime distributions in `explain`/`next`: `uniform`, `skewEarly`, `skewLate`
 - `normal` and `exponential` syntax is validated by `lint` but not executed by MVP runtime commands
 - CI: `gofmt` check, `go vet`, tests, coverage threshold, and Sphinx docs build
@@ -60,7 +61,7 @@ Planned components (`daemon/`, `operator/`) are documented but not implemented y
 | `krontab explain` | Implemented | Deterministic decision output, text/JSON |
 | `krontab next` | Implemented | Deterministic multi-period preview |
 | Runtime `normal`/`exponential` distributions | Planned | Currently lint-validated only |
-| `krond` daemon | Planned | Post-CLI MVP |
+| `krond` daemon | In progress | Early `start` slice implemented; full drop-in parity staged |
 | `kronctl` helper CLI | Planned | Post-CLI MVP |
 | Cross-platform release binaries | In progress | Milestone 4: Linux/macOS/Windows assets |
 
@@ -74,6 +75,7 @@ Start here:
 | [SETUP.md](docs/SETUP.md) | Local setup and build instructions |
 | [USAGE.md](docs/USAGE.md) | MVP CLI usage (`lint`, `explain`, `next`) |
 | [RELEASE.md](docs/RELEASE.md) | Freeze checklist, tag flow, and release artifact verification |
+| [BENCHMARK.md](docs/BENCHMARK.md) | Performance and reliability benchmark gates for `krond` |
 
 Reference specifications:
 
@@ -92,6 +94,7 @@ Reference specifications:
 | [SECURITY.md](docs/SECURITY.md) | Security model and hardening requirements |
 | [COMPAT.md](docs/COMPAT.md) | Compatibility with cron, systemd, CronJob |
 | [CRON-DROPIN.md](docs/CRON-DROPIN.md) | Next-stage cron replacement compatibility profile |
+| [CRON-MIGRATION.md](docs/CRON-MIGRATION.md) | Migration guide from `/etc/crontab` and `/etc/cron.d/*` to `krond` |
 | [TEST-VECTORS.md](docs/TEST-VECTORS.md) | Golden test vectors for determinism |
 | [CRD-SPEC.md](docs/CRD-SPEC.md) | Kubernetes CRD schema and behavior |
 | [CLI-SPEC.md](docs/CLI-SPEC.md) | CLI commands, flags, and exit codes |

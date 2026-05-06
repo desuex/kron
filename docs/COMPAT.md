@@ -27,6 +27,12 @@ The staged compatibility matrix and acceptance criteria for the next stage are d
 
 This profile is the contract for `krond` host-daemon development.
 
+For the current `krond` alpha, this contract is narrower than the longer-term drop-in vision:
+
+* supported cron-source inputs are `/etc/crontab` and `/etc/cron.d/*`
+* exported user crontab inputs are explicitly deferred until after alpha
+* runtime concurrency support is currently `allow|forbid` for the daemon adapter
+
 ---
 
 ## Cron Expression Compatibility
@@ -253,6 +259,8 @@ To migrate from cron:
 2. Add `@win(after,0s)` if explicitness desired.
 3. Ensure command does not rely on shell features.
 4. Configure logging as desired.
+
+For the current `krond` alpha compatibility mode, migrate system cron files first. Exported user crontab imports are not yet part of the supported alpha path.
 
 Cron jobs using shell pipelines must:
 
